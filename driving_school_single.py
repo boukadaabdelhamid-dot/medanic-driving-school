@@ -2665,13 +2665,158 @@ class InstructorsFrame(tk.Frame):
         draw_text(5.5, y-0.6, "المركبات ذات المحرك", ARABIC_FONT_BOLD, 12, "center")
 
         c.save()
+        self._trigger_print(path, "عقد العمل")
+
+    def _trigger_print(self, path, title="الوثيقة"):
+        """يعرض نافذة اختيار الطابعة ثم يرسل الملف للطباعة."""
+        printers = self._get_printers()
+
+        dlg = tk.Toplevel()
+        dlg.title("اختيار الطابعة")
+        dlg.resizable(False, False)
+        dlg.grab_set()
+        dlg.configure(bg=COLOR_BG)
+
+        w, h = 440, 210
+        dlg.update_idletasks()
+        x = (dlg.winfo_screenwidth() - w) // 2
+        y = (dlg.winfo_screenheight() - h) // 2
+        dlg.geometry(f"{w}x{h}+{x}+{y}")
+
+        tk.Label(dlg, text=f"🖨️  طباعة: {title}",
+                 font=FONT_BOLD, bg=COLOR_BG, fg=COLOR_HEADER,
+                 anchor="e").pack(fill="x", padx=20, pady=(18, 4))
+
+        tk.Label(dlg, text="اختر الطابعة:",
+                 font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
+                 anchor="e").pack(fill="x", padx=20)
+
+        printer_var = tk.StringVar()
+        if printers:
+            printer_var.set(printers[0])
+
+        cb = ttk.Combobox(dlg, textvariable=printer_var, values=printers,
+                          font=FONT_MAIN, state="readonly",
+                          style="Modern.TCombobox")
+        cb.pack(fill="x", padx=20, pady=8)
+
+        btn_frame = tk.Frame(dlg, bg=COLOR_BG)
+        btn_frame.pack(fill="x", padx=20, pady=10)
+
+        result = {"action": None}
+
+        def do_print():
+            result["action"] = "print"
+            dlg.destroy()
+
+        def do_open():
+            result["action"] = "open"
+            dlg.destroy()
+
+        def do_cancel():
+            result["action"] = "cancel"
+            dlg.destroy()
+
+        tk.Button(btn_frame, text="طباعة", font=FONT_BOLD,
+                  bg=COLOR_PRIMARY, fg="white", relief="flat",
+                  padx=18, pady=6, cursor="hand2",
+                  command=do_print).pack(side="right", padx=(6, 0))
+        tk.Button(btn_frame, text="فتح الملف فقط", font=FONT_MAIN,
+                  bg=COLOR_INFO, fg="white", relief="flat",
+                  padx=12, pady=6, cursor="hand2",
+                  command=do_open).pack(side="right", padx=6)
+        tk.Button(btn_frame, text="إلغاء", font=FONT_MAIN,
+                  bg=COLOR_BORDER, fg=COLOR_TEXT, relief="flat",
+                  padx=12, pady=6, cursor="hand2",
+                  command=do_cancel).pack(side="left")
+
+        dlg.wait_window()
+
+        if result["action"] == "print":
+            selected = printer_var.get()
+            self._send_to_printer(path, selected, title)
+        elif result["action"] == "open":
+            try:
+                os.startfile(path)
+            except Exception:
+                try:
+                    import subprocess, sys
+                    if sys.platform == "darwin":
+                        subprocess.run(["open", path])
+                    else:
+                        subprocess.run(["xdg-open", path])
+                except Exception as e:
+                    show_error(f"خطأ في فتح الملف: {e}")
+
+    def _get_printers(self):
+        """يجلب قائمة الطابعات المثبتة على النظام."""
+        printers = []
         try:
-            # محاولة الطباعة المباشرة
-            os.startfile(path, 'print')
+            import sys
+            if sys.platform == "win32":
+                try:
+                    import winreg
+                    key = winreg.OpenKey(
+                        winreg.HKEY_LOCAL_MACHINE,
+                        r"SYSTEM\CurrentControlSet\Control\Print\Printers")
+                    i = 0
+                    while True:
+                        try:
+                            printers.append(winreg.EnumKey(key, i))
+                            i += 1
+                        except OSError:
+                            break
+                except Exception:
+                    import subprocess
+                    result = subprocess.run(
+                        ["wmic", "printer", "get", "name"],
+                        capture_output=True, text=True)
+                    for line in result.stdout.splitlines():
+                        line = line.strip()
+                        if line and line.lower() != "name":
+                            printers.append(line)
+            else:
+                import subprocess
+                result = subprocess.run(
+                    ["lpstat", "-a"], capture_output=True, text=True)
+                for line in result.stdout.splitlines():
+                    parts = line.split()
+                    if parts:
+                        printers.append(parts[0])
         except Exception:
-            # في حال فشل الطباعة المباشرة، نكتفي بفتح الملف
-            try: os.startfile(path)
-            except Exception as e: show_error(f"خطأ: {e}")
+            pass
+        if not printers:
+            printers = ["الطابعة الافتراضية"]
+        return printers
+
+    def _send_to_printer(self, path, printer_name, title):
+        """يرسل ملف PDF إلى الطابعة المحددة."""
+        import sys, subprocess
+        try:
+            if sys.platform == "win32":
+                if printer_name and printer_name != "الطابعة الافتراضية":
+                    try:
+                        subprocess.run(
+                            ["SumatraPDF", "-print-to", printer_name, path],
+                            capture_output=True)
+                        show_info(f"تم إرسال {title} للطابعة:\n{printer_name}")
+                        return
+                    except Exception:
+                        pass
+                os.startfile(path, 'print')
+                show_info(f"تم إرسال {title} للطباعة.")
+            else:
+                cmd = ["lp", path]
+                if printer_name and printer_name != "الطابعة الافتراضية":
+                    cmd = ["lp", "-d", printer_name, path]
+                subprocess.run(cmd)
+                show_info(f"تم إرسال {title} للطابعة:\n{printer_name}")
+        except Exception as e:
+            show_error(f"خطأ في الطباعة:\n{e}\n\nسيتم فتح الملف بدلاً من ذلك.")
+            try:
+                os.startfile(path)
+            except Exception:
+                pass
 
     def _delete(self):
         if not self.selected_id:
