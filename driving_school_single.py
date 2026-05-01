@@ -3771,7 +3771,7 @@ class DocumentsFrame(tk.Frame):
                            selectcolor=COLOR_PRIMARY_LIGHT,
                            anchor="e", justify="right").pack(fill="x", pady=2)
 
-        # --- يسار: قائمة المترشحين بـ checkboxes ---
+        # --- يسار: قائمة المترشحين بـ Treeview قابلة للتحديد المتعدد ---
         left_col = tk.Frame(body, bg=COLOR_BG)
         left_col.pack(side="left", fill="both", expand=True)
 
@@ -3782,68 +3782,93 @@ class DocumentsFrame(tk.Frame):
 
         # شريط بحث
         sv = tk.StringVar()
-        search_row = tk.Frame(lc_frame, bg=COLOR_CARD); search_row.pack(fill="x", pady=(0, 6))
+        search_row = tk.Frame(lc_frame, bg=COLOR_CARD); search_row.pack(fill="x", pady=(0, 4))
         tk.Label(search_row, text="🔍", bg=COLOR_CARD, fg=COLOR_PRIMARY,
                  font=(FONT_FAMILY, 12)).pack(side="right", padx=(0, 4))
         make_entry(search_row, sv, width=28).pack(side="right", fill="x", expand=True, ipady=4)
 
         # أزرار تحديد الكل / إلغاء الكل
-        sel_row = tk.Frame(lc_frame, bg=COLOR_CARD); sel_row.pack(fill="x", pady=(0, 6))
+        sel_row = tk.Frame(lc_frame, bg=COLOR_CARD); sel_row.pack(fill="x", pady=(0, 4))
 
-        check_vars = {}
+        # Treeview مع عمود ✓ للتحديد
+        cand_tree = ttk.Treeview(lc_frame,
+                                 columns=("sel", "name", "lic", "birth"),
+                                 show="headings", height=16,
+                                 style="Modern.Treeview",
+                                 selectmode="extended")
+        cand_tree.heading("sel",   text="✓",          anchor="center")
+        cand_tree.heading("name",  text="اللقب والاسم", anchor="center")
+        cand_tree.heading("lic",   text="الصنف",       anchor="center")
+        cand_tree.heading("birth", text="تاريخ الميلاد", anchor="center")
+        cand_tree.column("sel",   width=40,  anchor="center", stretch=False)
+        cand_tree.column("name",  width=200, anchor="center")
+        cand_tree.column("lic",   width=60,  anchor="center", stretch=False)
+        cand_tree.column("birth", width=110, anchor="center")
 
-        def select_all():
-            for v in check_vars.values(): v.set(True)
+        vsb_c = ttk.Scrollbar(lc_frame, orient="vertical", command=cand_tree.yview)
+        cand_tree.configure(yscrollcommand=vsb_c.set)
+        cand_tree.pack(side="left", fill="both", expand=True)
+        vsb_c.pack(side="right", fill="y")
 
-        def deselect_all():
-            for v in check_vars.values(): v.set(False)
+        # مجموعة iids المحددة
+        selected_set = set()
+        all_iids = []
 
-        tk.Button(sel_row, text="تحديد الكل", font=FONT_SMALL,
-                  bg=COLOR_SUCCESS, fg="white", relief="flat", padx=8, pady=3,
-                  cursor="hand2", command=select_all).pack(side="right", padx=3)
-        tk.Button(sel_row, text="إلغاء الكل", font=FONT_SMALL,
-                  bg=COLOR_TEXT_LIGHT, fg="white", relief="flat", padx=8, pady=3,
-                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
-
-        # إطار قابل للتمرير
-        canvas_frame = tk.Canvas(lc_frame, bg=COLOR_CARD, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(lc_frame, orient="vertical", command=canvas_frame.yview)
-        scroll_inner = tk.Frame(canvas_frame, bg=COLOR_CARD)
-
-        scroll_inner.bind("<Configure>",
-                          lambda e: canvas_frame.configure(
-                              scrollregion=canvas_frame.bbox("all")))
-        canvas_frame.create_window((0, 0), window=scroll_inner, anchor="nw")
-        canvas_frame.configure(yscrollcommand=scrollbar.set)
-
-        canvas_frame.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        row_frames = []
-
-        def render_list(filter_text=""):
-            for w in scroll_inner.winfo_children(): w.destroy()
-            row_frames.clear()
-            for cand in all_cands:
+        def populate_tree(filter_text=""):
+            for item in cand_tree.get_children():
+                cand_tree.delete(item)
+            all_iids.clear()
+            for i, cand in enumerate(all_cands):
                 full = f"{cand['last_name']} {cand['first_name']}"
                 if filter_text and filter_text.lower() not in full.lower() \
                         and filter_text not in cand.get('phone', ''):
                     continue
-                if cand['id'] not in check_vars:
-                    check_vars[cand['id']] = tk.BooleanVar(value=True)
-                bg_c = "#f0f9ff" if len(row_frames) % 2 == 0 else COLOR_CARD
-                rf = tk.Frame(scroll_inner, bg=bg_c); rf.pack(fill="x", pady=1)
-                tk.Checkbutton(rf, variable=check_vars[cand['id']],
-                               bg=bg_c, activebackground=bg_c,
-                               selectcolor=COLOR_PRIMARY_LIGHT).pack(side="left")
-                tk.Label(rf,
-                         text=f"{full}  |  {cand.get('license_type','B')}  |  {cand.get('birth_date','')}",
-                         font=FONT_SMALL, bg=bg_c, fg=COLOR_TEXT,
-                         anchor="e").pack(side="right", padx=5)
-                row_frames.append(rf)
+                iid = str(cand['id'])
+                chk = "✓" if cand['id'] in selected_set else ""
+                tag = "even" if i % 2 == 0 else "odd"
+                cand_tree.insert("", "end", iid=iid, tags=(tag,),
+                                 values=(chk, full,
+                                         cand.get('license_type', 'B'),
+                                         cand.get('birth_date', '')))
+                all_iids.append(iid)
+            cand_tree.tag_configure("even", background="#f0f9ff")
+            cand_tree.tag_configure("odd",  background=COLOR_CARD)
 
-        render_list()
-        sv.trace("w", lambda *a: render_list(sv.get().strip()))
+        # تحديد كل المترشحين مبدئياً
+        for cand in all_cands:
+            selected_set.add(cand['id'])
+        populate_tree()
+
+        def toggle_item(event):
+            item = cand_tree.identify_row(event.y)
+            if not item:
+                return
+            cid = int(item)
+            if cid in selected_set:
+                selected_set.discard(cid)
+            else:
+                selected_set.add(cid)
+            populate_tree(sv.get().strip())
+
+        cand_tree.bind("<Button-1>", toggle_item)
+
+        def select_all():
+            for cand in all_cands:
+                selected_set.add(cand['id'])
+            populate_tree(sv.get().strip())
+
+        def deselect_all():
+            selected_set.clear()
+            populate_tree(sv.get().strip())
+
+        tk.Button(sel_row, text="✓ تحديد الكل", font=FONT_SMALL,
+                  bg=COLOR_SUCCESS, fg="white", relief="flat", padx=8, pady=3,
+                  cursor="hand2", command=select_all).pack(side="right", padx=3)
+        tk.Button(sel_row, text="✗ إلغاء الكل", font=FONT_SMALL,
+                  bg=COLOR_TEXT_LIGHT, fg="white", relief="flat", padx=8, pady=3,
+                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
+
+        sv.trace("w", lambda *a: populate_tree(sv.get().strip()))
 
         # --- شريط الأزرار السفلي ---
         bf = tk.Frame(dlg, bg=COLOR_BG, pady=12); bf.pack(side="bottom", fill="x", padx=20)
@@ -3851,7 +3876,7 @@ class DocumentsFrame(tk.Frame):
                      color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
 
         def do_generate():
-            selected_ids = [cid for cid, v in check_vars.items() if v.get()]
+            selected_ids = list(selected_set)
             if not selected_ids:
                 show_error("يرجى تحديد مترشح واحد على الأقل"); return
 
