@@ -2716,11 +2716,27 @@ class TrainingFrame(tk.Frame):
         return True
 
     def _get_active_stage(self):
+        """تُعيد أول مرحلة غير مكتملة وفق الترتيب الصحيح (code→creneau→circuit)."""
         if not self.selected_candidate_id: return None
         stages = TrainingDB.get_by_candidate(self.selected_candidate_id)
         if not stages: return None
-        stages.sort(key=lambda s: s['id'], reverse=True)
-        return stages[0]
+        # أنشئ قاموساً: stage_type → أحدث سجل (بحسب ID)
+        by_type = {}
+        for s in stages:
+            if s['stage_type'] not in by_type or s['id'] > by_type[s['stage_type']]['id']:
+                by_type[s['stage_type']] = s
+        # أعِد أول مرحلة في الترتيب ليست ناجحة
+        for stage_type in STAGE_ORDER:
+            s = by_type.get(stage_type)
+            if s is None:
+                continue
+            if s['status'] != STATUS_PASS:
+                return s
+        # كل المراحل ناجحة — أعد آخر مرحلة (circuit) لعرض "تخرج بنجاح"
+        for stage_type in reversed(STAGE_ORDER):
+            if stage_type in by_type:
+                return by_type[stage_type]
+        return None
 
     def _get_candidate_name(self):
         if not self.selected_candidate_id: return ""
@@ -2826,24 +2842,42 @@ class TrainingFrame(tk.Frame):
     def _update_action_panel(self):
         name = self._get_candidate_name()
         self.lbl_cand_name.config(text=f"المترشح: {name}")
-        
+
         active = self._get_active_stage()
         if not active:
             self.lbl_current_stage.config(text="لا توجد مراحل")
             self.lbl_stage_status.config(text="")
             self._set_buttons_state("disabled")
             return
-            
+
         stage_name = STAGE_LABELS.get(active['stage_type'], active['stage_type'])
-        
+
         if active['status'] == STATUS_PASS and active['stage_type'] == "circuit":
             self.lbl_current_stage.config(text="🎓 تخرج بنجاح!")
             self.lbl_stage_status.config(text="أنهى جميع المراحل (الكود، الكرينو، السيركوي)")
             self._set_buttons_state("disabled")
+            return
+
+        # تحقق من أن المرحلة مفتوحة (المراحل السابقة ناجحة)
+        stages_all = self.current_stages
+        unlocked = self._is_unlocked(stages_all, active['stage_type'])
+
+        if not unlocked:
+            # المرحلة مقفلة — أظهر رسالة وعطّل الأزرار
+            idx = STAGE_ORDER.index(active['stage_type'])
+            prev_name = STAGE_LABELS.get(STAGE_ORDER[idx - 1], STAGE_ORDER[idx - 1])
+            self.lbl_current_stage.config(
+                text=f"🔒 {stage_name}",
+                fg=COLOR_WARNING)
+            self.lbl_stage_status.config(
+                text=f"يجب النجاح في {prev_name} أولاً",
+                fg=COLOR_DANGER)
+            self._set_buttons_state("disabled")
         else:
-            self.lbl_current_stage.config(text=f"المرحلة: {stage_name}")
-            self.lbl_stage_status.config(text=f"الحالة: {active['status']}")
-            
+            self.lbl_current_stage.config(text=f"المرحلة: {stage_name}",
+                                          fg=COLOR_PRIMARY)
+            self.lbl_stage_status.config(text=f"الحالة: {active['status']}",
+                                         fg=COLOR_TEXT_LIGHT)
             if active['status'] == STATUS_PASS:
                 self._set_buttons_state("disabled")
             else:
@@ -3063,15 +3097,22 @@ class TrainingFrame(tk.Frame):
     def _quick_pass(self):
         active = self._get_active_stage()
         if not active: return
-        
+
+        # حماية: لا نجاح إن كانت المرحلة مقفلة
+        if not self._is_unlocked(self.current_stages, active['stage_type']):
+            idx = STAGE_ORDER.index(active['stage_type'])
+            prev_name = STAGE_LABELS.get(STAGE_ORDER[idx - 1], STAGE_ORDER[idx - 1])
+            show_error(f"لا يمكن تسجيل النجاح — يجب النجاح في {prev_name} أولاً")
+            return
+
         # 1. تحديث المرحلة الحالية إلى ناجح
         from datetime import date
         today = str(date.today())
         TrainingDB.update(active['id'], {
             "status": STATUS_PASS, "start_date": today, "end_date": today,
             "score": 0, "notes": ""})
-            
-        # 2. إضافة المرحلة التالية إذا وجدت
+
+        # 2. إضافة المرحلة التالية إذا وجدت ولم تكن موجودة
         idx = STAGE_ORDER.index(active['stage_type'])
         if idx + 1 < len(STAGE_ORDER):
             next_stage = STAGE_ORDER[idx + 1]
@@ -3079,7 +3120,7 @@ class TrainingFrame(tk.Frame):
             has_next = any(s['stage_type'] == next_stage for s in existing)
             if not has_next:
                 TrainingDB.add(self.selected_candidate_id, next_stage)
-                
+
         self._load_stages()
         self._update_action_panel()
         show_info("تم تسجيل النجاح والمرور للمرحلة التالية بنجاح!")
@@ -3087,15 +3128,22 @@ class TrainingFrame(tk.Frame):
     def _quick_fail(self):
         active = self._get_active_stage()
         if not active: return
-        
+
+        # حماية: لا رسوب إن كانت المرحلة مقفلة
+        if not self._is_unlocked(self.current_stages, active['stage_type']):
+            idx = STAGE_ORDER.index(active['stage_type'])
+            prev_name = STAGE_LABELS.get(STAGE_ORDER[idx - 1], STAGE_ORDER[idx - 1])
+            show_error(f"لا يمكن تسجيل الرسوب — يجب النجاح في {prev_name} أولاً")
+            return
+
         # 1. تحديث المرحلة الحالية إلى راسب
         TrainingDB.update(active['id'], {
             "status": "راسب", "start_date": active['start_date'], "end_date": active['end_date'],
             "score": 0, "notes": ""})
-            
+
         # 2. إضافة نفس المرحلة كمحاولة جديدة
         TrainingDB.add(self.selected_candidate_id, active['stage_type'])
-        
+
         self._load_stages()
         self._update_action_panel()
         show_info("تم تسجيل الرسوب. تمت إضافة محاولة جديدة للمترشح.")
