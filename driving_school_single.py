@@ -98,6 +98,8 @@ LICENSE_OPTIONS        = ["A", "B", "C", "D", "E"]
 PAYMENT_METHOD_OPTIONS = ["نقدي", "تحويل بنكي", "شيك"]
 BLOOD_TYPE_OPTIONS     = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 EXPENSE_TYPES          = ["وقود","صيانة","كراء","رواتب","تأمين","إعلان","مستلزمات مكتبية","أخرى"]
+EXAM_TYPE_OPTIONS      = ["نظري", "تطبيقي"]
+EXAM_RESULT_OPTIONS    = ["ناجح", "راسب"]
 
 
 # ============================================================================
@@ -317,6 +319,17 @@ def init_db():
             FOREIGN KEY (candidate_id) REFERENCES candidates(id),
             FOREIGN KEY (instructor_id) REFERENCES instructors(id),
             FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS exam_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            candidate_id INTEGER NOT NULL,
+            exam_type TEXT NOT NULL,
+            exam_date TEXT DEFAULT (date('now')),
+            result TEXT NOT NULL,
+            score REAL DEFAULT 0,
+            notes TEXT DEFAULT '',
+            FOREIGN KEY (candidate_id) REFERENCES candidates(id)
         );
 
     """)
@@ -876,6 +889,71 @@ class SessionDB:
 SESSION_TYPE_OPTIONS = ["كرينو", "طريق", "كود (نظري)", "مناورة حرة"]
 TIME_OPTIONS = [f"{h:02d}:{m:02d}" for h in range(7, 20) for m in (0, 30)]
 DURATION_OPTIONS = ["30", "45", "60", "90", "120"]
+
+
+class ExamResultDB:
+    """طبقة الوصول لجدول نتائج الامتحانات."""
+
+    @staticmethod
+    def get_by_candidate(candidate_id):
+        conn = get_connection()
+        rows = conn.execute(
+            "SELECT * FROM exam_results WHERE candidate_id=? ORDER BY exam_date DESC",
+            (candidate_id,)
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def add(d):
+        conn = get_connection()
+        conn.execute(
+            """INSERT INTO exam_results
+               (candidate_id, exam_type, exam_date, result, score, notes)
+               VALUES (?,?,?,?,?,?)""",
+            (d['candidate_id'], d['exam_type'], d['exam_date'],
+             d['result'], d.get('score', 0), d.get('notes', ''))
+        )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def delete(rid):
+        conn = get_connection()
+        conn.execute("DELETE FROM exam_results WHERE id=?", (rid,))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def get_pass_rate_by_type():
+        """معدل النجاح لكل نوع امتحان (نظري / تطبيقي)."""
+        conn = get_connection()
+        rows = conn.execute("""
+            SELECT exam_type,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN result='ناجح' THEN 1 ELSE 0 END) AS passed
+            FROM exam_results
+            GROUP BY exam_type
+        """).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_monthly_breakdown(year):
+        """تفصيل شهري لنتائج الامتحانات في السنة المحددة."""
+        conn = get_connection()
+        rows = conn.execute("""
+            SELECT strftime('%m', exam_date) AS month,
+                   exam_type,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN result='ناجح' THEN 1 ELSE 0 END) AS passed
+            FROM exam_results
+            WHERE strftime('%Y', exam_date) = ?
+            GROUP BY month, exam_type
+            ORDER BY month
+        """, (str(year),)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
 
 
 # ============================================================================
@@ -1536,6 +1614,46 @@ class CandidateDialog(tk.Toplevel):
         make_entry(prev_cell, v_prev, width=60).pack(fill="x", ipady=4, pady=(2, 0))
 
         # ══════════════════════════════════════════════
+        # التبويب 4: نتائج الامتحانات (تعديل فقط)
+        # ══════════════════════════════════════════════
+        tab4 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
+        nb.add(tab4, text="📊  نتائج الامتحانات")
+
+        if self.candidate:
+            # -- ملخص الإحصائيات --
+            self._exam_stats_frame = tk.Frame(tab4, bg=COLOR_BG)
+            self._exam_stats_frame.pack(fill="x", pady=(0, 10))
+
+            # -- جدول النتائج --
+            section_title(tab4, "سجل الامتحانات", icon="📋")
+            tree_outer, tree_card = make_card(tab4, padding=8)
+            tree_outer.pack(fill="both", expand=True, pady=(0, 8))
+            self._exam_tree = create_treeview(
+                tree_card,
+                ("id", "exam_type", "exam_date", "result", "score", "notes"),
+                ("رقم", "نوع الامتحان", "التاريخ", "النتيجة", "الدرجة", "ملاحظات"),
+                (0, 120, 120, 90, 80, 220),
+                height=8
+            )
+            self._exam_tree.column("id", width=0, stretch=False)
+
+            # -- أزرار الإضافة والحذف --
+            btn_bar = tk.Frame(tab4, bg=COLOR_CARD)
+            btn_bar.pack(fill="x")
+            ModernButton(btn_bar, "إضافة نتيجة", self._add_exam_result,
+                         icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
+            ModernButton(btn_bar, "حذف المحدد", self._delete_exam_result,
+                         icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
+
+            self._load_exam_results()
+        else:
+            tk.Label(tab4,
+                     text="احفظ بيانات المترشح أولاً، ثم ارجع لهذا التبويب لإضافة نتائج الامتحانات.",
+                     font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT,
+                     wraplength=500, justify="right", anchor="center").pack(
+                         expand=True, anchor="center")
+
+        # ══════════════════════════════════════════════
         # القيم الافتراضية
         # ══════════════════════════════════════════════
         self.vars["nationality"].set("جزائرية")
@@ -1561,6 +1679,82 @@ class CandidateDialog(tk.Toplevel):
             else:
                 v.set(str(c.get(k, "")) if c.get(k) is not None else "")
         self.born_abroad_var.set(int(c.get("is_born_abroad") or 0))
+
+    # ── نتائج الامتحانات ──────────────────────────────────────────────────────
+    def _load_exam_results(self):
+        if not self.candidate:
+            return
+        cid = self.candidate['id']
+        rows = ExamResultDB.get_by_candidate(cid)
+
+        # --- ملخص الإحصائيات ---
+        for w in self._exam_stats_frame.winfo_children():
+            w.destroy()
+
+        stats = {}
+        for r in rows:
+            t = r['exam_type']
+            stats.setdefault(t, {"total": 0, "passed": 0})
+            stats[t]["total"]  += 1
+            if r["result"] == "ناجح":
+                stats[t]["passed"] += 1
+
+        for etype in EXAM_TYPE_OPTIONS:
+            s = stats.get(etype, {"total": 0, "passed": 0})
+            total  = s["total"]
+            passed = s["passed"]
+            failed = total - passed
+            pct    = int(passed / total * 100) if total else 0
+            color  = COLOR_SUCCESS if pct >= 50 else (COLOR_WARNING if total == 0 else COLOR_DANGER)
+            card   = tk.Frame(self._exam_stats_frame, bg=color,
+                              padx=14, pady=10, relief="flat")
+            card.pack(side="right", padx=6)
+            tk.Label(card, text=f"امتحان {etype}",
+                     font=FONT_BOLD, bg=color, fg="white").pack()
+            tk.Label(card, text=f"{passed}/{total}  ({pct}%  ناجح)",
+                     font=(FONT_FAMILY, 10), bg=color, fg="white").pack()
+            tk.Label(card, text=f"✅ {passed}  ❌ {failed}  |  محاولات: {total}",
+                     font=FONT_TINY, bg=color, fg="white").pack()
+
+        # --- ملء الجدول ---
+        values = [
+            (r['id'], r['exam_type'], r['exam_date'],
+             r['result'], f"{r['score']:g}" if r['score'] else "—",
+             r['notes'] or "")
+            for r in rows
+        ]
+        insert_zebra(self._exam_tree, values)
+
+        # لون النتيجة (ناجح = أخضر، راسب = أحمر)
+        for item in self._exam_tree.get_children():
+            vals = self._exam_tree.item(item, "values")
+            if vals and vals[3] == "ناجح":
+                self._exam_tree.item(item, tags=("pass",))
+            else:
+                self._exam_tree.item(item, tags=("fail",))
+        self._exam_tree.tag_configure("pass", foreground=COLOR_SUCCESS)
+        self._exam_tree.tag_configure("fail", foreground=COLOR_DANGER)
+
+    def _add_exam_result(self):
+        if not self.candidate:
+            return
+        def on_save(data):
+            ExamResultDB.add(data)
+            self._load_exam_results()
+            show_info("تمت إضافة النتيجة بنجاح")
+        ExamResultDialog(self, self.candidate['id'], on_save=on_save)
+
+    def _delete_exam_result(self):
+        if not self.candidate:
+            return
+        sel = self._exam_tree.selection()
+        if not sel:
+            show_error("يرجى تحديد نتيجة من الجدول"); return
+        rid = self._exam_tree.item(sel[0])['values'][0]
+        if confirm_delete("هذه النتيجة"):
+            ExamResultDB.delete(rid)
+            self._load_exam_results()
+            show_info("تم حذف النتيجة")
 
     def _save(self):
         try:
@@ -1607,6 +1801,93 @@ class CandidateDialog(tk.Toplevel):
 
 
 # ============================================================================
+#  نافذة: إضافة نتيجة امتحان
+# ============================================================================
+
+class ExamResultDialog(tk.Toplevel):
+    """نافذة إضافة نتيجة امتحان لمترشح محدد."""
+
+    def __init__(self, parent, candidate_id, on_save):
+        super().__init__(parent)
+        self.candidate_id = candidate_id
+        self.on_save = on_save
+        self.title("إضافة نتيجة امتحان")
+        self.geometry("480x400")
+        self.resizable(False, False)
+        self.configure(bg=COLOR_BG)
+        self.transient(parent)
+        self.grab_set()
+        self._build()
+
+    def _build(self):
+        head = tk.Frame(self, bg=COLOR_PRIMARY, pady=14, padx=20)
+        head.pack(fill="x")
+        tk.Label(head, text="📝  إضافة نتيجة امتحان",
+                 font=(FONT_FAMILY, 14, "bold"),
+                 bg=COLOR_PRIMARY, fg="white", anchor="e").pack(side="right")
+
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
+        wrap.pack(fill="both", expand=True)
+        wrap.columnconfigure(0, weight=1); wrap.columnconfigure(1, weight=1)
+
+        def lbl_entry(row, col, text, var, kind="entry", values=None, colspan=1):
+            f = tk.Frame(wrap, bg=COLOR_BG)
+            f.grid(row=row, column=col, columnspan=colspan,
+                   sticky="ew", padx=8, pady=6)
+            tk.Label(f, text=text, font=FONT_BOLD, bg=COLOR_BG,
+                     fg=COLOR_TEXT, anchor="e").pack(anchor="e")
+            if kind == "combo":
+                w = make_combo(f, var, values or [], width=22)
+            else:
+                w = make_entry(f, var, width=24)
+            w.pack(fill="x", ipady=5, pady=(2, 0))
+
+        self.v_type   = tk.StringVar(value=EXAM_TYPE_OPTIONS[0])
+        self.v_date   = tk.StringVar(value=str(date.today()))
+        self.v_result = tk.StringVar(value=EXAM_RESULT_OPTIONS[0])
+        self.v_score  = tk.StringVar(value="")
+        self.v_notes  = tk.StringVar(value="")
+
+        lbl_entry(0, 0, "نوع الامتحان *",         self.v_type,   "combo", EXAM_TYPE_OPTIONS)
+        lbl_entry(0, 1, "تاريخ الامتحان (YYYY-MM-DD) *", self.v_date, "entry")
+        lbl_entry(1, 0, "النتيجة *",               self.v_result, "combo", EXAM_RESULT_OPTIONS)
+        lbl_entry(1, 1, "الدرجة / العلامة (اختياري)", self.v_score, "entry")
+        lbl_entry(2, 0, "ملاحظات (اختياري)",       self.v_notes,  "entry", colspan=2)
+
+        bf = tk.Frame(self, bg=COLOR_BG, pady=10)
+        bf.pack(side="bottom", fill="x", padx=20)
+        tk.Frame(bf, bg=COLOR_BORDER, height=1).pack(fill="x", pady=(0, 8))
+        ModernButton(bf, "إلغاء", self.destroy,
+                     icon="✗", color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
+        ModernButton(bf, "✅  حفظ النتيجة", self._save,
+                     color=COLOR_SUCCESS, size="large").pack(side="right", padx=5)
+
+    def _save(self):
+        exam_date = self.v_date.get().strip()
+        exam_type = self.v_type.get()
+        result    = self.v_result.get()
+        if not exam_type or not result:
+            show_error("نوع الامتحان والنتيجة إلزاميان"); return
+        try:
+            datetime.strptime(exam_date, "%Y-%m-%d")
+        except ValueError:
+            show_error("صيغة التاريخ غير صحيحة. استخدم: YYYY-MM-DD"); return
+        try:
+            score = float(self.v_score.get().replace(",", ".") or 0)
+        except ValueError:
+            score = 0
+        self.on_save({
+            "candidate_id": self.candidate_id,
+            "exam_type":    exam_type,
+            "exam_date":    exam_date,
+            "result":       result,
+            "score":        score,
+            "notes":        self.v_notes.get().strip(),
+        })
+        self.destroy()
+
+
+# ============================================================================
 #  واجهة: المترشحون (مُصلَحة بالكامل)
 # ============================================================================
 
@@ -1637,6 +1918,8 @@ class CandidatesFrame(tk.Frame):
                      icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
         ModernButton(left_head, "تعديل المحدد", self._edit_dialog,
                      icon="✏️", color=COLOR_PRIMARY).pack(side="right", padx=4)
+        ModernButton(left_head, "نتائج الامتحانات", self._open_exam_results,
+                     icon="📊", color=COLOR_PURPLE).pack(side="right", padx=4)
         ModernButton(left_head, "بطاقة التكوين", self._print_training_card,
                      icon="📋", color=COLOR_ACCENT).pack(side="right", padx=4)
         ModernButton(left_head, "حذف", self._delete,
@@ -1723,6 +2006,27 @@ class CandidatesFrame(tk.Frame):
             self.selected_id = None
             self._load_list()
             show_info("تم حذف المترشح")
+
+    def _open_exam_results(self):
+        """فتح نافذة تعديل المترشح مع الانتقال مباشرة لتبويب نتائج الامتحانات."""
+        if not self.selected_id:
+            show_error("يرجى تحديد مترشح من القائمة"); return
+        cand = CandidateDB.get(self.selected_id)
+        if cand:
+            dlg = CandidateDialog(self, on_save=lambda d: self._do_update(d), candidate=cand)
+            # الانتقال للتبويب الرابع (الفهرس 3)
+            try:
+                dlg.children['!notebook'].select(3)
+            except Exception:
+                try:
+                    for child in dlg.winfo_children():
+                        if isinstance(child, tk.Frame):
+                            for nb in child.winfo_children():
+                                if isinstance(nb, ttk.Notebook):
+                                    nb.select(3)
+                                    break
+                except Exception:
+                    pass
 
     def _print_training_card(self):
         if not self.selected_id:
@@ -2861,12 +3165,22 @@ class ReportsFrame(tk.Frame):
         self.stats_row = tk.Frame(wrap, bg=COLOR_BG); self.stats_row.pack(fill="x", pady=(0, 15))
 
         # تفصيل شهري
-        mo, mc = make_card(wrap, padding=10); mo.pack(fill="both", expand=True)
+        mo, mc = make_card(wrap, padding=10); mo.pack(fill="x", pady=(0, 12))
         section_title(mc, "تفصيل شهري للسنة المحددة", icon="📅")
         self.monthly_tree = create_treeview(mc,
             ("month","payments","expenses","profit"),
             ("الشهر","المدفوعات (دج)","المصاريف (دج)","الأرباح (دج)"),
-            (140,180,180,180), height=14)
+            (140,180,180,180), height=8)
+
+        # إحصائيات الامتحانات
+        eo, ec = make_card(wrap, padding=10); eo.pack(fill="both", expand=True)
+        section_title(ec, "إحصائيات نتائج الامتحانات", icon="🎓")
+        self._exam_stats_row = tk.Frame(ec, bg=COLOR_CARD)
+        self._exam_stats_row.pack(fill="x", pady=(0, 8))
+        self._exam_monthly_tree = create_treeview(ec,
+            ("month", "nazari_total", "nazari_pass", "tatbiqi_total", "tatbiqi_pass"),
+            ("الشهر", "نظري (محاولات)", "نظري (ناجح)", "تطبيقي (محاولات)", "تطبيقي (ناجح)"),
+            (120, 140, 120, 160, 130), height=7)
 
         self._refresh()
 
@@ -2913,6 +3227,56 @@ class ReportsFrame(tk.Frame):
                 nav(6)
         self.monthly_tree.bind("<Double-Button-1>", _on_month_dbl)
         self.monthly_tree.configure(cursor="hand2")
+
+        # ── إحصائيات الامتحانات ──────────────────────────────────────────────
+        for w in self._exam_stats_row.winfo_children():
+            w.destroy()
+
+        pass_data = ExamResultDB.get_pass_rate_by_type()
+        total_all = sum(r['total'] for r in pass_data)
+        passed_all = sum(r['passed'] for r in pass_data)
+        overall_pct = int(passed_all / total_all * 100) if total_all else 0
+
+        # بطاقة المعدل الكلي
+        overall_color = COLOR_SUCCESS if overall_pct >= 50 else (COLOR_WARNING if total_all == 0 else COLOR_DANGER)
+        stat_card(self._exam_stats_row,
+                  "المعدل الكلي للنجاح",
+                  f"{overall_pct}%",
+                  "🎓", overall_color)
+
+        # بطاقة لكل نوع
+        for r in pass_data:
+            total  = r['total']
+            passed = r['passed']
+            pct    = int(passed / total * 100) if total else 0
+            color  = COLOR_SUCCESS if pct >= 50 else (COLOR_WARNING if total == 0 else COLOR_DANGER)
+            stat_card(self._exam_stats_row,
+                      f"نجاح {r['exam_type']}",
+                      f"{pct}%  ({passed}/{total})",
+                      "📝", color)
+
+        # جدول التفصيل الشهري للامتحانات
+        monthly_exam = ExamResultDB.get_monthly_breakdown(y)
+        # بناء قاموس {شهر → {نوع → {total, passed}}}
+        em = {}
+        for r in monthly_exam:
+            mo_ = r['month']
+            em.setdefault(mo_, {})
+            em[mo_][r['exam_type']] = {"total": r['total'], "passed": r['passed']}
+
+        exam_rows = []
+        for mm in range(1, 13):
+            ms = f"{mm:02d}"
+            naz  = em.get(ms, {}).get("نظري",    {"total": 0, "passed": 0})
+            tat  = em.get(ms, {}).get("تطبيقي",  {"total": 0, "passed": 0})
+            exam_rows.append((
+                MONTHS_AR.get(ms, ms),
+                str(naz['total'])  if naz['total']  else "—",
+                str(naz['passed']) if naz['total']  else "—",
+                str(tat['total'])  if tat['total']  else "—",
+                str(tat['passed']) if tat['total']  else "—",
+            ))
+        insert_zebra(self._exam_monthly_tree, exam_rows)
 
 
 # ============================================================================
