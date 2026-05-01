@@ -223,6 +223,20 @@ def upgrade_db():
             if col not in inst_existing:
                 conn.execute(f"ALTER TABLE instructors ADD COLUMN {col} {dtype}")
 
+        # جدول محاولات الامتحانات (جديد)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS exam_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                candidate_id INTEGER NOT NULL,
+                stage_type TEXT NOT NULL,
+                exam_date TEXT DEFAULT (date('now')),
+                score REAL DEFAULT 0,
+                result TEXT DEFAULT 'راسب',
+                notes TEXT DEFAULT '',
+                FOREIGN KEY (candidate_id) REFERENCES candidates(id)
+            )
+        """)
+
         conn.commit()
     except Exception:
         pass
@@ -328,6 +342,17 @@ def init_db():
             exam_date TEXT DEFAULT (date('now')),
             result TEXT NOT NULL,
             score REAL DEFAULT 0,
+            notes TEXT DEFAULT '',
+            FOREIGN KEY (candidate_id) REFERENCES candidates(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS exam_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            candidate_id INTEGER NOT NULL,
+            stage_type TEXT NOT NULL,
+            exam_date TEXT DEFAULT (date('now')),
+            score REAL DEFAULT 0,
+            result TEXT DEFAULT 'راسب',
             notes TEXT DEFAULT '',
             FOREIGN KEY (candidate_id) REFERENCES candidates(id)
         );
@@ -590,9 +615,60 @@ class TrainingDB:
     def get_stats():
         conn = get_connection()
         rows = conn.execute("""
-            SELECT stage_type, status, COUNT(*) as count 
-            FROM training_stages 
-            GROUP BY stage_type, status
+            SELECT stage_type, result as status, COUNT(*) as count 
+            FROM exam_attempts 
+            GROUP BY stage_type, result
+        """).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+
+class ExamAttemptsDB:
+    @staticmethod
+    def get_by_candidate(cid):
+        conn = get_connection()
+        rows = conn.execute(
+            "SELECT * FROM exam_attempts WHERE candidate_id=? ORDER BY stage_type, exam_date",
+            (cid,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_by_candidate_and_stage(cid, stage_type):
+        conn = get_connection()
+        rows = conn.execute(
+            "SELECT * FROM exam_attempts WHERE candidate_id=? AND stage_type=? ORDER BY exam_date",
+            (cid, stage_type)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def add(d):
+        conn = get_connection()
+        conn.execute("""INSERT INTO exam_attempts
+            (candidate_id, stage_type, exam_date, score, result, notes)
+            VALUES (?,?,?,?,?,?)""",
+            (d['candidate_id'], d['stage_type'], d['exam_date'],
+             d['score'], d['result'], d['notes']))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def delete(i):
+        conn = get_connection()
+        conn.execute("DELETE FROM exam_attempts WHERE id=?", (i,))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def get_stats_by_stage():
+        conn = get_connection()
+        rows = conn.execute("""
+            SELECT stage_type,
+                   COUNT(*) as total,
+                   SUM(CASE WHEN result='ناجح' THEN 1 ELSE 0 END) as passed
+            FROM exam_attempts
+            GROUP BY stage_type
         """).fetchall()
         conn.close()
         return [dict(r) for r in rows]
@@ -1198,25 +1274,30 @@ class DashboardFrame(tk.Frame):
                  font=(FONT_FAMILY, 22, "bold"),
                  bg=profit_color, fg="white", anchor="w").pack(side="left")
 
-        # إحصائيات النجاح (Success Rates)
-        stats_data = TrainingDB.get_stats()
+        # إحصائيات النجاح (Success Rates) — مبنية على سجل الامتحانات الفعلي
+        exam_stats = {s['stage_type']: s for s in ExamAttemptsDB.get_stats_by_stage()}
         rates_frame = tk.Frame(wrap, bg=COLOR_BG)
         rates_frame.pack(fill="x", pady=(0, 20))
-        
+
         for stage_code, label in STAGE_LABELS.items():
-            total = sum(s['count'] for s in stats_data if s['stage_type'] == stage_code)
-            passed = sum(s['count'] for s in stats_data if s['stage_type'] == stage_code and s['status'] == STATUS_PASS)
-            rate = (passed / total * 100) if total > 0 else 0
-            
+            es = exam_stats.get(stage_code, {'total': 0, 'passed': 0})
+            total  = es.get('total',  0) or 0
+            passed = es.get('passed', 0) or 0
+            rate   = (passed / total * 100) if total > 0 else 0
+
             color = COLOR_SUCCESS if rate >= 50 else COLOR_WARNING
             if total == 0: color = COLOR_TEXT_LIGHT
-            
-            sc = tk.Frame(rates_frame, bg=COLOR_CARD, padx=15, pady=10, highlightthickness=1, highlightbackground=COLOR_BORDER)
+
+            sc = tk.Frame(rates_frame, bg=COLOR_CARD, padx=15, pady=10,
+                          highlightthickness=1, highlightbackground=COLOR_BORDER)
             sc.pack(side="right", fill="both", expand=True, padx=5)
-            
+
             tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(anchor="e")
-            tk.Label(sc, text=f"{rate:.1f}% نجاح", font=(FONT_FAMILY, 16, "bold"), bg=COLOR_CARD, fg=color).pack(anchor="e")
-            tk.Label(sc, text=f"إجمالي الممتحنين: {total}", font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor="e")
+            tk.Label(sc, text=f"{rate:.1f}%  نجاح", font=(FONT_FAMILY, 16, "bold"),
+                     bg=COLOR_CARD, fg=color).pack(anchor="e")
+            tk.Label(sc,
+                     text=f"المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
+                     font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor="e")
 
         # التنبيهات والإشعارات (Notifications & Alerts)
         v_alerts = VehicleDB.get_alerts()
@@ -2493,8 +2574,11 @@ class TrainingFrame(tk.Frame):
         self.lbl_stage_status = tk.Label(fc, text="الحالة: -", font=FONT_MAIN, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
         self.lbl_stage_status.pack(pady=5)
 
-        self.btn_history = ModernButton(fc, "عرض سجل المراحل (التاريخ)", self._show_history_window, icon="📜", color=COLOR_PRIMARY)
-        self.btn_history.pack(fill="x", pady=(15, 10), ipady=2)
+        self.btn_exam_results = ModernButton(fc, "نتائج الامتحانات", self._show_exam_results_window, icon="📋", color=COLOR_PURPLE)
+        self.btn_exam_results.pack(fill="x", pady=(15, 5), ipady=2)
+
+        self.btn_history = ModernButton(fc, "سجل مراحل التكوين", self._show_history_window, icon="📜", color=COLOR_PRIMARY)
+        self.btn_history.pack(fill="x", pady=(0, 10), ipady=2)
 
         action_btns = tk.Frame(fc, bg=COLOR_CARD)
         action_btns.pack(fill="x", pady=5)
@@ -2546,7 +2630,9 @@ class TrainingFrame(tk.Frame):
     def _set_buttons_state(self, state):
         self.btn_pass.config(state=state)
         self.btn_fail.config(state=state)
-        self.btn_history.config(state="normal" if self.selected_candidate_id else "disabled")
+        has_cand = "normal" if self.selected_candidate_id else "disabled"
+        self.btn_history.config(state=has_cand)
+        self.btn_exam_results.config(state=has_cand)
 
     def _update_action_panel(self):
         name = self._get_candidate_name()
@@ -2585,24 +2671,23 @@ class TrainingFrame(tk.Frame):
     def _show_history_window(self):
         if not self.selected_candidate_id: return
         win = tk.Toplevel(self)
-        win.title(f"سجل المراحل - {self._get_candidate_name()}")
+        win.title(f"سجل مراحل التكوين - {self._get_candidate_name()}")
         win.geometry("900x450")
         win.configure(bg=COLOR_BG)
         win.transient(self.winfo_toplevel())
-        
-        lbl = tk.Label(win, text=f"سجل المحاولات للمترشح: {self._get_candidate_name()}", font=(FONT_FAMILY, 16, "bold"), bg=COLOR_BG, fg=COLOR_HEADER)
-        lbl.pack(pady=15)
-        
+
+        tk.Label(win, text=f"سجل مراحل التكوين للمترشح: {self._get_candidate_name()}",
+                 font=(FONT_FAMILY, 16, "bold"), bg=COLOR_BG, fg=COLOR_HEADER).pack(pady=15)
+
         tree = create_treeview(win,
             ("id","stage_type","status","start_date","end_date","score","notes"),
             ("رقم","المرحلة","الحالة","تاريخ البداية","تاريخ النهاية","النتيجة","ملاحظات"),
             (40,150,120,110,110,80,150), height=15)
-            
+
         values = []
         for s in self.current_stages:
             unlocked = self._is_unlocked(self.current_stages, s['stage_type'])
             label = STAGE_LABELS.get(s['stage_type'], s['stage_type'])
-
             if not unlocked:
                 label = f"🔒  {label}  (مقفلة)"
             elif s['status'] == STATUS_PASS:
@@ -2611,14 +2696,180 @@ class TrainingFrame(tk.Frame):
                 label = f"❌  {label}"
             else:
                 label = f"▶  {label}"
-            
-            values.append((s['id'], label, s['status'], 
+            values.append((s['id'], label, s['status'],
                            s['start_date'] or "", s['end_date'] or "",
                            s['score'] or "", s['notes'] or ""))
         insert_zebra(tree, values)
-        
-        btn = ModernButton(win, "إغلاق", win.destroy, color=COLOR_TEXT_LIGHT)
-        btn.pack(pady=15)
+
+        ModernButton(win, "إغلاق", win.destroy, color=COLOR_TEXT_LIGHT).pack(pady=15)
+
+    def _show_exam_results_window(self):
+        if not self.selected_candidate_id: return
+        cid  = self.selected_candidate_id
+        name = self._get_candidate_name()
+
+        win = tk.Toplevel(self)
+        win.title(f"نتائج الامتحانات - {name}")
+        win.geometry("1000x620")
+        win.configure(bg=COLOR_BG)
+        win.transient(self.winfo_toplevel())
+
+        # ── العنوان ──────────────────────────────────────────────────
+        hdr = tk.Frame(win, bg=COLOR_PRIMARY, padx=20, pady=12)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text=f"📋  نتائج الامتحانات للمترشح: {name}",
+                 font=(FONT_FAMILY, 16, "bold"), bg=COLOR_PRIMARY, fg="white").pack(side="right")
+
+        # ── صف الإحصائيات السريعة ────────────────────────────────────
+        stats_frame = tk.Frame(win, bg=COLOR_BG, padx=15, pady=10)
+        stats_frame.pack(fill="x")
+        self._exam_stats_frame = stats_frame
+
+        # ── شريط الأدوات ─────────────────────────────────────────────
+        toolbar = tk.Frame(win, bg=COLOR_BG, padx=15, pady=0)
+        toolbar.pack(fill="x")
+
+        stage_var = tk.StringVar(value=list(STAGE_LABELS.keys())[0])
+        stage_labels_list = [f"{v}  ({k})" for k, v in STAGE_LABELS.items()]
+        stage_keys = list(STAGE_LABELS.keys())
+
+        tk.Label(toolbar, text="اختر المرحلة:", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="right", padx=(0, 6))
+        stage_combo = make_combo(toolbar, stage_var, stage_labels_list, width=28)
+        stage_combo.current(0)
+        stage_combo.pack(side="right")
+
+        ModernButton(toolbar, "تسجيل نتيجة امتحان", icon="➕", color=COLOR_SUCCESS,
+                     command=lambda: self._add_exam_attempt_dialog(
+                         win, cid, stage_keys[stage_combo.current()],
+                         lambda: self._refresh_exam_window(win, cid, tree_ref, self._exam_stats_frame))
+                     ).pack(side="right", padx=(8, 0), ipady=2)
+
+        ModernButton(toolbar, "حذف المحدد", icon="🗑️", color=COLOR_DANGER,
+                     command=lambda: self._delete_exam_attempt(cid, tree_ref,
+                         lambda: self._refresh_exam_window(win, cid, tree_ref, self._exam_stats_frame))
+                     ).pack(side="left", padx=(0, 0), ipady=2)
+
+        # ── جدول النتائج ─────────────────────────────────────────────
+        table_frame = tk.Frame(win, bg=COLOR_BG, padx=15, pady=5)
+        table_frame.pack(fill="both", expand=True)
+
+        tree_ref = create_treeview(table_frame,
+            ("id","stage","exam_date","score","result","notes"),
+            ("رقم","المرحلة","تاريخ الامتحان","العلامة / 40","النتيجة","ملاحظات"),
+            (40, 180, 120, 110, 100, 220), height=15)
+
+        ModernButton(win, "إغلاق", win.destroy, color=COLOR_TEXT_LIGHT).pack(pady=8)
+
+        self._refresh_exam_window(win, cid, tree_ref, self._exam_stats_frame)
+
+    def _refresh_exam_window(self, win, cid, tree, stats_frame):
+        attempts = ExamAttemptsDB.get_by_candidate(cid)
+        values = []
+        for a in attempts:
+            stage_label = STAGE_LABELS.get(a['stage_type'], a['stage_type'])
+            result_icon = "✅ ناجح" if a['result'] == STATUS_PASS else "❌ راسب"
+            values.append((a['id'], stage_label, a['exam_date'],
+                           a['score'] if a['score'] else "—",
+                           result_icon, a['notes'] or ""))
+        insert_zebra(tree, values)
+
+        for w in stats_frame.winfo_children():
+            w.destroy()
+
+        stats_by_stage = {s['stage_type']: s
+                          for s in ExamAttemptsDB.get_stats_by_stage()}
+
+        for code, label in STAGE_LABELS.items():
+            s = stats_by_stage.get(code, {'total': 0, 'passed': 0})
+            total  = s.get('total', 0) or 0
+            passed = s.get('passed', 0) or 0
+            rate   = (passed / total * 100) if total > 0 else 0
+            color  = COLOR_SUCCESS if rate >= 50 else (COLOR_DANGER if total > 0 else COLOR_TEXT_LIGHT)
+
+            sc = tk.Frame(stats_frame, bg=COLOR_CARD, padx=14, pady=10,
+                          highlightthickness=1, highlightbackground=COLOR_BORDER)
+            sc.pack(side="right", fill="both", expand=True, padx=6)
+            tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(anchor="e")
+            tk.Label(sc, text=f"{rate:.0f}%  نجاح", font=(FONT_FAMILY, 18, "bold"),
+                     bg=COLOR_CARD, fg=color).pack(anchor="e")
+            tk.Label(sc, text=f"إجمالي المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
+                     font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor="e")
+
+    def _add_exam_attempt_dialog(self, parent_win, cid, stage_type, on_save):
+        dlg = tk.Toplevel(parent_win)
+        dlg.title("تسجيل نتيجة امتحان")
+        dlg.geometry("440x360")
+        dlg.configure(bg=COLOR_BG)
+        dlg.transient(parent_win)
+        dlg.grab_set()
+
+        tk.Label(dlg, text="تسجيل نتيجة امتحان جديدة",
+                 font=(FONT_FAMILY, 15, "bold"), bg=COLOR_BG, fg=COLOR_HEADER).pack(pady=(18, 10))
+
+        outer, body = make_card(dlg, padding=18)
+        outer.pack(fill="both", expand=True, padx=15, pady=(0, 10))
+
+        vars_ = {}
+
+        def field_row(label, key, widget_type="entry", options=None, default=""):
+            row = tk.Frame(body, bg=COLOR_CARD); row.pack(fill="x", pady=5)
+            tk.Label(row, text=label, font=FONT_BOLD, bg=COLOR_CARD,
+                     fg=COLOR_TEXT, width=14, anchor="e").pack(side="right")
+            v = tk.StringVar(value=default)
+            vars_[key] = v
+            if widget_type == "combo":
+                w = make_combo(row, v, options, width=18)
+                w.set(options[0] if options else "")
+                if default:
+                    w.set(default)
+            else:
+                w = make_entry(row, v, width=20)
+            w.pack(side="left", fill="x", expand=True, padx=(8, 0), ipady=3)
+
+        stage_label = STAGE_LABELS.get(stage_type, stage_type)
+        tk.Label(body, text=f"المرحلة: {stage_label}",
+                 font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
+                 fg=COLOR_PRIMARY, anchor="e").pack(fill="x", pady=(0, 8))
+
+        field_row("تاريخ الامتحان:", "exam_date", default=str(date.today()))
+        field_row("العلامة (/ 40):", "score", default="0")
+        field_row("النتيجة:", "result", "combo", ["راسب", "ناجح"], default="راسب")
+        field_row("ملاحظات:", "notes", default="")
+
+        def _save():
+            try:
+                score_val = float(vars_['score'].get() or 0)
+            except ValueError:
+                show_error("العلامة يجب أن تكون رقماً")
+                return
+            ExamAttemptsDB.add({
+                'candidate_id': cid,
+                'stage_type':   stage_type,
+                'exam_date':    vars_['exam_date'].get() or str(date.today()),
+                'score':        score_val,
+                'result':       vars_['result'].get(),
+                'notes':        vars_['notes'].get(),
+            })
+            dlg.destroy()
+            on_save()
+            show_info("تم تسجيل نتيجة الامتحان بنجاح!")
+
+        btn_frame = tk.Frame(dlg, bg=COLOR_BG); btn_frame.pack(fill="x", padx=15, pady=(0, 12))
+        ModernButton(btn_frame, "حفظ", _save, icon="💾", color=COLOR_SUCCESS).pack(side="right", ipady=2)
+        ModernButton(btn_frame, "إلغاء", dlg.destroy, color=COLOR_TEXT_LIGHT).pack(side="left", ipady=2)
+
+    def _delete_exam_attempt(self, cid, tree, on_delete):
+        sel = tree.selection()
+        if not sel:
+            show_error("الرجاء تحديد سجل لحذفه")
+            return
+        attempt_id = tree.item(sel[0])['values'][0]
+        if not confirm_delete("هذه النتيجة"):
+            return
+        ExamAttemptsDB.delete(attempt_id)
+        on_delete()
+        show_info("تم حذف نتيجة الامتحان.")
 
     def _quick_pass(self):
         active = self._get_active_stage()
