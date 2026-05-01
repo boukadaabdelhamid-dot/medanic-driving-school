@@ -553,6 +553,8 @@ class CandidateDB:
         conn = get_connection()
         conn.execute("DELETE FROM training_stages WHERE candidate_id=?", (i,))
         conn.execute("DELETE FROM payments WHERE candidate_id=?", (i,))
+        conn.execute("DELETE FROM exam_results WHERE candidate_id=?", (i,))
+        conn.execute("DELETE FROM sessions WHERE candidate_id=?", (i,))
         conn.execute("DELETE FROM candidates WHERE id=?", (i,))
         conn.commit()
         conn.close()
