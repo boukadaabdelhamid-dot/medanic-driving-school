@@ -5446,7 +5446,7 @@ class DocumentsFrame(tk.Frame):
 
         school = SchoolInfoDB.get()
         addr = school.get('address', '')
-        default_wilaya = addr.split()[-1] if addr else ""
+        default_wilaya = school.get('wilaya', '').strip() or (addr.split()[-1] if addr else "")
 
         # =========================================================
         #  نافذة الإعداد الحوارية
@@ -5912,7 +5912,7 @@ class DocumentsFrame(tk.Frame):
         lbl_entry(rc_frame, "مركز الامتحان", "exam_center", "")
         lbl_entry(rc_frame, "رقم الوثيقة (ر.ت)", "doc_ref", "")
         lbl_entry(rc_frame, "الولاية", "wilaya",
-                  school.get('address','').split()[-1] if school.get('address') else "")
+                  school.get('wilaya', '').strip() or (school.get('address','').split()[-1] if school.get('address') else ""))
 
         tk.Frame(rc_frame, bg=COLOR_BORDER, height=1).pack(fill="x", pady=10)
         section_title(rc_frame, "طبيعة الامتحان", icon="📝")
