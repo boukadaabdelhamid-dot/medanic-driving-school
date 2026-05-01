@@ -2721,10 +2721,42 @@ class DocumentsFrame(tk.Frame):
 
         bottom = tk.Frame(wrap, bg=COLOR_BG); bottom.pack(fill="both", expand=True)
 
-        # يمين: قائمة الوثائق
-        right = tk.Frame(bottom, bg=COLOR_BG, width=320); right.pack(side="right", fill="y")
-        right.pack_propagate(False)
-        ro, rc = make_card(right); ro.pack(fill="both", expand=True, padx=(10, 0))
+        # ===== يمين: قائمة الوثائق (قابلة للتمرير) =====
+        right_outer = tk.Frame(bottom, bg=COLOR_BG, width=300)
+        right_outer.pack(side="right", fill="y", padx=(8, 0))
+        right_outer.pack_propagate(False)
+
+        # إطار الكارد الخارجي
+        right_card_outer = tk.Frame(right_outer, bg=COLOR_BORDER, padx=1, pady=1)
+        right_card_outer.pack(fill="both", expand=True)
+
+        # Canvas قابل للتمرير داخل الكارد
+        docs_canvas = tk.Canvas(right_card_outer, bg=COLOR_CARD, highlightthickness=0)
+        docs_vsb = ttk.Scrollbar(right_card_outer, orient="vertical",
+                                  command=docs_canvas.yview)
+        docs_inner = tk.Frame(docs_canvas, bg=COLOR_CARD, padx=10, pady=10)
+
+        docs_inner.bind("<Configure>",
+                        lambda e: docs_canvas.configure(
+                            scrollregion=docs_canvas.bbox("all")))
+        win_id = docs_canvas.create_window((0, 0), window=docs_inner, anchor="nw")
+        docs_canvas.configure(yscrollcommand=docs_vsb.set)
+
+        # تمرير بعجلة الماوس
+        def _on_mousewheel(event):
+            docs_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        docs_canvas.bind("<MouseWheel>", _on_mousewheel)
+        docs_inner.bind("<MouseWheel>", _on_mousewheel)
+
+        # ضبط عرض الـ inner عند تغيير حجم الـ canvas
+        def _resize_inner(event):
+            docs_canvas.itemconfig(win_id, width=event.width)
+        docs_canvas.bind("<Configure>", _resize_inner)
+
+        docs_vsb.pack(side="right", fill="y")
+        docs_canvas.pack(side="left", fill="both", expand=True)
+
+        rc = docs_inner  # الآن rc هو الإطار الداخلي القابل للتمرير
 
         section_title(rc, "وثائق فردية (للمترشح المحدد)", icon="📄")
         docs_individual = [
@@ -2738,7 +2770,7 @@ class DocumentsFrame(tk.Frame):
         for label, icon, cmd in docs_individual:
             ModernButton(rc, label, cmd, icon=icon, color=COLOR_PRIMARY).pack(fill="x", pady=2)
 
-        tk.Frame(rc, bg=COLOR_BORDER, height=2).pack(fill="x", pady=10)
+        tk.Frame(rc, bg=COLOR_BORDER, height=2).pack(fill="x", pady=8)
 
         section_title(rc, "وثائق جماعية", icon="📊")
         docs_group = [
@@ -2748,17 +2780,17 @@ class DocumentsFrame(tk.Frame):
             ("تقرير المدفوعات", "💰", self._doc_payments_report),
         ]
         for label, icon, cmd in docs_group:
-            ModernButton(rc, label, cmd, icon=icon, color=COLOR_PURPLE).pack(fill="x", pady=4)
+            ModernButton(rc, label, cmd, icon=icon, color=COLOR_PURPLE).pack(fill="x", pady=3)
 
-        tk.Frame(rc, bg=COLOR_BORDER, height=2).pack(fill="x", pady=10)
+        tk.Frame(rc, bg=COLOR_BORDER, height=2).pack(fill="x", pady=8)
 
         section_title(rc, "وثائق الامتحانات", icon="📝")
         ModernButton(rc, "قائمة المترشحين للامتحان", self._doc_exam_candidates_list,
-                     icon="📋", color="#0369a1").pack(fill="x", pady=4)
+                     icon="📋", color="#0369a1").pack(fill="x", pady=3)
 
-        tip = tk.Frame(rc, bg=COLOR_PRIMARY_LIGHT, padx=12, pady=10)
-        tip.pack(fill="x", pady=(15, 0))
-        tk.Label(tip, text="💡 اختر مترشحاً ثم اضغط على نوع الوثيقة\nسيُحفظ الملف بصيغة PDF",
+        tip = tk.Frame(rc, bg=COLOR_PRIMARY_LIGHT, padx=10, pady=8)
+        tip.pack(fill="x", pady=(12, 0))
+        tk.Label(tip, text="💡 اختر مترشحاً ثم اضغط\nعلى نوع الوثيقة → PDF",
                  font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT,
                  fg=COLOR_PRIMARY_DARK, justify="right",
                  anchor="e").pack(anchor="e")
@@ -3771,72 +3803,102 @@ class DocumentsFrame(tk.Frame):
                            selectcolor=COLOR_PRIMARY_LIGHT,
                            anchor="e", justify="right").pack(fill="x", pady=2)
 
-        # --- يسار: قائمة المترشحين بـ Treeview قابلة للتحديد المتعدد ---
+        # --- يسار: قائمة المترشحين ---
         left_col = tk.Frame(body, bg=COLOR_BG)
         left_col.pack(side="left", fill="both", expand=True)
 
-        lo, lc_frame = make_card(left_col, padding=10)
-        lo.pack(fill="both", expand=True)
+        # عنوان + شريط بحث
+        top_bar = tk.Frame(left_col, bg=COLOR_CARD, padx=8, pady=6,
+                           relief="flat", bd=0)
+        top_bar.pack(fill="x")
 
-        section_title(lc_frame, "اختر المترشحين", icon="👥")
+        tk.Label(top_bar, text="👥  اختر المترشحين",
+                 font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
+                 fg=COLOR_PRIMARY, anchor="e").pack(fill="x")
 
-        # شريط بحث
         sv = tk.StringVar()
-        search_row = tk.Frame(lc_frame, bg=COLOR_CARD); search_row.pack(fill="x", pady=(0, 4))
-        tk.Label(search_row, text="🔍", bg=COLOR_CARD, fg=COLOR_PRIMARY,
-                 font=(FONT_FAMILY, 12)).pack(side="right", padx=(0, 4))
-        make_entry(search_row, sv, width=28).pack(side="right", fill="x", expand=True, ipady=4)
+        sr = tk.Frame(top_bar, bg=COLOR_CARD); sr.pack(fill="x", pady=(4, 0))
+        tk.Label(sr, text="🔍", bg=COLOR_CARD, fg=COLOR_PRIMARY,
+                 font=(FONT_FAMILY, 11)).pack(side="right", padx=(0, 4))
+        make_entry(sr, sv, width=30).pack(side="right", fill="x", expand=True, ipady=3)
 
         # أزرار تحديد الكل / إلغاء الكل
-        sel_row = tk.Frame(lc_frame, bg=COLOR_CARD); sel_row.pack(fill="x", pady=(0, 4))
-
-        # Treeview مع عمود ✓ للتحديد
-        cand_tree = ttk.Treeview(lc_frame,
-                                 columns=("sel", "name", "lic", "birth"),
-                                 show="headings", height=16,
-                                 style="Modern.Treeview",
-                                 selectmode="extended")
-        cand_tree.heading("sel",   text="✓",          anchor="center")
-        cand_tree.heading("name",  text="اللقب والاسم", anchor="center")
-        cand_tree.heading("lic",   text="الصنف",       anchor="center")
-        cand_tree.heading("birth", text="تاريخ الميلاد", anchor="center")
-        cand_tree.column("sel",   width=40,  anchor="center", stretch=False)
-        cand_tree.column("name",  width=200, anchor="center")
-        cand_tree.column("lic",   width=60,  anchor="center", stretch=False)
-        cand_tree.column("birth", width=110, anchor="center")
-
-        vsb_c = ttk.Scrollbar(lc_frame, orient="vertical", command=cand_tree.yview)
-        cand_tree.configure(yscrollcommand=vsb_c.set)
-        cand_tree.pack(side="left", fill="both", expand=True)
-        vsb_c.pack(side="right", fill="y")
+        sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
+        sel_row.pack(fill="x")
 
         # مجموعة iids المحددة
         selected_set = set()
-        all_iids = []
+
+        def select_all():
+            for c in all_cands: selected_set.add(c['id'])
+            populate_tree(sv.get().strip())
+
+        def deselect_all():
+            selected_set.clear()
+            populate_tree(sv.get().strip())
+
+        tk.Button(sel_row, text="✓ تحديد الكل", font=FONT_SMALL,
+                  bg=COLOR_SUCCESS, fg="white", relief="flat", padx=10, pady=4,
+                  cursor="hand2", command=select_all).pack(side="right", padx=3)
+        tk.Button(sel_row, text="✗ إلغاء الكل", font=FONT_SMALL,
+                  bg="#94a3b8", fg="white", relief="flat", padx=10, pady=4,
+                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
+        tk.Label(sel_row,
+                 text="اضغط على أي صف لتحديده / إلغاء تحديده",
+                 font=FONT_TINY, bg="#e0f2fe", fg="#0369a1",
+                 anchor="e").pack(side="right", padx=8)
+
+        # حاوية الجدول
+        tree_frame = tk.Frame(left_col, bg=COLOR_CARD)
+        tree_frame.pack(fill="both", expand=True)
+
+        # Treeview مع عمود ✓ للتحديد
+        cand_tree = ttk.Treeview(tree_frame,
+                                 columns=("sel", "num", "name", "lic", "birth"),
+                                 show="headings",
+                                 style="Modern.Treeview",
+                                 selectmode="browse")
+        cand_tree.heading("sel",   text="✓",             anchor="center")
+        cand_tree.heading("num",   text="رقم",            anchor="center")
+        cand_tree.heading("name",  text="اللقب والاسم",   anchor="center")
+        cand_tree.heading("lic",   text="الصنف",          anchor="center")
+        cand_tree.heading("birth", text="تاريخ الميلاد",  anchor="center")
+        cand_tree.column("sel",   width=35,  anchor="center", stretch=False)
+        cand_tree.column("num",   width=45,  anchor="center", stretch=False)
+        cand_tree.column("name",  width=220, anchor="center")
+        cand_tree.column("lic",   width=55,  anchor="center", stretch=False)
+        cand_tree.column("birth", width=110, anchor="center")
+
+        vsb_c = ttk.Scrollbar(tree_frame, orient="vertical", command=cand_tree.yview)
+        cand_tree.configure(yscrollcommand=vsb_c.set)
+        vsb_c.pack(side="right", fill="y")
+        cand_tree.pack(side="left", fill="both", expand=True)
+
+        # تحديد الكل مبدئياً
+        for c in all_cands:
+            selected_set.add(c['id'])
 
         def populate_tree(filter_text=""):
             for item in cand_tree.get_children():
                 cand_tree.delete(item)
-            all_iids.clear()
-            for i, cand in enumerate(all_cands):
+            idx = 0
+            for cand in all_cands:
                 full = f"{cand['last_name']} {cand['first_name']}"
                 if filter_text and filter_text.lower() not in full.lower() \
                         and filter_text not in cand.get('phone', ''):
                     continue
                 iid = str(cand['id'])
-                chk = "✓" if cand['id'] in selected_set else ""
-                tag = "even" if i % 2 == 0 else "odd"
+                chk = "✓" if cand['id'] in selected_set else "○"
+                tag = "sel" if cand['id'] in selected_set else ("even" if idx % 2 == 0 else "odd")
                 cand_tree.insert("", "end", iid=iid, tags=(tag,),
-                                 values=(chk, full,
+                                 values=(chk, idx + 1, full,
                                          cand.get('license_type', 'B'),
                                          cand.get('birth_date', '')))
-                all_iids.append(iid)
-            cand_tree.tag_configure("even", background="#f0f9ff")
-            cand_tree.tag_configure("odd",  background=COLOR_CARD)
+                idx += 1
+            cand_tree.tag_configure("sel",  background="#bfdbfe", foreground="#1e3a8a")
+            cand_tree.tag_configure("even", background="#f8fafc",  foreground=COLOR_TEXT)
+            cand_tree.tag_configure("odd",  background=COLOR_CARD, foreground=COLOR_TEXT)
 
-        # تحديد كل المترشحين مبدئياً
-        for cand in all_cands:
-            selected_set.add(cand['id'])
         populate_tree()
 
         def toggle_item(event):
@@ -3851,23 +3913,6 @@ class DocumentsFrame(tk.Frame):
             populate_tree(sv.get().strip())
 
         cand_tree.bind("<Button-1>", toggle_item)
-
-        def select_all():
-            for cand in all_cands:
-                selected_set.add(cand['id'])
-            populate_tree(sv.get().strip())
-
-        def deselect_all():
-            selected_set.clear()
-            populate_tree(sv.get().strip())
-
-        tk.Button(sel_row, text="✓ تحديد الكل", font=FONT_SMALL,
-                  bg=COLOR_SUCCESS, fg="white", relief="flat", padx=8, pady=3,
-                  cursor="hand2", command=select_all).pack(side="right", padx=3)
-        tk.Button(sel_row, text="✗ إلغاء الكل", font=FONT_SMALL,
-                  bg=COLOR_TEXT_LIGHT, fg="white", relief="flat", padx=8, pady=3,
-                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
-
         sv.trace("w", lambda *a: populate_tree(sv.get().strip()))
 
         # --- شريط الأزرار السفلي ---
