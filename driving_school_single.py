@@ -2170,6 +2170,8 @@ class CandidatesFrame(tk.Frame):
                      icon="📊", color=COLOR_PURPLE).pack(side="right", padx=4)
         ModernButton(left_head, "بطاقة التكوين", self._print_training_card,
                      icon="📋", color=COLOR_ACCENT).pack(side="right", padx=4)
+        ModernButton(left_head, "طباعة الاستمارة", self._print_application_form,
+                     icon="📄", color="#0369a1").pack(side="right", padx=4)
         if _can_edit:
             ModernButton(left_head, "حذف", self._delete,
                          icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
@@ -2283,6 +2285,14 @@ class CandidatesFrame(tk.Frame):
         temp_doc = DocumentsFrame(self)
         temp_doc.selected_candidate_id = self.selected_id
         temp_doc._doc_training_card()
+        temp_doc.destroy()
+
+    def _print_application_form(self):
+        if not self.selected_id:
+            show_error("يرجى تحديد مترشح من القائمة أولاً"); return
+        temp_doc = DocumentsFrame(self)
+        temp_doc.selected_candidate_id = self.selected_id
+        temp_doc._doc_exam_form()
         temp_doc.destroy()
 
 
@@ -4393,7 +4403,7 @@ class DocumentsFrame(tk.Frame):
         section_title(rc, "وثائق فردية (للمترشح المحدد)", icon="📄")
         docs_individual = [
             ("جدول إرسال", "📋", self._doc_dispatch_table),
-            ("استمارة اجتياز الامتحان", "📄", self._doc_exam_form),
+            ("استمارة الترشح الرسمية", "📄", self._doc_exam_form),
             ("بطاقة التكوين", "📋", self._doc_training_card),
             ("عقد التكوين", "📜", self._doc_contract),
             ("شهادة إدارية", "🏛️", self._doc_certificate),
@@ -4708,9 +4718,11 @@ class DocumentsFrame(tk.Frame):
         c.setLineWidth(1.0)
         draw_rect(5.0, 22.4, 4.5, 1.0)
         draw_text(12.0, 22.8, "تاريخ إيداع الملف", ARABIC_FONT, 11, "right")
+        draw_text(7.25, 22.75, cand.get('file_date', '') or "", "Helvetica-Bold", 11, "center")
         
         draw_rect(5.0, 21.0, 4.5, 1.0)
         draw_text(12.0, 21.4, "رقم الملف", ARABIC_FONT, 11, "right")
+        draw_text(7.25, 21.35, cand.get('file_number', '') or "", "Helvetica-Bold", 11, "center")
         
         # خط فاصل سميك
         c.setLineWidth(2.5)
@@ -4878,13 +4890,7 @@ class DocumentsFrame(tk.Frame):
         draw_text(19.5, yt_f, "و", ARABIC_FONT, 9, "center")
 
         c.save()
-        try:
-            # محاولة الطباعة المباشرة
-            os.startfile(path, 'print')
-        except Exception:
-            # في حال فشل الطباعة المباشرة، نكتفي بفتح الملف
-            try: os.startfile(path)
-            except Exception as e: show_error(f"خطأ: {e}")
+        self._trigger_print(path, "استمارة الترشح")
 
     def _doc_training_card(self):
         if not self._check(): return
