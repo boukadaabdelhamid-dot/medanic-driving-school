@@ -257,6 +257,12 @@ def upgrade_db():
             if col not in inst_existing:
                 conn.execute(f"ALTER TABLE instructors ADD COLUMN {col} {dtype}")
 
+        # عمود الولاية في جدول school_info
+        cur3 = conn.execute("PRAGMA table_info(school_info)")
+        school_existing = {row[1] for row in cur3.fetchall()}
+        if "wilaya" not in school_existing:
+            conn.execute("ALTER TABLE school_info ADD COLUMN wilaya TEXT DEFAULT ''")
+
         # جدول محاولات الامتحانات (جديد)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS exam_attempts (
@@ -506,9 +512,10 @@ class SchoolInfoDB:
     def update(d):
         conn = get_connection()
         conn.execute("""UPDATE school_info SET name=?,commercial_register=?,
-            accreditation_number=?,nif=?,nis=?,article_number=?,address=?,phone=? WHERE id=1""",
+            accreditation_number=?,nif=?,nis=?,article_number=?,address=?,phone=?,wilaya=? WHERE id=1""",
             (d['name'], d['commercial_register'], d['accreditation_number'],
-             d['nif'], d['nis'], d['article_number'], d['address'], d['phone']))
+             d['nif'], d['nis'], d['article_number'], d['address'], d['phone'],
+             d.get('wilaya', '')))
         conn.commit()
         conn.close()
 
@@ -1622,13 +1629,20 @@ class SchoolInfoFrame(tk.Frame):
         self.vars["phone"] = v_phone
         make_entry(f_phone, v_phone, width=32).pack(fill="x", ipady=4, pady=(2, 0))
         
-        # 2. الصف الثاني: العنوان (كامل العرض)
+        # 2. الصف الثاني: العنوان + الولاية
         f_addr = tk.Frame(grid, bg=COLOR_CARD)
-        f_addr.grid(row=1, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
+        f_addr.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
         make_label(f_addr, "العنوان", font=FONT_BOLD).pack(anchor="e")
         v_addr = tk.StringVar()
         self.vars["address"] = v_addr
-        make_entry(f_addr, v_addr, width=70).pack(fill="x", ipady=4, pady=(2, 0))
+        make_entry(f_addr, v_addr, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+
+        f_wilaya = tk.Frame(grid, bg=COLOR_CARD)
+        f_wilaya.grid(row=1, column=1, sticky="ew", padx=10, pady=5)
+        make_label(f_wilaya, "الولاية", font=FONT_BOLD).pack(anchor="e")
+        v_wilaya = tk.StringVar()
+        self.vars["wilaya"] = v_wilaya
+        make_entry(f_wilaya, v_wilaya, width=32).pack(fill="x", ipady=4, pady=(2, 0))
         
         # 3. بقية الحقول (CR, Accreditation, NIF, NIS, Article)
         other_fields = [
@@ -2653,7 +2667,7 @@ class InstructorsFrame(tk.Frame):
 
         # 5. الخاتمة والتوقيعات
         y -= 1.5
-        wilaya = school.get('address', '').split(' ')[-1] if school.get('address') else '........'
+        wilaya = school.get('wilaya', '').strip() or (school.get('address', '').split(' ')[-1] if school.get('address') else '........')
         sig_date = ins.get('contract_signing_date','') or "...................."
         draw_text(12.0, y, f"حرر بـ: {wilaya}              في: {sig_date}", size=12)
 
@@ -4896,7 +4910,7 @@ class DocumentsFrame(tk.Frame):
         draw_text(10.5, 27.8, "وزارة الداخلية والجماعات المحلية والتهيئة العمرانية", ARABIC_FONT_BOLD, 12, "center")
         draw_text(10.5, 27.1, "المندوبية الوطنية للأمن في الطرق", ARABIC_FONT_BOLD, 12, "center")
         
-        wilaya = school.get('address', '').split(' ')[-1] if school.get('address') else '........'
+        wilaya = school.get('wilaya', '').strip() or (school.get('address', '').split(' ')[-1] if school.get('address') else '........')
         draw_text(19.5, 26.3, f"المندوبية الولائية للأمن في الطرق لولاية : {wilaya}", ARABIC_FONT_BOLD, 12, "right")
         
         # 2. المربعات العلوية (صورة، عنوان، ختم)
@@ -5135,10 +5149,12 @@ class DocumentsFrame(tk.Frame):
         draw_text(10.5, 28.7, "الجمهورية الجزائرية الديمقراطية الشعبية", ARABIC_FONT_BOLD, 12, "center")
         
         # جهة اليمين
+        school_w = SchoolInfoDB.get()
+        school_wilaya = school_w.get('wilaya', '').strip() or (school_w.get('address', '').split(' ')[-1] if school_w.get('address') else '........')
         y_head = 27.8
-        draw_text(20.0, y_head, "ولاية معسكر", ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_head, f"ولاية {school_wilaya}", ARABIC_FONT_BOLD, 11)
         draw_text(20.0, y_head-0.6, "المركز الوطني لرخصة السياقة", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_head-1.2, "الفرع المحلي لولاية معسكر", ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_head-1.2, f"الفرع المحلي لولاية {school_wilaya}", ARABIC_FONT_BOLD, 11)
         
         # مربع الصورة/الختم يسار
         draw_rect(1.5, 25.5, 2.5, 3.5)
@@ -5310,8 +5326,7 @@ class DocumentsFrame(tk.Frame):
                    27.5, font=ARABIC_FONT_BOLD, size=13)
         txt_center("المندوبية الوطنية للأمن في الطرق",
                    26.7, size=11)
-        # نستخرج الولاية من عنوان المدرسة إن أمكن
-        wilaya_school = school.get('address', '')
+        wilaya_school = school.get('wilaya', '').strip() or school.get('address', '')
         txt_center(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_school}",
                    25.9, size=11)
         txt_center(f"مدرسة تعليم السياقة  {school.get('name', '')}",
