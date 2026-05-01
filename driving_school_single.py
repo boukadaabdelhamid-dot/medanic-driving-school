@@ -14,6 +14,8 @@ Python 3 | Tkinter | SQLite | reportlab + arabic_reshaper + python-bidi (PDF ع�
 import os
 import sys
 import sqlite3
+import hashlib
+import json
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import date, datetime, timedelta
@@ -100,6 +102,35 @@ BLOOD_TYPE_OPTIONS     = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 EXPENSE_TYPES          = ["وقود","صيانة","كراء","رواتب","تأمين","إعلان","مستلزمات مكتبية","أخرى"]
 EXAM_TYPE_OPTIONS      = ["نظري", "تطبيقي"]
 EXAM_RESULT_OPTIONS    = ["ناجح", "راسب"]
+
+# ── الصلاحيات ──────────────────────────────────────────────────────────────
+PERMISSION_LABELS = {
+    "view_candidates":    "عرض المترشحين",
+    "edit_candidates":    "إضافة / تعديل / حذف المترشحين",
+    "view_payments":      "عرض المدفوعات",
+    "add_payments":       "إضافة المدفوعات",
+    "view_expenses":      "عرض المصاريف",
+    "view_training":      "عرض مراحل التكوين",
+    "view_schedule":      "عرض الجدول الزمني",
+    "print_docs":         "طباعة الوثائق",
+    "view_reports":       "عرض التقارير",
+    "manage_school_info": "إدارة معلومات المدرسة",
+}
+PERMISSION_KEYS = list(PERMISSION_LABELS.keys())
+
+# صلاحية مطلوبة لكل صفحة (None = لا قيد — دائماً مرئية)
+NAV_PERMISSIONS = {
+    0: None,                   # الرئيسية
+    1: "manage_school_info",   # معلومات المدرسة
+    2: "view_candidates",      # المترشحون
+    3: None,                   # الممرنون (admin فقط — يُعالَج منفصلاً)
+    4: "view_training",        # مراحل التكوين
+    5: "view_schedule",        # الجدول الزمني
+    6: "view_payments",        # المدفوعات
+    7: "view_expenses",        # المصاريف
+    8: "view_reports",         # التقارير
+    9: "print_docs",           # طباعة الوثائق
+}
 
 
 # ============================================================================
@@ -237,6 +268,30 @@ def upgrade_db():
             )
         """)
 
+        # جدول المستخدمين (نظام الدخول)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role TEXT DEFAULT 'trainer',
+                full_name TEXT DEFAULT '',
+                permissions TEXT DEFAULT '{}'
+            )
+        """)
+
+        # إنشاء حساب المدير الافتراضي إن لم يوجد
+        existing_admin = conn.execute(
+            "SELECT id FROM users WHERE username='admin'"
+        ).fetchone()
+        if not existing_admin:
+            admin_hash = hashlib.sha256(b"admin123").hexdigest()
+            conn.execute(
+                """INSERT INTO users (username, password_hash, role, full_name, permissions)
+                   VALUES ('admin', ?, 'admin', 'مدير النظام', '{}')""",
+                (admin_hash,)
+            )
+
         conn.commit()
     except Exception:
         pass
@@ -355,6 +410,15 @@ def init_db():
             result TEXT DEFAULT 'راسب',
             notes TEXT DEFAULT '',
             FOREIGN KEY (candidate_id) REFERENCES candidates(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'trainer',
+            full_name TEXT DEFAULT '',
+            permissions TEXT DEFAULT '{}'
         );
 
     """)
@@ -1032,6 +1096,102 @@ class ExamResultDB:
         """, (str(year),)).fetchall()
         conn.close()
         return [dict(r) for r in rows]
+
+
+class UserDB:
+    """طبقة الوصول لجدول المستخدمين."""
+
+    @staticmethod
+    def _hash(password: str) -> str:
+        return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _parse(row: dict) -> dict:
+        try:
+            row["permissions"] = json.loads(row.get("permissions") or "{}")
+        except Exception:
+            row["permissions"] = {}
+        return row
+
+    @staticmethod
+    def authenticate(username: str, password: str):
+        conn = get_connection()
+        row = conn.execute(
+            "SELECT * FROM users WHERE username=?", (username,)
+        ).fetchone()
+        conn.close()
+        if not row:
+            return None
+        u = dict(row)
+        if u["password_hash"] != UserDB._hash(password):
+            return None
+        return UserDB._parse(u)
+
+    @staticmethod
+    def get_all():
+        conn = get_connection()
+        rows = conn.execute(
+            "SELECT * FROM users ORDER BY role DESC, username"
+        ).fetchall()
+        conn.close()
+        return [UserDB._parse(dict(r)) for r in rows]
+
+    @staticmethod
+    def get(uid):
+        conn = get_connection()
+        row = conn.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+        conn.close()
+        return UserDB._parse(dict(row)) if row else None
+
+    @staticmethod
+    def add(d: dict):
+        conn = get_connection()
+        perm = json.dumps(d.get("permissions", {}), ensure_ascii=False)
+        conn.execute(
+            """INSERT INTO users (username, password_hash, role, full_name, permissions)
+               VALUES (?,?,?,?,?)""",
+            (d["username"], UserDB._hash(d["password"]),
+             d.get("role", "trainer"), d.get("full_name", ""), perm)
+        )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def update(uid, d: dict):
+        conn = get_connection()
+        perm = json.dumps(d.get("permissions", {}), ensure_ascii=False)
+        conn.execute(
+            "UPDATE users SET full_name=?, role=?, permissions=? WHERE id=?",
+            (d.get("full_name", ""), d.get("role", "trainer"), perm, uid)
+        )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def change_password(uid, new_password: str):
+        conn = get_connection()
+        conn.execute(
+            "UPDATE users SET password_hash=? WHERE id=?",
+            (UserDB._hash(new_password), uid)
+        )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def delete(uid):
+        conn = get_connection()
+        conn.execute("DELETE FROM users WHERE id=?", (uid,))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def has_perm(user: dict, key: str) -> bool:
+        """هل يملك المستخدم صلاحية معيّنة؟ admin لديه كل الصلاحيات دائماً."""
+        if not user:
+            return False
+        if user.get("role") == "admin":
+            return True
+        return bool(user.get("permissions", {}).get(key, False))
 
 
 # ============================================================================
@@ -5796,13 +5956,432 @@ class LoginWindow:
 
 
 # ============================================================================
+#  نافذة تسجيل الدخول
+# ============================================================================
+
+class LoginWindow:
+    """نافذة تسجيل الدخول — تظهر عند بدء البرنامج."""
+
+    def __init__(self):
+        init_db()
+        upgrade_db()
+
+        self.root = tk.Tk()
+        self.root.title("تسجيل الدخول — برنامج ميدانيك")
+        self.root.geometry("460x560")
+        self.root.resizable(False, False)
+        self.root.configure(bg=COLOR_SIDEBAR)
+        self.root.update_idletasks()
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        x  = (sw - 460) // 2
+        y  = (sh - 560) // 2
+        self.root.geometry(f"460x560+{x}+{y}")
+
+        self._build()
+        self.root.mainloop()
+
+    def _build(self):
+        tk.Frame(self.root, bg=COLOR_ACCENT, height=5).pack(fill="x")
+
+        head = tk.Frame(self.root, bg=COLOR_SIDEBAR, pady=28)
+        head.pack(fill="x")
+        tk.Label(head, text="🚗", font=(FONT_FAMILY, 38),
+                 bg=COLOR_SIDEBAR, fg=COLOR_ACCENT).pack()
+        tk.Label(head, text="ميدانيك", font=(FONT_FAMILY, 22, "bold"),
+                 bg=COLOR_SIDEBAR, fg="white").pack(pady=(4, 0))
+        tk.Label(head, text="إدارة مدرسة تعليم السياقة — الجزائر",
+                 font=(FONT_FAMILY, 9), bg=COLOR_SIDEBAR, fg="#94a3b8").pack(pady=(2, 0))
+
+        card = tk.Frame(self.root, bg=COLOR_CARD, padx=34, pady=28)
+        card.pack(fill="x", padx=24, pady=12)
+
+        tk.Label(card, text="تسجيل الدخول", font=(FONT_FAMILY, 14, "bold"),
+                 bg=COLOR_CARD, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 18))
+
+        tk.Label(card, text="اسم المستخدم", font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._v_user = tk.StringVar()
+        self._e_user = tk.Entry(card, textvariable=self._v_user,
+                                font=FONT_MAIN, bg=COLOR_INPUT_BG,
+                                relief="flat", bd=0, highlightthickness=2,
+                                highlightcolor=COLOR_PRIMARY,
+                                highlightbackground=COLOR_BORDER,
+                                justify="right")
+        self._e_user.pack(fill="x", ipady=10, pady=(4, 14))
+
+        tk.Label(card, text="كلمة المرور", font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._v_pass = tk.StringVar()
+        self._e_pass = tk.Entry(card, textvariable=self._v_pass,
+                                font=FONT_MAIN, show="●",
+                                bg=COLOR_INPUT_BG, relief="flat", bd=0,
+                                highlightthickness=2,
+                                highlightcolor=COLOR_PRIMARY,
+                                highlightbackground=COLOR_BORDER,
+                                justify="right")
+        self._e_pass.pack(fill="x", ipady=10, pady=(4, 22))
+
+        btn_frame = tk.Frame(card, bg=COLOR_PRIMARY, cursor="hand2")
+        btn_frame.pack(fill="x")
+        self._login_lbl = tk.Label(btn_frame, text="  ←  دخول",
+                                   font=(FONT_FAMILY, 13, "bold"),
+                                   bg=COLOR_PRIMARY, fg="white", pady=12)
+        self._login_lbl.pack(fill="x")
+
+        for w in [btn_frame, self._login_lbl]:
+            w.bind("<Button-1>", lambda e: self._do_login())
+            w.bind("<Enter>",    lambda e: (btn_frame.configure(bg=COLOR_PRIMARY_DARK),
+                                            self._login_lbl.configure(bg=COLOR_PRIMARY_DARK)))
+            w.bind("<Leave>",    lambda e: (btn_frame.configure(bg=COLOR_PRIMARY),
+                                            self._login_lbl.configure(bg=COLOR_PRIMARY)))
+
+        self._err_lbl = tk.Label(card, text="", font=FONT_SMALL,
+                                 bg=COLOR_CARD, fg=COLOR_DANGER)
+        self._err_lbl.pack(pady=(10, 0))
+
+        hint = tk.Frame(self.root, bg=COLOR_SIDEBAR, padx=24, pady=8)
+        hint.pack(fill="x")
+        tk.Label(hint, text="🔑  الحساب الافتراضي للمدير:  admin  /  admin123",
+                 font=FONT_TINY, bg=COLOR_SIDEBAR, fg="#64748b",
+                 anchor="e").pack(fill="x")
+
+        self._e_user.bind("<Return>", lambda e: self._e_pass.focus())
+        self._e_pass.bind("<Return>", lambda e: self._do_login())
+        self._e_user.focus()
+
+    def _do_login(self):
+        username = self._v_user.get().strip()
+        password = self._v_pass.get()
+        if not username or not password:
+            self._err_lbl.configure(text="يرجى إدخال اسم المستخدم وكلمة المرور")
+            return
+        user = UserDB.authenticate(username, password)
+        if user is None:
+            self._err_lbl.configure(text="❌  اسم المستخدم أو كلمة المرور غير صحيحة")
+            self._e_pass.delete(0, "end")
+            self._e_pass.focus()
+            return
+        self.root.destroy()
+        DrivingSchoolApp(current_user=user)
+
+
+# ============================================================================
+#  إدارة المستخدمين (حوار)
+# ============================================================================
+
+class UserManagementDialog(tk.Toplevel):
+    """نافذة إدارة المستخدمين — للمدير فقط."""
+
+    def __init__(self, parent, current_user_id=None):
+        super().__init__(parent)
+        self.title("إدارة المستخدمين")
+        self.geometry("860x600")
+        self.resizable(True, True)
+        self.configure(bg=COLOR_BG)
+        self.grab_set()
+        self._current_uid = current_user_id
+        self._selected_uid = None
+        self._build()
+        self._refresh()
+
+    def _build(self):
+        hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=20, pady=14)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="👥  إدارة المستخدمين والصلاحيات",
+                 font=FONT_TITLE, bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
+
+        bar = tk.Frame(self, bg=COLOR_BG, padx=16, pady=10)
+        bar.pack(fill="x")
+        ModernButton(bar, "مستخدم جديد", self._add_user,
+                     color=COLOR_SUCCESS, icon="➕").pack(side="right", padx=(0, 8))
+        ModernButton(bar, "تعديل الصلاحيات", self._edit_user,
+                     color=COLOR_PRIMARY, icon="✏️").pack(side="right", padx=(0, 8))
+        ModernButton(bar, "تغيير كلمة المرور", self._change_pass,
+                     color=COLOR_WARNING, icon="🔑").pack(side="right", padx=(0, 8))
+        ModernButton(bar, "حذف المستخدم", self._delete_user,
+                     color=COLOR_DANGER, icon="🗑").pack(side="right", padx=(0, 8))
+
+        tree_f = tk.Frame(self, bg=COLOR_BG, padx=16, pady=4)
+        tree_f.pack(fill="both", expand=True)
+
+        cols = ("id", "username", "full_name", "role", "perms")
+        self._tree = ttk.Treeview(tree_f, columns=cols, show="headings",
+                                  style="Modern.Treeview", selectmode="browse")
+        hdrs = {"id": ("ID", 40), "username": ("اسم المستخدم", 120),
+                "full_name": ("الاسم الكامل", 160), "role": ("الدور", 90),
+                "perms": ("الصلاحيات الممنوحة", 380)}
+        for c, (h, w) in hdrs.items():
+            self._tree.heading(c, text=h, anchor="e")
+            self._tree.column(c, width=w, anchor="e", minwidth=40)
+        sb = ttk.Scrollbar(tree_f, orient="vertical", command=self._tree.yview,
+                           style="Thin.Vertical.TScrollbar")
+        self._tree.configure(yscrollcommand=sb.set)
+        self._tree.pack(side="right", fill="both", expand=True)
+        sb.pack(side="left", fill="y")
+        self._tree.bind("<<TreeviewSelect>>", self._on_select)
+
+    def _refresh(self):
+        for row in self._tree.get_children():
+            self._tree.delete(row)
+        for u in UserDB.get_all():
+            role_lbl = "مدير" if u["role"] == "admin" else "ممرّن"
+            if u["role"] == "admin":
+                perms_str = "جميع الصلاحيات"
+            else:
+                granted = [PERMISSION_LABELS[k]
+                           for k in PERMISSION_KEYS if u["permissions"].get(k)]
+                perms_str = " | ".join(granted) if granted else "—  لا صلاحيات"
+            self._tree.insert("", "end", iid=str(u["id"]),
+                              values=(u["id"], u["username"],
+                                      u.get("full_name") or "—",
+                                      role_lbl, perms_str))
+
+    def _on_select(self, _=None):
+        sel = self._tree.selection()
+        self._selected_uid = int(sel[0]) if sel else None
+
+    def _get_selected(self):
+        if not self._selected_uid:
+            messagebox.showwarning("تنبيه", "اختر مستخدماً أولاً", parent=self)
+            return None
+        return UserDB.get(self._selected_uid)
+
+    def _add_user(self):
+        dlg = _UserFormDialog(self, title="مستخدم جديد", user=None)
+        self.wait_window(dlg)
+        if dlg.result:
+            try:
+                UserDB.add(dlg.result)
+                self._refresh()
+            except Exception as ex:
+                messagebox.showerror("خطأ", f"فشل الإضافة:\n{ex}", parent=self)
+
+    def _edit_user(self):
+        u = self._get_selected()
+        if not u:
+            return
+        if u.get("role") == "admin":
+            messagebox.showinfo("معلومة",
+                                "حساب المدير يملك دائماً جميع الصلاحيات.", parent=self)
+            return
+        dlg = _UserFormDialog(self, title="تعديل الصلاحيات", user=u)
+        self.wait_window(dlg)
+        if dlg.result:
+            UserDB.update(u["id"], dlg.result)
+            self._refresh()
+
+    def _change_pass(self):
+        u = self._get_selected()
+        if not u:
+            return
+        dlg = _ChangePasswordDialog(self, user=u)
+        self.wait_window(dlg)
+
+    def _delete_user(self):
+        u = self._get_selected()
+        if not u:
+            return
+        if u["id"] == self._current_uid:
+            messagebox.showwarning("تحذير", "لا يمكنك حذف حسابك الخاص.", parent=self)
+            return
+        if u.get("username") == "admin":
+            messagebox.showwarning("تحذير", "لا يمكن حذف حساب admin.", parent=self)
+            return
+        if not messagebox.askyesno("تأكيد الحذف",
+                                   f"هل تريد حذف المستخدم «{u['username']}»؟",
+                                   parent=self):
+            return
+        UserDB.delete(u["id"])
+        self._selected_uid = None
+        self._refresh()
+
+
+class _UserFormDialog(tk.Toplevel):
+    """نموذج إضافة / تعديل مستخدم."""
+
+    def __init__(self, parent, title, user=None):
+        super().__init__(parent)
+        self.title(title)
+        self.geometry("500x620")
+        self.resizable(False, False)
+        self.configure(bg=COLOR_BG)
+        self.grab_set()
+        self.result     = None
+        self._user      = user
+        self._perm_vars = {}
+        self._build()
+        if user:
+            self._populate(user)
+
+    def _build(self):
+        hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=16, pady=12)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text=self.title(), font=FONT_TITLE,
+                 bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
+
+        # ── جسم قابل للتمرير ──
+        wrapper = tk.Frame(self, bg=COLOR_BG)
+        wrapper.pack(fill="both", expand=True)
+        canvas = tk.Canvas(wrapper, bg=COLOR_BG, highlightthickness=0)
+        vsb    = ttk.Scrollbar(wrapper, orient="vertical", command=canvas.yview,
+                               style="Thin.Vertical.TScrollbar")
+        canvas.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="left", fill="y")
+        canvas.pack(side="right", fill="both", expand=True)
+
+        body = tk.Frame(canvas, bg=COLOR_BG, padx=20, pady=16)
+        canvas_win = canvas.create_window((0, 0), window=body, anchor="ne")
+
+        def _on_configure(e):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            canvas.itemconfig(canvas_win, width=canvas.winfo_width())
+        body.bind("<Configure>", _on_configure)
+        canvas.bind("<Configure>",
+                    lambda e: canvas.itemconfig(canvas_win, width=e.width))
+
+        is_new = self._user is None
+
+        def lbl(txt):
+            tk.Label(body, text=txt, font=FONT_BOLD,
+                     bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+
+        def entry_field(show=None):
+            v = tk.StringVar()
+            kw = {"show": show} if show else {}
+            e = tk.Entry(body, textvariable=v, font=FONT_MAIN,
+                         bg=COLOR_INPUT_BG, relief="flat", bd=0,
+                         highlightthickness=1, highlightbackground=COLOR_BORDER,
+                         highlightcolor=COLOR_PRIMARY, justify="right", **kw)
+            e.pack(fill="x", ipady=8, pady=(3, 12))
+            return v
+
+        lbl("الاسم الكامل:")
+        self._v_full_name = entry_field()
+
+        if is_new:
+            lbl("اسم المستخدم:")
+            self._v_username = entry_field()
+            lbl("كلمة المرور:")
+            self._v_password = entry_field(show="●")
+
+        # ── الصلاحيات ──
+        pf = tk.LabelFrame(body, text="  الصلاحيات  ", font=FONT_BOLD,
+                            bg=COLOR_BG, fg=COLOR_PRIMARY,
+                            padx=10, pady=8, relief="groove")
+        pf.pack(fill="x", pady=(4, 14))
+        for key in PERMISSION_KEYS:
+            v = tk.BooleanVar(value=False)
+            self._perm_vars[key] = v
+            tk.Checkbutton(pf, text=PERMISSION_LABELS[key],
+                           variable=v, font=FONT_SMALL,
+                           bg=COLOR_BG, fg=COLOR_TEXT,
+                           activebackground=COLOR_BG,
+                           anchor="e", justify="right",
+                           selectcolor=COLOR_PRIMARY_LIGHT).pack(fill="x", pady=2)
+
+        ModernButton(body, "حفظ", self._save, color=COLOR_SUCCESS).pack(
+            fill="x", pady=(8, 4))
+
+    def _populate(self, u):
+        self._v_full_name.set(u.get("full_name") or "")
+        for k, v in self._perm_vars.items():
+            v.set(bool(u.get("permissions", {}).get(k, False)))
+
+    def _save(self):
+        full_name = self._v_full_name.get().strip()
+        perms     = {k: v.get() for k, v in self._perm_vars.items()}
+        d = {"full_name": full_name, "role": "trainer", "permissions": perms}
+        if self._user is None:
+            username = self._v_username.get().strip()
+            password = self._v_password.get()
+            if not username:
+                messagebox.showwarning("تنبيه", "أدخل اسم المستخدم", parent=self)
+                return
+            if not password:
+                messagebox.showwarning("تنبيه", "أدخل كلمة المرور", parent=self)
+                return
+            d["username"] = username
+            d["password"] = password
+        self.result = d
+        self.destroy()
+
+
+class _ChangePasswordDialog(tk.Toplevel):
+    """حوار تغيير كلمة مرور مستخدم."""
+
+    def __init__(self, parent, user):
+        super().__init__(parent)
+        self.title(f"تغيير كلمة المرور — {user['username']}")
+        self.geometry("400x280")
+        self.resizable(False, False)
+        self.configure(bg=COLOR_BG)
+        self.grab_set()
+        self._uid = user["id"]
+        self._build()
+
+    def _build(self):
+        hdr = tk.Frame(self, bg=COLOR_WARNING, padx=16, pady=12)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="🔑  تغيير كلمة المرور", font=FONT_TITLE,
+                 bg=COLOR_WARNING, fg="white").pack(anchor="e")
+
+        body = tk.Frame(self, bg=COLOR_BG, padx=24, pady=20)
+        body.pack(fill="both", expand=True)
+
+        def lbl(txt):
+            tk.Label(body, text=txt, font=FONT_BOLD,
+                     bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+
+        def entry_pass():
+            v = tk.StringVar()
+            e = tk.Entry(body, textvariable=v, show="●", font=FONT_MAIN,
+                         bg=COLOR_INPUT_BG, relief="flat", bd=0,
+                         highlightthickness=1, highlightbackground=COLOR_BORDER,
+                         highlightcolor=COLOR_PRIMARY, justify="right")
+            e.pack(fill="x", ipady=8, pady=(3, 14))
+            return v
+
+        lbl("كلمة المرور الجديدة:")
+        self._v_new  = entry_pass()
+        lbl("تأكيد كلمة المرور:")
+        self._v_conf = entry_pass()
+
+        ModernButton(body, "حفظ كلمة المرور", self._save,
+                     color=COLOR_SUCCESS).pack(fill="x")
+
+    def _save(self):
+        new  = self._v_new.get()
+        conf = self._v_conf.get()
+        if not new:
+            messagebox.showwarning("تنبيه", "أدخل كلمة المرور الجديدة", parent=self)
+            return
+        if new != conf:
+            messagebox.showwarning("تنبيه", "كلمتا المرور غير متطابقتين", parent=self)
+            return
+        if len(new) < 4:
+            messagebox.showwarning("تنبيه",
+                                   "كلمة المرور يجب أن تكون 4 أحرف على الأقل",
+                                   parent=self)
+            return
+        UserDB.change_password(self._uid, new)
+        messagebox.showinfo("تم", "تم تغيير كلمة المرور بنجاح", parent=self)
+        self.destroy()
+
+
+# ============================================================================
 #  التطبيق الرئيسي
 # ============================================================================
 
 class DrivingSchoolApp:
-    def __init__(self, logged_user: str = "مدير النظام"):
+    def __init__(self, current_user: dict = None):
         seed_demo_data()
-        self._logged_user = logged_user
+        # حساب افتراضي إن لم يُمرَّر
+        if current_user is None:
+            current_user = {"id": 0, "username": "admin",
+                            "full_name": "مدير النظام", "role": "admin",
+                            "permissions": {}}
+        self._current_user = current_user
         self.root = tk.Tk()
         self.root.title("برنامج ميدانيك — إدارة مدرسة تعليم السياقة")
         self.root.geometry("1280x800")
@@ -5959,12 +6538,47 @@ class DrivingSchoolApp:
             ("📊", "التقارير"),
             ("🖨️", "طباعة الوثائق"),
         ]
+        is_admin = (self._current_user.get("role") == "admin")
         self._nav_refs = []
         for i, (icon, label) in enumerate(nav_defs):
             self._make_nav_item(nav_container, icon, label, i)
+            # إخفاء عناصر القائمة التي لا يملك المستخدم صلاحيتها
+            perm_key = NAV_PERMISSIONS.get(i)
+            visible  = True
+            if perm_key is None:
+                # الرئيسية دائماً مرئية؛ الممرنون (index=3) للمدير فقط
+                if i == 3 and not is_admin:
+                    visible = False
+            else:
+                visible = is_admin or bool(
+                    self._current_user.get("permissions", {}).get(perm_key, False))
+            if not visible:
+                self._nav_refs[i]["outer"].pack_forget()
 
         # فاصل سفلي
         tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=6)
+
+        # ── زر إدارة المستخدمين (للمدير فقط) ──
+        if is_admin:
+            users_btn = tk.Frame(sb, bg=COLOR_PURPLE, cursor="hand2", padx=10, pady=6)
+            users_btn.pack(fill="x", padx=8, pady=(0, 4))
+            tk.Label(users_btn, text="👥  إدارة المستخدمين",
+                     font=(FONT_FAMILY, 9, "bold"),
+                     bg=COLOR_PURPLE, fg="white").pack()
+            def _open_users(e=None):
+                UserManagementDialog(self.root,
+                                     current_user_id=self._current_user.get("id"))
+            users_btn.bind("<Button-1>", _open_users)
+            for ch in users_btn.winfo_children():
+                ch.bind("<Button-1>", _open_users)
+            def _users_hover(e):
+                users_btn.configure(bg="#7c3aed")
+                for ch in users_btn.winfo_children(): ch.configure(bg="#7c3aed")
+            def _users_leave(e):
+                users_btn.configure(bg=COLOR_PURPLE)
+                for ch in users_btn.winfo_children(): ch.configure(bg=COLOR_PURPLE)
+            users_btn.bind("<Enter>", _users_hover)
+            users_btn.bind("<Leave>", _users_leave)
 
         # ── تذييل الشريط الجانبي: المستخدم + خروج ──
         tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=10, pady=(6, 0))
@@ -5972,17 +6586,20 @@ class DrivingSchoolApp:
         bot = tk.Frame(sb, bg=COLOR_HEADER, padx=12, pady=10)
         bot.pack(fill="x", side="bottom")
 
-        # بيانات المستخدم
+        # بيانات المستخدم الحالي
         user_row = tk.Frame(bot, bg=COLOR_HEADER)
         user_row.pack(fill="x", pady=(0, 8))
         tk.Label(user_row, text="👤", font=(FONT_FAMILY, 16),
                  bg=COLOR_HEADER, fg=COLOR_ACCENT).pack(side="left")
         ubox = tk.Frame(user_row, bg=COLOR_HEADER)
         ubox.pack(side="left", padx=(8, 0))
-        tk.Label(ubox, text=getattr(self, "_logged_user", "مدير النظام"),
+        display_name = (self._current_user.get("full_name")
+                        or self._current_user.get("username", "مستخدم"))
+        role_label   = "مدير النظام" if is_admin else "ممرّن"
+        tk.Label(ubox, text=display_name,
                  font=(FONT_FAMILY, 10, "bold"),
                  bg=COLOR_HEADER, fg="white", anchor="w").pack(anchor="w")
-        tk.Label(ubox, text="مسؤول النظام",
+        tk.Label(ubox, text=role_label,
                  font=(FONT_FAMILY, 8),
                  bg=COLOR_HEADER, fg="#64748b", anchor="w").pack(anchor="w")
 
@@ -5993,8 +6610,10 @@ class DrivingSchoolApp:
                  font=(FONT_FAMILY, 10, "bold"),
                  bg="#ef4444", fg="white", pady=7, anchor="center").pack(fill="x")
         def _do_logout(e=None):
-            if messagebox.askyesno("تسجيل الخروج", "هل تريد الخروج من البرنامج؟"):
+            if messagebox.askyesno("تسجيل الخروج",
+                                   "هل تريد تسجيل الخروج والعودة لشاشة الدخول؟"):
                 self.root.destroy()
+                LoginWindow()
         logout_btn.bind("<Button-1>", _do_logout)
         for ch in logout_btn.winfo_children():
             ch.bind("<Button-1>", _do_logout)
@@ -6059,6 +6678,18 @@ class DrivingSchoolApp:
         r["text"].configure(bg=COLOR_SIDEBAR, fg="#94a3b8")
 
     def _navigate(self, index):
+        # فحص الصلاحية قبل التنقل
+        is_admin = (self._current_user.get("role") == "admin")
+        perm_key = NAV_PERMISSIONS.get(index)
+        if index == 3 and not is_admin:
+            return
+        if perm_key and not is_admin:
+            if not self._current_user.get("permissions", {}).get(perm_key, False):
+                messagebox.showwarning("صلاحية مرفوضة",
+                                       "ليس لديك صلاحية الوصول إلى هذا القسم.",
+                                       parent=self.root)
+                return
+
         # إلغاء تفعيل الصفحة الحالية
         if 0 <= self._current_idx < len(self._nav_refs):
             old = self._nav_refs[self._current_idx]
