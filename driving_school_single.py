@@ -3177,10 +3177,21 @@ class ReportsFrame(tk.Frame):
         section_title(ec, "إحصائيات نتائج الامتحانات", icon="🎓")
         self._exam_stats_row = tk.Frame(ec, bg=COLOR_CARD)
         self._exam_stats_row.pack(fill="x", pady=(0, 8))
+
+        # -- مخطط شريطي شهري --
+        chart_lbl = tk.Label(ec,
+            text="مخطط النجاح الشهري  (🟦 نظري ناجح  |  🟩 تطبيقي ناجح  |  ◻ محاولات)",
+            font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT, anchor="e")
+        chart_lbl.pack(anchor="e", pady=(0, 4))
+        self._exam_chart = tk.Canvas(ec, bg=COLOR_CARD, height=160,
+                                     highlightthickness=0)
+        self._exam_chart.pack(fill="x", padx=4, pady=(0, 8))
+
+        # -- جدول تفصيلي --
         self._exam_monthly_tree = create_treeview(ec,
             ("month", "nazari_total", "nazari_pass", "tatbiqi_total", "tatbiqi_pass"),
             ("الشهر", "نظري (محاولات)", "نظري (ناجح)", "تطبيقي (محاولات)", "تطبيقي (ناجح)"),
-            (120, 140, 120, 160, 130), height=7)
+            (120, 140, 120, 160, 130), height=5)
 
         self._refresh()
 
@@ -3255,7 +3266,7 @@ class ReportsFrame(tk.Frame):
                       f"{pct}%  ({passed}/{total})",
                       "📝", color)
 
-        # جدول التفصيل الشهري للامتحانات
+        # جدول التفصيل الشهري للامتحانات + المخطط الشريطي
         monthly_exam = ExamResultDB.get_monthly_breakdown(y)
         # بناء قاموس {شهر → {نوع → {total, passed}}}
         em = {}
@@ -3277,6 +3288,84 @@ class ReportsFrame(tk.Frame):
                 str(tat['passed']) if tat['total']  else "—",
             ))
         insert_zebra(self._exam_monthly_tree, exam_rows)
+
+        # ── رسم المخطط الشريطي الشهري ─────────────────────────────────────
+        self._draw_exam_bar_chart(em)
+
+    def _draw_exam_bar_chart(self, em):
+        """يرسم مخططاً شريطياً شهرياً على Canvas يُظهر ناجحي نظري وتطبيقي."""
+        canvas = self._exam_chart
+        canvas.delete("all")
+        canvas.update_idletasks()
+
+        W = canvas.winfo_width() or 700
+        H = 160
+        pad_l, pad_r, pad_top, pad_bot = 30, 10, 14, 28
+
+        months_abbr = ["يناير","فبراير","مارس","أبريل","مايو","يونيو",
+                        "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"]
+
+        # حساب البيانات لـ12 شهر
+        data = []
+        for mm in range(1, 13):
+            ms = f"{mm:02d}"
+            naz = em.get(ms, {}).get("نظري",   {"total": 0, "passed": 0})
+            tat = em.get(ms, {}).get("تطبيقي", {"total": 0, "passed": 0})
+            data.append((naz['total'], naz['passed'], tat['total'], tat['passed']))
+
+        max_val = max((max(d) for d in data), default=1) or 1
+        chart_h = H - pad_top - pad_bot
+        chart_w = W - pad_l - pad_r
+        group_w = chart_w / 12
+        bar_w   = max(3, int(group_w / 3) - 2)
+
+        # خط قاعدة
+        base_y = H - pad_bot
+        canvas.create_line(pad_l, pad_top, pad_l, base_y,
+                           fill=COLOR_BORDER, width=1)
+        canvas.create_line(pad_l, base_y, W - pad_r, base_y,
+                           fill=COLOR_BORDER, width=1)
+
+        # خطوط دليل
+        for fraction in (0.25, 0.5, 0.75, 1.0):
+            gy = base_y - int(chart_h * fraction)
+            canvas.create_line(pad_l, gy, W - pad_r, gy,
+                               fill="#e2e8f0", dash=(4, 4))
+            lbl_val = int(max_val * fraction)
+            canvas.create_text(pad_l - 4, gy, text=str(lbl_val),
+                                font=(FONT_FAMILY, 7), fill=COLOR_TEXT_LIGHT,
+                                anchor="e")
+
+        BLUE   = COLOR_PRIMARY    # نظري ناجح
+        GREEN  = COLOR_SUCCESS    # تطبيقي ناجح
+        GRAY   = "#CBD5E1"        # محاولات (مجموع)
+
+        for i, (naz_tot, naz_pass, tat_tot, tat_pass) in enumerate(data):
+            cx = pad_l + i * group_w + group_w / 2
+
+            def bar(value, color, offset):
+                if value <= 0:
+                    return
+                bh = max(2, int(chart_h * value / max_val))
+                x0 = int(cx + offset - bar_w / 2)
+                x1 = x0 + bar_w
+                y0 = base_y - bh
+                canvas.create_rectangle(x0, y0, x1, base_y,
+                                        fill=color, outline="", width=0)
+
+            bar(naz_tot,  GRAY,  -bar_w - 1)
+            bar(naz_pass, BLUE,  -bar_w - 1)
+            bar(tat_tot,  GRAY,   bar_w + 1)
+            bar(tat_pass, GREEN,  bar_w + 1)
+
+            # اسم الشهر (حروف مختصرة — أول 3 حروف)
+            canvas.create_text(int(cx), base_y + 4,
+                                text=months_abbr[i][:3],
+                                font=(FONT_FAMILY, 7), fill=COLOR_TEXT_LIGHT,
+                                anchor="n")
+
+        # أعد رسم عند تغيير الحجم
+        canvas.bind("<Configure>", lambda e: self._draw_exam_bar_chart(em))
 
 
 # ============================================================================
