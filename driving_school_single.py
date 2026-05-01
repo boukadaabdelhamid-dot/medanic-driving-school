@@ -2882,19 +2882,23 @@ class ReportsFrame(tk.Frame):
         # إعادة بناء البطاقات
         for w in self.stats_row.winfo_children(): w.destroy()
         nav = self._navigate_cb
-        go_pay = (lambda: nav(6)) if nav else None
-        go_exp = (lambda: nav(7)) if nav else None
+        go_pay  = (lambda: nav(6)) if nav else None
+        go_exp  = (lambda: nav(7)) if nav else None
+        # بطاقتا الأرباح: تنتقل للتقارير ذاتها لعرض التفاصيل (index 8)
+        go_rep  = (lambda: nav(8)) if nav else None
         stat_card(self.stats_row, f"مدفوعات {y}",  f"{tp:,.0f}", "💰", COLOR_SUCCESS,
                   command=go_pay)
         stat_card(self.stats_row, f"مصاريف {y}",   f"{te:,.0f}", "💸", COLOR_DANGER,
                   command=go_exp)
         stat_card(self.stats_row, f"أرباح {y}",    f"{prof:,.0f}", "💎",
-                  COLOR_PRIMARY if prof >= 0 else COLOR_DANGER)
+                  COLOR_PRIMARY if prof >= 0 else COLOR_DANGER,
+                  command=go_rep)
         mn = MONTHS_AR.get(m, m)
         stat_card(self.stats_row, f"أرباح {mn}", f"{mpr:,.0f}", "📅",
-                  COLOR_PURPLE if mpr >= 0 else COLOR_DANGER)
+                  COLOR_PURPLE if mpr >= 0 else COLOR_DANGER,
+                  command=go_rep)
 
-        # تفصيل شهري
+        # تفصيل شهري — النقر المزدوج على صف ينتقل لقسم المدفوعات
         ap = {r['month']: r['total'] for r in PaymentDB.get_monthly_breakdown(y)}
         ae = {r['month']: r['total'] for r in ExpenseDB.get_monthly_breakdown(y)}
         rows = []
@@ -2902,6 +2906,13 @@ class ReportsFrame(tk.Frame):
             ms = f"{mm:02d}"; p = ap.get(ms, 0); e = ae.get(ms, 0)
             rows.append((MONTHS_AR.get(ms, ms), f"{p:,.0f}", f"{e:,.0f}", f"{p - e:,.0f}"))
         insert_zebra(self.monthly_tree, rows)
+
+        # نقر مزدوج على صف التفصيل الشهري → ينتقل للمدفوعات
+        def _on_month_dbl(e):
+            if nav:
+                nav(6)
+        self.monthly_tree.bind("<Double-Button-1>", _on_month_dbl)
+        self.monthly_tree.configure(cursor="hand2")
 
 
 # ============================================================================
