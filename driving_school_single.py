@@ -308,13 +308,15 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             candidate_id INTEGER NOT NULL,
             instructor_id INTEGER NOT NULL,
+            vehicle_id INTEGER,
             session_date TEXT NOT NULL,
             session_time TEXT NOT NULL DEFAULT '08:00',
             duration INTEGER NOT NULL DEFAULT 60,
             session_type TEXT DEFAULT 'كرينو',
             notes TEXT DEFAULT '',
             FOREIGN KEY (candidate_id) REFERENCES candidates(id),
-            FOREIGN KEY (instructor_id) REFERENCES instructors(id)
+            FOREIGN KEY (instructor_id) REFERENCES instructors(id),
+            FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
         );
 
     """)
@@ -792,12 +794,12 @@ class SessionDB:
         conn = get_connection()
         conn.execute("""
             INSERT INTO sessions
-                (candidate_id, instructor_id, session_date, session_time,
+                (candidate_id, instructor_id, vehicle_id, session_date, session_time,
                  duration, session_type, notes)
-            VALUES (?,?,?,?,?,?,?)""",
-            (d['candidate_id'], d['instructor_id'], d['session_date'],
-             d['session_time'], d['duration'], d.get('session_type', 'كرينو'),
-             d.get('notes', '')))
+            VALUES (?,?,?,?,?,?,?,?)""",
+            (d['candidate_id'], d['instructor_id'], d.get('vehicle_id'),
+             d['session_date'], d['session_time'], d['duration'],
+             d.get('session_type', 'كرينو'), d.get('notes', '')))
         conn.commit()
         conn.close()
 
@@ -805,13 +807,13 @@ class SessionDB:
     def update(sid, d):
         conn = get_connection()
         conn.execute("""
-            UPDATE sessions SET candidate_id=?, instructor_id=?,
+            UPDATE sessions SET candidate_id=?, instructor_id=?, vehicle_id=?,
                 session_date=?, session_time=?, duration=?,
                 session_type=?, notes=?
             WHERE id=?""",
-            (d['candidate_id'], d['instructor_id'], d['session_date'],
-             d['session_time'], d['duration'], d.get('session_type', 'كرينو'),
-             d.get('notes', ''), sid))
+            (d['candidate_id'], d['instructor_id'], d.get('vehicle_id'),
+             d['session_date'], d['session_time'], d['duration'],
+             d.get('session_type', 'كرينو'), d.get('notes', ''), sid))
         conn.commit()
         conn.close()
 
@@ -823,23 +825,13 @@ class SessionDB:
         conn.close()
 
     @staticmethod
-    def check_conflict(instructor_id, session_date, session_time, duration,
-                       exclude_id=None):
-        """يبحث عن تعارض زمني لنفس الممرّن في نفس اليوم."""
-        conn   = get_connection()
-        rows   = conn.execute("""
-            SELECT * FROM sessions
-            WHERE instructor_id=? AND session_date=?
-              AND id != COALESCE(?,0)
-        """, (instructor_id, session_date, exclude_id)).fetchall()
-        conn.close()
-
+    def _overlapping(rows, session_time, duration):
+        """يُعيد قائمة الصفوف المتعارضة زمنياً."""
         try:
             new_start = datetime.strptime(session_time, "%H:%M")
             new_end   = new_start + timedelta(minutes=int(duration))
         except Exception:
             return []
-
         conflicts = []
         for r in rows:
             try:
@@ -850,6 +842,35 @@ class SessionDB:
             except Exception:
                 pass
         return conflicts
+
+
+    @staticmethod
+    def check_conflict(instructor_id, session_date, session_time, duration,
+                       vehicle_id=None, exclude_id=None):
+        """يبحث عن تعارض زمني للممرّن وكذلك للمركبة (إن وُجدت)."""
+        conn = get_connection()
+        # استعلام الممرّن
+        inst_rows = conn.execute("""
+            SELECT * FROM sessions
+            WHERE instructor_id=? AND session_date=?
+              AND id != COALESCE(?,0)
+        """, (instructor_id, session_date, exclude_id or 0)).fetchall()
+
+        # استعلام المركبة (إن اختيرت)
+        veh_rows = []
+        if vehicle_id:
+            veh_rows = conn.execute("""
+                SELECT * FROM sessions
+                WHERE vehicle_id=? AND session_date=?
+                  AND id != COALESCE(?,0)
+            """, (vehicle_id, session_date, exclude_id or 0)).fetchall()
+        conn.close()
+
+        inst_conflicts = SessionDB._overlapping(
+            [dict(r) for r in inst_rows], session_time, duration)
+        veh_conflicts  = SessionDB._overlapping(
+            [dict(r) for r in veh_rows],  session_time, duration)
+        return inst_conflicts, veh_conflicts
 
 
 SESSION_TYPE_OPTIONS = ["كرينو", "طريق", "كود (نظري)", "مناورة حرة"]
@@ -2933,27 +2954,27 @@ def _styled_table(data_rows, col_widths):
 # ============================================================================
 
 class SessionDialog(tk.Toplevel):
-    """نافذة Toplevel لإدخال بيانات حصة مع فحص التعارض."""
+    """نافذة Toplevel لإدخال بيانات حصة مع فحص تعارض الممرّن والمركبة."""
 
     def __init__(self, parent, session_id=None, on_save=None):
         super().__init__(parent)
         self.session_id = session_id
         self.on_save    = on_save
         self.title("تعديل حصة تدريبية" if session_id else "إضافة حصة جديدة")
-        self.geometry("560x520")
+        self.geometry("580x600")
         self.resizable(False, False)
         self.grab_set()
         self.configure(bg=COLOR_BG)
-        self._vars = {}
-        self._cand_map = {}   # name -> id
-        self._inst_map = {}   # name -> id
+        self._vars     = {}
+        self._cand_map = {}   # display_name -> id
+        self._inst_map = {}   # display_name -> id
+        self._veh_map  = {}   # display_name -> id  (None = بدون مركبة)
         self._build()
         if session_id:
             self._load()
 
     # ──────────────────────────────────────────────────────────
     def _build(self):
-        # عنوان
         hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=16, pady=12)
         hdr.pack(fill="x")
         icon = "✏️" if self.session_id else "➕"
@@ -2961,65 +2982,78 @@ class SessionDialog(tk.Toplevel):
                  text=f"{icon}  {'تعديل حصة تدريبية' if self.session_id else 'إضافة حصة جديدة'}",
                  font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
 
-        # محتوى
-        wrap = tk.Frame(self, bg=COLOR_BG, padx=24, pady=16)
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=24, pady=14)
         wrap.pack(fill="both", expand=True)
 
         cands = CandidateDB.get_all()
         insts = InstructorDB.get_all()
+        vehs  = VehicleDB.get_all()
+
         self._cand_map = {f"{c['last_name']} {c['first_name']}": c['id'] for c in cands}
         self._inst_map = {f"{i['last_name']} {i['first_name']}": i['id'] for i in insts}
+        # مركبات: "بلا مركبة" + كل مركبة
+        self._veh_map  = {"بلا مركبة": None}
+        for v in vehs:
+            label = f"{v['model']} ({v.get('plate_number','') or '—'})"
+            self._veh_map[label] = v['id']
 
-        def row(lbl, widget_fn, key, pady=(4, 10)):
-            tk.Label(wrap, text=lbl, font=FONT_BOLD, bg=COLOR_BG,
-                     fg=COLOR_TEXT, anchor="e").pack(fill="x")
-            w = widget_fn()
-            w.pack(fill="x", ipady=4, pady=pady)
-            return w
+        def lbl(text):
+            tk.Label(wrap, text=text, font=FONT_BOLD,
+                     bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
 
         # المترشح
+        lbl("المترشح *")
         self._vars['candidate'] = tk.StringVar()
-        cand_names = list(self._cand_map.keys())
-        cb_c = ttk.Combobox(wrap, textvariable=self._vars['candidate'],
-                            values=cand_names, state="readonly",
-                            font=FONT_MAIN, justify="right")
-        tk.Label(wrap, text="المترشح *", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
-        cb_c.pack(fill="x", ipady=4, pady=(4, 10))
+        ttk.Combobox(wrap, textvariable=self._vars['candidate'],
+                     values=list(self._cand_map.keys()),
+                     state="readonly", font=FONT_MAIN,
+                     justify="right").pack(fill="x", ipady=4, pady=(4, 10))
 
-        # الممرّن
-        self._vars['instructor'] = tk.StringVar()
-        inst_names = list(self._inst_map.keys())
-        tk.Label(wrap, text="الممرّن *", font=FONT_BOLD,
+        # صف: الممرّن + المركبة
+        im_row = tk.Frame(wrap, bg=COLOR_BG)
+        im_row.pack(fill="x", pady=(0, 10))
+
+        inst_col = tk.Frame(im_row, bg=COLOR_BG)
+        inst_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        tk.Label(inst_col, text="الممرّن *", font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
-        cb_i = ttk.Combobox(wrap, textvariable=self._vars['instructor'],
-                            values=inst_names, state="readonly",
-                            font=FONT_MAIN, justify="right")
-        cb_i.pack(fill="x", ipady=4, pady=(4, 10))
+        self._vars['instructor'] = tk.StringVar()
+        ttk.Combobox(inst_col, textvariable=self._vars['instructor'],
+                     values=list(self._inst_map.keys()),
+                     state="readonly", font=FONT_MAIN,
+                     justify="right").pack(fill="x", ipady=4)
+
+        veh_col = tk.Frame(im_row, bg=COLOR_BG)
+        veh_col.pack(side="left", fill="both", expand=True)
+        tk.Label(veh_col, text="المركبة", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._vars['vehicle'] = tk.StringVar(value="بلا مركبة")
+        ttk.Combobox(veh_col, textvariable=self._vars['vehicle'],
+                     values=list(self._veh_map.keys()),
+                     state="readonly", font=FONT_MAIN,
+                     justify="right").pack(fill="x", ipady=4)
 
         # صف: التاريخ + الوقت
         dt_row = tk.Frame(wrap, bg=COLOR_BG)
         dt_row.pack(fill="x", pady=(0, 10))
 
-        # التاريخ
-        left_col = tk.Frame(dt_row, bg=COLOR_BG)
-        left_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
-        tk.Label(left_col, text="التاريخ *", font=FONT_BOLD,
+        date_col = tk.Frame(dt_row, bg=COLOR_BG)
+        date_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        tk.Label(date_col, text="التاريخ * (YYYY-MM-DD)", font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
         self._vars['session_date'] = tk.StringVar(value=date.today().strftime('%Y-%m-%d'))
-        tk.Entry(left_col, textvariable=self._vars['session_date'],
+        tk.Entry(date_col, textvariable=self._vars['session_date'],
                  font=FONT_MAIN, justify="right",
                  relief="solid", bd=1).pack(fill="x", ipady=5)
 
-        # الوقت
-        right_col = tk.Frame(dt_row, bg=COLOR_BG)
-        right_col.pack(side="left", fill="both", expand=True)
-        tk.Label(right_col, text="الوقت *", font=FONT_BOLD,
+        time_col = tk.Frame(dt_row, bg=COLOR_BG)
+        time_col.pack(side="left", fill="both", expand=True)
+        tk.Label(time_col, text="الوقت *", font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
         self._vars['session_time'] = tk.StringVar(value="08:00")
-        cb_t = ttk.Combobox(right_col, textvariable=self._vars['session_time'],
-                            values=TIME_OPTIONS, font=FONT_MAIN, justify="right")
-        cb_t.pack(fill="x", ipady=4)
+        ttk.Combobox(time_col, textvariable=self._vars['session_time'],
+                     values=TIME_OPTIONS, font=FONT_MAIN,
+                     justify="right").pack(fill="x", ipady=4)
 
         # صف: المدة + نوع الحصة
         dd_row = tk.Frame(wrap, bg=COLOR_BG)
@@ -3027,7 +3061,7 @@ class SessionDialog(tk.Toplevel):
 
         dur_col = tk.Frame(dd_row, bg=COLOR_BG)
         dur_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
-        tk.Label(dur_col, text="المدة (دقيقة)", font=FONT_BOLD,
+        tk.Label(dur_col, text="المدة (دقيقة) *", font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
         self._vars['duration'] = tk.StringVar(value="60")
         ttk.Combobox(dur_col, textvariable=self._vars['duration'],
@@ -3044,8 +3078,7 @@ class SessionDialog(tk.Toplevel):
                      font=FONT_MAIN, justify="right").pack(fill="x", ipady=4)
 
         # ملاحظات
-        tk.Label(wrap, text="ملاحظات", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        lbl("ملاحظات")
         self._notes_txt = tk.Text(wrap, height=3, font=FONT_MAIN,
                                   relief="solid", bd=1)
         self._notes_txt.pack(fill="x", pady=(4, 0))
@@ -3054,7 +3087,7 @@ class SessionDialog(tk.Toplevel):
         self._conflict_var = tk.StringVar()
         tk.Label(wrap, textvariable=self._conflict_var,
                  font=FONT_SMALL, bg=COLOR_BG, fg=COLOR_DANGER,
-                 anchor="e", wraplength=500).pack(fill="x", pady=(6, 0))
+                 anchor="e", wraplength=540).pack(fill="x", pady=(6, 0))
 
         # أزرار
         bf = tk.Frame(self, bg=COLOR_BG, padx=24, pady=12)
@@ -3069,16 +3102,21 @@ class SessionDialog(tk.Toplevel):
         s = SessionDB.get(self.session_id)
         if not s:
             return
-        # ربط المترشح
         cand = CandidateDB.get(s['candidate_id'])
         if cand:
-            name = f"{cand['last_name']} {cand['first_name']}"
-            self._vars['candidate'].set(name)
-        # ربط الممرّن
+            self._vars['candidate'].set(f"{cand['last_name']} {cand['first_name']}")
         inst = InstructorDB.get(s['instructor_id'])
         if inst:
-            name = f"{inst['last_name']} {inst['first_name']}"
-            self._vars['instructor'].set(name)
+            self._vars['instructor'].set(f"{inst['last_name']} {inst['first_name']}")
+        # المركبة
+        vid = s.get('vehicle_id')
+        if vid:
+            for label, lid in self._veh_map.items():
+                if lid == vid:
+                    self._vars['vehicle'].set(label)
+                    break
+        else:
+            self._vars['vehicle'].set("بلا مركبة")
         self._vars['session_date'].set(s.get('session_date', ''))
         self._vars['session_time'].set(s.get('session_time', '08:00'))
         self._vars['duration'].set(str(s.get('duration', 60)))
@@ -3092,42 +3130,70 @@ class SessionDialog(tk.Toplevel):
         s_date    = self._vars['session_date'].get().strip()
         s_time    = self._vars['session_time'].get().strip()
         duration  = self._vars['duration'].get().strip()
+        veh_name  = self._vars['vehicle'].get().strip()
 
+        # ── التحقق من الحقول الإلزامية ──
         if not all([cand_name, inst_name, s_date, s_time, duration]):
             show_error("يرجى ملء جميع الحقول الإلزامية (*)"); return
-
         if cand_name not in self._cand_map:
-            show_error("المترشح غير موجود"); return
+            show_error("يرجى اختيار مترشح صحيح من القائمة"); return
         if inst_name not in self._inst_map:
-            show_error("الممرّن غير موجود"); return
+            show_error("يرجى اختيار ممرّن صحيح من القائمة"); return
 
-        # التحقق من صيغة التاريخ
+        # ── التحقق من صيغة التاريخ ──
         try:
             datetime.strptime(s_date, '%Y-%m-%d')
         except ValueError:
             show_error("صيغة التاريخ غير صحيحة، استخدم: YYYY-MM-DD"); return
 
-        # فحص التعارض
+        # ── التحقق من صيغة الوقت ──
+        try:
+            datetime.strptime(s_time, '%H:%M')
+        except ValueError:
+            show_error("صيغة الوقت غير صحيحة، اختر من القائمة (HH:MM)"); return
+
+        # ── التحقق من المدة ──
+        try:
+            dur_int = int(duration)
+            if dur_int <= 0 or dur_int > 480:
+                raise ValueError
+        except ValueError:
+            show_error("المدة يجب أن تكون رقماً موجباً (دقائق) لا تتجاوز 480"); return
+
         inst_id = self._inst_map[inst_name]
-        conflicts = SessionDB.check_conflict(inst_id, s_date, s_time, duration,
-                                              exclude_id=self.session_id)
-        if conflicts:
-            c0 = conflicts[0]
-            self._conflict_var.set(
-                f"⚠️  تعارض! الممرّن لديه حصة في {c0['session_time']} "
-                f"(مدة {c0['duration']} د.) في نفس اليوم. هل تريد الحفظ رغم ذلك؟"
-            )
+        veh_id  = self._veh_map.get(veh_name)  # None إذا "بلا مركبة"
+
+        # ── فحص تعارض الممرّن والمركبة ──
+        inst_conflicts, veh_conflicts = SessionDB.check_conflict(
+            inst_id, s_date, s_time, duration,
+            vehicle_id=veh_id, exclude_id=self.session_id)
+
+        conflict_msgs = []
+        if inst_conflicts:
+            c = inst_conflicts[0]
+            conflict_msgs.append(
+                f"الممرّن لديه حصة في {c['session_time']} (مدة {c['duration']} د.)")
+        if veh_conflicts:
+            c = veh_conflicts[0]
+            conflict_msgs.append(
+                f"المركبة مستخدمة في {c['session_time']} (مدة {c['duration']} د.)")
+
+        if conflict_msgs:
+            msg = "⚠️  تعارض في الجدول:\n" + "\n".join(conflict_msgs)
+            self._conflict_var.set(msg)
             if not messagebox.askyesno("تعارض في الجدول",
-                    f"الممرّن {inst_name} لديه حصة أخرى في {c0['session_time']} بتاريخ {s_date}.\n"
-                    "هل تريد الحفظ رغم التعارض؟"):
+                    msg + f"\nبتاريخ {s_date}.\nهل تريد الحفظ رغم التعارض؟"):
                 return
+        else:
+            self._conflict_var.set("")
 
         d = {
             'candidate_id':  self._cand_map[cand_name],
             'instructor_id': inst_id,
+            'vehicle_id':    veh_id,
             'session_date':  s_date,
             'session_time':  s_time,
-            'duration':      int(duration),
+            'duration':      dur_int,
             'session_type':  self._vars['session_type'].get(),
             'notes':         self._notes_txt.get("1.0", "end-1c").strip(),
         }
@@ -3210,6 +3276,19 @@ class ScheduleFrame(tk.Frame):
         self._inst_combo.current(0)
         self._inst_combo.pack(side="left", padx=4)
 
+        # فلتر المترشح
+        tk.Label(filter_row, text="المترشح:", font=FONT_SMALL,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="left", padx=(8, 0))
+        self._cand_filter_var = tk.StringVar()
+        cands = ["الكل"] + [f"{c['last_name']} {c['first_name']}"
+                             for c in CandidateDB.get_all()]
+        self._cand_combo = ttk.Combobox(filter_row,
+                                         textvariable=self._cand_filter_var,
+                                         values=cands, state="readonly",
+                                         width=14, font=FONT_SMALL)
+        self._cand_combo.current(0)
+        self._cand_combo.pack(side="left", padx=4)
+
         ModernButton(filter_row, text="تصفية", icon="🔎",
                      color=COLOR_INFO, size="small",
                      command=self._load).pack(side="left", padx=4)
@@ -3239,6 +3318,8 @@ class ScheduleFrame(tk.Frame):
         self._date_var.set("")
         self._inst_filter_var.set("الكل")
         self._inst_combo.current(0)
+        self._cand_filter_var.set("الكل")
+        self._cand_combo.current(0)
         self._load()
 
     def _load(self):
@@ -3254,7 +3335,18 @@ class ScheduleFrame(tk.Frame):
                     inst_id = i['id']
                     break
 
-        sessions = SessionDB.get_all(date_filter=date_f, instructor_id=inst_id)
+        # فلتر المترشح
+        cand_filter_name = self._cand_filter_var.get()
+        cand_id = None
+        if cand_filter_name and cand_filter_name != "الكل":
+            for c in CandidateDB.get_all():
+                if f"{c['last_name']} {c['first_name']}" == cand_filter_name:
+                    cand_id = c['id']
+                    break
+
+        sessions = SessionDB.get_all(date_filter=date_f,
+                                      instructor_id=inst_id,
+                                      candidate_id=cand_id)
 
         rows = [(s['session_date'], s['session_time'], str(s['duration']),
                  s['session_type'], s['candidate_name'],
