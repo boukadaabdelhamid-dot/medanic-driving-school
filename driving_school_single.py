@@ -185,29 +185,42 @@ def get_connection():
 def upgrade_db():
     """يضيف الأعمدة الجديدة لقاعدة بيانات قديمة (توافق رجعي)."""
     conn = get_connection()
-    new_cols = [
-        ("national_id",        "TEXT DEFAULT ''"),
-        ("second_nationality", "TEXT DEFAULT ''"),
-        ("current_address",    "TEXT DEFAULT ''"),
-        ("is_born_abroad",     "INTEGER DEFAULT 0"),
-        ("birth_country",      "TEXT DEFAULT 'الجزائر'"),
-        ("embassy",            "TEXT DEFAULT ''"),
-        ("consulate",          "TEXT DEFAULT ''"),
-    ]
     try:
-        cur = conn.execute("PRAGMA table_info(instructors)")
-        existing = {row[1] for row in cur.fetchall()}
-        cols_to_add = [
-            ("birth_place", "TEXT DEFAULT ''"),
-            ("contract_duration", "TEXT DEFAULT ''"),
-            ("salary", "TEXT DEFAULT ''"),
-            ("contract_start_date", "TEXT DEFAULT ''"),
-            ("notice_period", "TEXT DEFAULT '0'"),
-            ("contract_signing_date", "TEXT DEFAULT ''")
+        # أعمدة جدول المترشحين
+        cur = conn.execute("PRAGMA table_info(candidates)")
+        cand_existing = {row[1] for row in cur.fetchall()}
+        cand_cols = [
+            ("national_id",        "TEXT DEFAULT ''"),
+            ("second_nationality", "TEXT DEFAULT ''"),
+            ("current_address",    "TEXT DEFAULT ''"),
+            ("is_born_abroad",     "INTEGER DEFAULT 0"),
+            ("birth_country",      "TEXT DEFAULT 'الجزائر'"),
+            ("embassy",            "TEXT DEFAULT ''"),
+            ("consulate",          "TEXT DEFAULT ''"),
+            ("file_number",        "TEXT DEFAULT ''"),
+            ("file_date",          "TEXT DEFAULT ''"),
+            ("address_commune",    "TEXT DEFAULT ''"),
+            ("address_wilaya",     "TEXT DEFAULT ''"),
         ]
-        for col, dtype in cols_to_add:
-            if col not in existing:
+        for col, dtype in cand_cols:
+            if col not in cand_existing:
+                conn.execute(f"ALTER TABLE candidates ADD COLUMN {col} {dtype}")
+
+        # أعمدة جدول الممرنين
+        cur2 = conn.execute("PRAGMA table_info(instructors)")
+        inst_existing = {row[1] for row in cur2.fetchall()}
+        inst_cols = [
+            ("birth_place",           "TEXT DEFAULT ''"),
+            ("contract_duration",     "TEXT DEFAULT ''"),
+            ("salary",                "TEXT DEFAULT ''"),
+            ("contract_start_date",   "TEXT DEFAULT ''"),
+            ("notice_period",         "TEXT DEFAULT '0'"),
+            ("contract_signing_date", "TEXT DEFAULT ''"),
+        ]
+        for col, dtype in inst_cols:
+            if col not in inst_existing:
                 conn.execute(f"ALTER TABLE instructors ADD COLUMN {col} {dtype}")
+
         conn.commit()
     except Exception:
         pass
@@ -465,8 +478,8 @@ class CandidateDB:
             birth_place_commune,birth_place_wilaya,marital_status,father_name,mother_name,phone,
             nationality,disability,blood_type,license_type,previous_licenses,instructor_id,
             total_amount,national_id,second_nationality,current_address,is_born_abroad,
-            birth_country,embassy,consulate)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            birth_country,embassy,consulate,file_number,file_date,address_commune,address_wilaya)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (d['first_name'], d['last_name'], d['gender'], d['birth_date'],
              d['birth_place_commune'], d['birth_place_wilaya'], d['marital_status'],
              d['father_name'], d['mother_name'], d['phone'], d['nationality'],
@@ -474,7 +487,9 @@ class CandidateDB:
              d['previous_licenses'], d.get('instructor_id'), d['total_amount'],
              d.get('national_id',''), d.get('second_nationality',''),
              d.get('current_address',''), d.get('is_born_abroad',0),
-             d.get('birth_country','الجزائر'), d.get('embassy',''), d.get('consulate','')))
+             d.get('birth_country','الجزائر'), d.get('embassy',''), d.get('consulate',''),
+             d.get('file_number',''), d.get('file_date',''),
+             d.get('address_commune',''), d.get('address_wilaya','')))
         lid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         conn.execute("INSERT INTO training_stages (candidate_id,stage_type) VALUES (?,?)",
                      (lid, 'code'))
@@ -490,7 +505,8 @@ class CandidateDB:
             mother_name=?,phone=?,nationality=?,disability=?,blood_type=?,license_type=?,
             previous_licenses=?,instructor_id=?,total_amount=?,national_id=?,
             second_nationality=?,current_address=?,is_born_abroad=?,birth_country=?,
-            embassy=?,consulate=? WHERE id=?""",
+            embassy=?,consulate=?,file_number=?,file_date=?,address_commune=?,address_wilaya=?
+            WHERE id=?""",
             (d['first_name'], d['last_name'], d['gender'], d['birth_date'],
              d['birth_place_commune'], d['birth_place_wilaya'], d['marital_status'],
              d['father_name'], d['mother_name'], d['phone'], d['nationality'],
@@ -499,7 +515,8 @@ class CandidateDB:
              d.get('national_id',''), d.get('second_nationality',''),
              d.get('current_address',''), d.get('is_born_abroad',0),
              d.get('birth_country','الجزائر'), d.get('embassy',''),
-             d.get('consulate',''), i))
+             d.get('consulate',''), d.get('file_number',''), d.get('file_date',''),
+             d.get('address_commune',''), d.get('address_wilaya',''), i))
         conn.commit()
         conn.close()
 
@@ -704,70 +721,67 @@ class VehicleDB:
 #  مكونات الواجهة (UI Helpers)
 # ============================================================================
 
+def _clr_lighten(hex_color, amount=0.14):
+    try:
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+        r = min(255, int(r + (255-r)*amount))
+        g = min(255, int(g + (255-g)*amount))
+        b = min(255, int(b + (255-b)*amount))
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return hex_color
+
+def _clr_darken(hex_color, amount=0.18):
+    try:
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+        r,g,b = int(r*(1-amount)), int(g*(1-amount)), int(b*(1-amount))
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return hex_color
+
+
 class ModernButton(tk.Button):
-    """زر 3D احترافي (آخر طراز) مع عمق بصري وتأثير ضغطة حقيقي."""
+    """زر عصري مسطّح (Flat) بتأثير hover وضغط ناعمَين."""
     def __init__(self, parent, text="", command=None, color=COLOR_PRIMARY,
-                 fg="white", icon="", width=None, **kw):
+                 fg="white", icon="", width=None, size="normal", **kw):
         display = f"{icon}  {text}" if icon else text
-        # استخدام relief="raised" مع bd=5 يعطي عمقاً أكبر
-        # highlightthickness تضيف إطاراً خارجياً يعمل كظلال إضافية
-        super().__init__(parent, text=display, command=command, font=FONT_BOLD,
-                         bg=color, fg=fg, relief="raised", bd=5, 
-                         padx=20, pady=8, cursor="hand2",
-                         activebackground=self._darken(color, 0.1),
+        if size == "large":
+            pady_v, padx_v, font_f = 12, 24, (FONT_FAMILY, 12, "bold")
+        elif size == "small":
+            pady_v, padx_v, font_f = 4,  10, (FONT_FAMILY, 9,  "bold")
+        else:
+            pady_v, padx_v, font_f = 8,  18, FONT_BOLD
+
+        super().__init__(parent, text=display, command=command, font=font_f,
+                         bg=color, fg=fg, relief="flat", bd=0,
+                         padx=padx_v, pady=pady_v, cursor="hand2",
+                         activebackground=_clr_darken(color, 0.14),
                          activeforeground="white",
-                         highlightthickness=2,
-                         highlightbackground=self._darken(color, 0.3),
-                         **kw)
+                         highlightthickness=0, **kw)
         if width:
             self.configure(width=width)
-        
-        self._color = color
-        self._hover = self._lighten(color, 0.15)
-        self._dark = self._darken(color, 0.3)
-        
-        # ربط الأحداث لإعطاء إحساس بالعمق (3D Interaction)
-        self.bind("<Enter>", self._on_enter)
-        self.bind("<Leave>", self._on_leave)
-        self.bind("<ButtonPress-1>", self._on_press)
-        self.bind("<ButtonRelease-1>", self._on_release)
+        self._c  = color
+        self._h  = _clr_lighten(color, 0.14)
+        self._p  = _clr_darken(color, 0.18)
+        self.bind("<Enter>",          self._on_enter)
+        self.bind("<Leave>",          self._on_leave)
+        self.bind("<ButtonPress-1>",  self._on_press)
+        self.bind("<ButtonRelease-1>",self._on_release)
 
-    def _on_enter(self, e):
-        self.configure(bg=self._hover, relief="raised")
-        
-    def _on_leave(self, e):
-        self.configure(bg=self._color, relief="raised")
-        
-    def _on_press(self, e):
-        # عند الضغط يغوص الزر للداخل (Sunken) ويختفي الظل الخارجي جزئياً
-        self.configure(relief="sunken", bd=3, bg=self._dark)
-        
+    def _on_enter(self, e):   self.configure(bg=self._h)
+    def _on_leave(self, e):   self.configure(bg=self._c)
+    def _on_press(self, e):   self.configure(bg=self._p)
     def _on_release(self, e):
-        # عند الإفلات يعود الزر لوضعه البارز
-        self.configure(relief="raised", bd=5, bg=self._hover if self.winfo_containing(e.x_root, e.y_root) == self else self._color)
+        inside = self.winfo_containing(e.x_root, e.y_root) == self
+        self.configure(bg=self._h if inside else self._c)
 
-
+    # للتوافق مع الكود القديم الذي يستدعي _lighten/_darken كـ static
     @staticmethod
-    def _lighten(hex_color, amount=0.15):
-        try:
-            h = hex_color.lstrip("#")
-            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-            r = min(255, int(r + (255 - r) * amount))
-            g = min(255, int(g + (255 - g) * amount))
-            b = min(255, int(b + (255 - b) * amount))
-            return f"#{r:02x}{g:02x}{b:02x}"
-        except Exception:
-            return hex_color
-
+    def _lighten(hex_color, amount=0.15): return _clr_lighten(hex_color, amount)
     @staticmethod
-    def _darken(hex_color, amount=0.2):
-        try:
-            h = hex_color.lstrip("#")
-            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-            r, g, b = int(r * (1 - amount)), int(g * (1 - amount)), int(b * (1 - amount))
-            return f"#{r:02x}{g:02x}{b:02x}"
-        except Exception:
-            return hex_color
+    def _darken(hex_color, amount=0.2):  return _clr_darken(hex_color, amount)
 
 
 def confirm_delete(name="هذا العنصر"):
@@ -778,9 +792,11 @@ def show_error(msg): messagebox.showerror("خطأ ✗", msg)
 
 
 def make_card(parent, padding=20):
-    """إطار أبيض كبطاقة بحدود ناعمة."""
-    outer = tk.Frame(parent, bg=COLOR_BORDER, padx=1, pady=1)
-    inner = tk.Frame(outer, bg=COLOR_CARD, padx=padding, pady=padding)
+    """بطاقة بيضاء بظل ناعم وزوايا احترافية."""
+    outer = tk.Frame(parent, bg="#d1d9e6", padx=1, pady=1)
+    mid   = tk.Frame(outer,  bg="#e8edf3", padx=1, pady=1)
+    mid.pack(fill="both", expand=True)
+    inner = tk.Frame(mid, bg=COLOR_CARD, padx=padding, pady=padding)
     inner.pack(fill="both", expand=True)
     return outer, inner
 
@@ -822,21 +838,23 @@ def make_combo(parent, textvariable, values, width=22, state="readonly"):
 
 def create_treeview(parent, columns, headings, widths=None, height=15):
     frame = tk.Frame(parent, bg=COLOR_CARD)
-    frame.pack(fill="both", expand=True, padx=5, pady=5)
+    frame.pack(fill="both", expand=True, padx=4, pady=4)
     tree = ttk.Treeview(frame, columns=columns, show="headings", height=height,
                         style="Modern.Treeview")
     for i, col in enumerate(columns):
         tree.heading(col, text=headings[i], anchor="center")
         tree.column(col, width=(widths[i] if widths else 120), anchor="center")
-    vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-    hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
+    vsb = ttk.Scrollbar(frame, orient="vertical",   command=tree.yview,
+                        style="Thin.Vertical.TScrollbar")
+    hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview,
+                        style="Thin.Horizontal.TScrollbar")
     tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
     tree.grid(row=0, column=0, sticky="nsew")
     vsb.grid(row=0, column=1, sticky="ns")
     hsb.grid(row=1, column=0, sticky="ew")
     frame.grid_rowconfigure(0, weight=1)
     frame.grid_columnconfigure(0, weight=1)
-    tree.tag_configure("oddrow", background="#f8fafc")
+    tree.tag_configure("oddrow",  background="#f8fafc")
     tree.tag_configure("evenrow", background=COLOR_CARD)
     return tree
 
@@ -850,18 +868,33 @@ def insert_zebra(tree, values_list):
         tree.insert("", "end", values=vals, tags=(tag,))
 
 
-def stat_card(parent, title, value, icon, color):
-    """بطاقة إحصائية ملونة."""
-    card = tk.Frame(parent, bg=color, padx=20, pady=18)
-    card.pack(side="right", fill="both", expand=True, padx=8)
-    top = tk.Frame(card, bg=color)
-    top.pack(fill="x")
-    tk.Label(top, text=icon, font=(FONT_FAMILY, 28),
-             bg=color, fg="white").pack(side="right")
-    tk.Label(top, text=title, font=(FONT_FAMILY, 11, "bold"),
-             bg=color, fg="white", anchor="e").pack(side="right", padx=10)
-    tk.Label(card, text=value, font=(FONT_FAMILY, 22, "bold"),
-             bg=color, fg="white", anchor="e").pack(fill="x", pady=(8, 0))
+def stat_card(parent, title, value, icon, color, command=None):
+    """بطاقة إحصائية ملونة قابلة للنقر."""
+    hc = _clr_lighten(color, 0.12)
+    card = tk.Frame(parent, bg=color, padx=20, pady=18,
+                    cursor="hand2" if command else "")
+    card.pack(side="right", fill="both", expand=True, padx=6)
+    top = tk.Frame(card, bg=color); top.pack(fill="x")
+    icon_lbl = tk.Label(top, text=icon, font=(FONT_FAMILY, 26),
+                        bg=color, fg="white"); icon_lbl.pack(side="right")
+    title_lbl = tk.Label(top, text=title, font=(FONT_FAMILY, 10, "bold"),
+                         bg=color, fg="white", anchor="e")
+    title_lbl.pack(side="right", padx=8)
+    val_lbl = tk.Label(card, text=value, font=(FONT_FAMILY, 20, "bold"),
+                       bg=color, fg="white", anchor="e")
+    val_lbl.pack(fill="x", pady=(6, 0))
+    if command:
+        arr_lbl = tk.Label(card, text="← عرض التفاصيل",
+                           font=(FONT_FAMILY, 8), bg=color, fg="white",
+                           anchor="w"); arr_lbl.pack(fill="x", pady=(4, 0))
+        all_w = [card, top, icon_lbl, title_lbl, val_lbl, arr_lbl]
+        def _enter(e):
+            for w in all_w: w.configure(bg=hc)
+        def _leave(e):
+            for w in all_w: w.configure(bg=color)
+        for w in all_w:
+            w.bind("<Enter>", _enter); w.bind("<Leave>", _leave)
+            w.bind("<Button-1>", lambda e: command())
     return card
 
 
@@ -1086,8 +1119,10 @@ class CandidateDialog(tk.Toplevel):
         self.candidate = candidate
         self.vars = {}
         self.born_abroad_var = tk.IntVar(value=0)
-        self.title("بيانات المترشح" if candidate else "تسجيل مترشح جديد")
-        self.geometry("900x680")
+        self.title("تعديل بيانات المترشح" if candidate else "تسجيل مترشح جديد")
+        self.geometry("980x720")
+        self.minsize(880, 640)
+        self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.transient(parent)
         self.grab_set()
@@ -1104,9 +1139,10 @@ class CandidateDialog(tk.Toplevel):
         return [""] + list(self.instructor_map.keys())[:-1]
 
     def _make_field(self, parent, label, key, kind="entry", values=None,
-                    width=28, row=0, col=0):
+                    width=28, row=0, col=0, colspan=1):
         cell = tk.Frame(parent, bg=COLOR_CARD)
-        cell.grid(row=row, column=col, sticky="ew", padx=10, pady=6)
+        cell.grid(row=row, column=col, columnspan=colspan,
+                  sticky="ew", padx=10, pady=5)
         make_label(cell, label, font=FONT_BOLD).pack(anchor="e")
         v = tk.StringVar()
         self.vars[key] = v
@@ -1114,71 +1150,96 @@ class CandidateDialog(tk.Toplevel):
             w = make_combo(cell, v, values or [], width=width)
         else:
             w = make_entry(cell, v, width=width + 2)
-        w.pack(fill="x", ipady=4, pady=(3, 0))
+        w.pack(fill="x", ipady=4, pady=(2, 0))
         return v, w, cell
 
     def _build(self):
-        # رأس النافذة
-        head = tk.Frame(self, bg=COLOR_PRIMARY, pady=18, padx=20)
-        head.pack(fill="x")
+        # ===== رأس النافذة =====
+        head = tk.Frame(self, bg=COLOR_PRIMARY, pady=16, padx=20)
+        head.pack(fill="x", side="top")
         title_text = "✏️  تعديل بيانات المترشح" if self.candidate else "➕  تسجيل مترشح جديد"
-        tk.Label(head, text=title_text, font=(FONT_FAMILY, 16, "bold"),
+        tk.Label(head, text=title_text, font=(FONT_FAMILY, 15, "bold"),
                  bg=COLOR_PRIMARY, fg="white", anchor="e").pack(side="right")
+        tk.Label(head, text="استمارة الترشح لاجتياز امتحانات رخصة السياقة",
+                 font=(FONT_FAMILY, 10), bg=COLOR_PRIMARY, fg="#c7d2fe",
+                 anchor="w").pack(side="left")
 
-        # تبويبات داخل النافذة
-        wrap = tk.Frame(self, bg=COLOR_BG, padx=15, pady=10)
+        # ===== شريط الأزرار (يُعبَّأ أولاً ليبقى ظاهراً دائماً) =====
+        bf = tk.Frame(self, bg=COLOR_BG, pady=10)
+        bf.pack(side="bottom", fill="x", padx=20)
+        tk.Frame(bf, bg=COLOR_BORDER, height=1).pack(fill="x", pady=(0, 10))
+        ModernButton(bf, "إلغاء", self.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
+        save_lbl = "💾  حفظ التعديل" if self.candidate else "✅  تسجيل المترشح"
+        ModernButton(bf, save_lbl, self._save,
+                     color=COLOR_SUCCESS, size="large").pack(side="right", padx=5)
+
+        # ===== المحتوى (يملأ الفراغ المتبقي) =====
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=12, pady=8)
         wrap.pack(fill="both", expand=True)
 
         nb = ttk.Notebook(wrap, style="Modern.TNotebook")
         nb.pack(fill="both", expand=True)
 
-        # ===== التبويب 1: البيانات الشخصية =====
-        tab1 = tk.Frame(nb, bg=COLOR_CARD, padx=20, pady=15)
+        # ══════════════════════════════════════════════
+        # التبويب 1: بيانات الملف والمعلومات الشخصية
+        # ══════════════════════════════════════════════
+        tab1 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
         nb.add(tab1, text="👤  البيانات الشخصية")
-        section_title(tab1, "المعلومات الشخصية الأساسية", icon="📝")
 
+        # -- قسم: بيانات الملف (رقم الملف + تاريخ الإيداع) --
+        section_title(tab1, "بيانات الملف", icon="📁")
+        gf = tk.Frame(tab1, bg=COLOR_CARD)
+        gf.pack(fill="x")
+        gf.columnconfigure(0, weight=1); gf.columnconfigure(1, weight=1)
+        self._make_field(gf, "رقم الملف",           "file_number", row=0, col=0)
+        self._make_field(gf, "تاريخ إيداع الملف",   "file_date",   row=0, col=1)
+
+        # -- قسم: المعلومات الشخصية --
+        section_title(tab1, "المعلومات الشخصية", icon="📝")
         g1 = tk.Frame(tab1, bg=COLOR_CARD)
         g1.pack(fill="both", expand=True)
-        g1.columnconfigure(0, weight=1)
-        g1.columnconfigure(1, weight=1)
+        g1.columnconfigure(0, weight=1); g1.columnconfigure(1, weight=1)
 
         personal = [
-            ("الاسم *",                  "first_name",         "entry", None),
-            ("اللقب *",                  "last_name",          "entry", None),
-            ("الجنس",                    "gender",             "combo", GENDER_OPTIONS),
-            ("الحالة العائلية",          "marital_status",     "combo", MARITAL_OPTIONS),
-            ("رقم التعريف الوطني (NIN)", "national_id",        "entry", None),
-            ("الجنسية",                  "nationality",        "entry", None),
-            ("جنسية ثانية (إن وجدت)",    "second_nationality", "entry", None),
-            ("فصيلة الدم",               "blood_type",         "combo", BLOOD_TYPE_OPTIONS),
-            ("اسم الأب",                 "father_name",        "entry", None),
-            ("اسم ولقب الأم",            "mother_name",        "entry", None),
-            ("رقم الهاتف",               "phone",              "entry", None),
-            ("الإصابة (إن وجدت)",        "disability",         "entry", None),
+            ("اللقب / Nom *",               "last_name",          "entry", None),
+            ("الاسم / Prénom *",             "first_name",         "entry", None),
+            ("الجنس",                        "gender",             "combo", GENDER_OPTIONS),
+            ("الحالة العائلية",              "marital_status",     "combo", MARITAL_OPTIONS),
+            ("رقم التعريف الوطني (NIN)",     "national_id",        "entry", None),
+            ("فصيلة الدم",                   "blood_type",         "combo", BLOOD_TYPE_OPTIONS),
+            ("اسم الأب",                     "father_name",        "entry", None),
+            ("اسم ولقب الأم",                "mother_name",        "entry", None),
+            ("رقم الهاتف",                   "phone",              "entry", None),
+            ("الجنسية الأصلية",              "nationality",        "entry", None),
+            ("الجنسية المكتسبة (إن وجدت)",  "second_nationality", "entry", None),
+            ("إعاقة / إصابة (إن وجدت)",     "disability",         "entry", None),
         ]
         for i, (lbl, key, kind, vals) in enumerate(personal):
             self._make_field(g1, lbl, key, kind, vals, row=i // 2, col=i % 2)
 
-        # ===== التبويب 2: الميلاد والعنوان =====
-        tab2 = tk.Frame(nb, bg=COLOR_CARD, padx=20, pady=15)
+        # ══════════════════════════════════════════════
+        # التبويب 2: الميلاد والعنوان
+        # ══════════════════════════════════════════════
+        tab2 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
         nb.add(tab2, text="🎂  الميلاد والعنوان")
-        section_title(tab2, "بيانات الميلاد", icon="🎂")
+
+        section_title(tab2, "تاريخ ومكان الميلاد", icon="🎂")
 
         # خيار: مولود بالخارج
         ab_box = tk.Frame(tab2, bg=COLOR_PRIMARY_LIGHT, padx=12, pady=8)
-        ab_box.pack(fill="x", pady=(0, 10))
-        cb = tk.Checkbutton(ab_box, text="  مولود(ة) بالخارج (تفعيل حقول السفارة والقنصلية)",
-                            variable=self.born_abroad_var,
-                            command=self._toggle_abroad_fields,
-                            font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
-                            fg=COLOR_PRIMARY_DARK, activebackground=COLOR_PRIMARY_LIGHT,
-                            selectcolor=COLOR_WHITE, anchor="e")
-        cb.pack(anchor="e")
+        ab_box.pack(fill="x", pady=(0, 8))
+        tk.Checkbutton(ab_box,
+                       text="  مولود(ة) بالخارج — تفعيل حقول بلد الميلاد والسفارة/القنصلية",
+                       variable=self.born_abroad_var,
+                       command=self._toggle_abroad_fields,
+                       font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
+                       fg=COLOR_PRIMARY_DARK, activebackground=COLOR_PRIMARY_LIGHT,
+                       selectcolor=COLOR_WHITE, anchor="e").pack(anchor="e")
 
         g2 = tk.Frame(tab2, bg=COLOR_CARD)
-        g2.pack(fill="both", expand=True)
-        g2.columnconfigure(0, weight=1)
-        g2.columnconfigure(1, weight=1)
+        g2.pack(fill="x")
+        g2.columnconfigure(0, weight=1); g2.columnconfigure(1, weight=1)
 
         self._make_field(g2, "تاريخ الميلاد (YYYY-MM-DD)",
                          "birth_date", "entry", row=0, col=0)
@@ -1186,76 +1247,86 @@ class CandidateDialog(tk.Toplevel):
                          "birth_country", "entry", row=0, col=1)
         self._make_field(g2, "بلدية / مدينة الميلاد",
                          "birth_place_commune", "entry", row=1, col=0)
-        self._make_field(g2, "ولاية / منطقة الميلاد",
+        self._make_field(g2, "ولاية الميلاد",
                          "birth_place_wilaya", "entry", row=1, col=1)
 
-        # حقول مخصصة للمولودين بالخارج (تظهر/تختفي)
-        _, w_emb, c_emb = self._make_field(g2, "السفارة (للمولودين بالخارج)",
-                                            "embassy", "entry", row=2, col=0)
-        _, w_con, c_con = self._make_field(g2, "القنصلية (للمولودين بالخارج)",
-                                            "consulate", "entry", row=2, col=1)
+        _, _w_emb, c_emb = self._make_field(
+            g2, "السفارة (للمولودين بالخارج)", "embassy", "entry", row=2, col=0)
+        _, _w_con, c_con = self._make_field(
+            g2, "القنصلية أو مكتب التسجيل",   "consulate","entry", row=2, col=1)
         self._abroad_widgets = [c_emb, c_con]
 
+        # -- العنوان الحالي --
         section_title(tab2, "العنوان الحالي", icon="🏠")
+        g_addr = tk.Frame(tab2, bg=COLOR_CARD)
+        g_addr.pack(fill="x")
+        g_addr.columnconfigure(0, weight=1); g_addr.columnconfigure(1, weight=1)
+        self._make_field(g_addr, "بلدية / مدينة السكن",
+                         "address_commune", "entry", row=0, col=0)
+        self._make_field(g_addr, "ولاية السكن",
+                         "address_wilaya",  "entry", row=0, col=1)
+
         addr_cell = tk.Frame(tab2, bg=COLOR_CARD)
-        addr_cell.pack(fill="x", padx=10, pady=8)
-        make_label(addr_cell, "العنوان الكامل (الشارع، الحي، البلدية، الولاية)",
-                   font=FONT_BOLD).pack(anchor="e")
+        addr_cell.pack(fill="x", padx=10, pady=4)
+        make_label(addr_cell, "العنوان الكامل (الشارع، الحي...)", font=FONT_BOLD).pack(anchor="e")
         v_addr = tk.StringVar(); self.vars["current_address"] = v_addr
-        make_entry(addr_cell, v_addr, width=80).pack(fill="x", ipady=6, pady=(3, 0))
+        make_entry(addr_cell, v_addr, width=80).pack(fill="x", ipady=5, pady=(2, 0))
 
-        # ===== التبويب 3: التسجيل والتكوين =====
-        tab3 = tk.Frame(nb, bg=COLOR_CARD, padx=20, pady=15)
+        # ══════════════════════════════════════════════
+        # التبويب 3: التسجيل والتكوين والأصناف السابقة
+        # ══════════════════════════════════════════════
+        tab3 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
         nb.add(tab3, text="🚗  التسجيل والتكوين")
-        section_title(tab3, "تسجيل في التكوين — اختر نوع الرخصة", icon="🚗")
 
-        opts = self._instructor_options()
-
-        # نوع الرخصة بشكل مميّز
-        lic_card = tk.Frame(tab3, bg=COLOR_PRIMARY_LIGHT, padx=15, pady=12)
-        lic_card.pack(fill="x", pady=(0, 12))
+        # -- نوع الرخصة --
+        section_title(tab3, "الصنف المطلوب ونوع الرخصة", icon="🎯")
+        lic_card = tk.Frame(tab3, bg=COLOR_PRIMARY_LIGHT, padx=14, pady=10)
+        lic_card.pack(fill="x", pady=(0, 10))
         tk.Label(lic_card, text="🎯  نوع الرخصة المطلوبة *",
                  font=(FONT_FAMILY, 12, "bold"),
-                 bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK,
-                 anchor="e").pack(anchor="e")
+                 bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor="e").pack(anchor="e")
         v_lic = tk.StringVar(); self.vars["license_type"] = v_lic
         make_combo(lic_card, v_lic, LICENSE_OPTIONS, width=20).pack(
-            anchor="e", pady=(6, 4), ipady=4)
-        tk.Label(lic_card, text="A: دراجة • B: سيارة • C: شاحنة • D: حافلة • E: مقطورة",
-                 font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT,
-                 fg=COLOR_PRIMARY_DARK, anchor="e").pack(anchor="e")
+            anchor="e", pady=(4, 2), ipady=4)
+        tk.Label(lic_card, text="A: دراجة نارية  |  B: سيارة  |  C: شاحنة  |  D: حافلة  |  E: مقطورة",
+                 font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor="e").pack(anchor="e")
 
+        # -- الممرن والمبالغ --
+        section_title(tab3, "الممرن والمبالغ المالية", icon="💰")
+        opts = self._instructor_options()
         g3 = tk.Frame(tab3, bg=COLOR_CARD)
-        g3.pack(fill="both", expand=True)
-        g3.columnconfigure(0, weight=1)
-        g3.columnconfigure(1, weight=1)
+        g3.pack(fill="x")
+        g3.columnconfigure(0, weight=1); g3.columnconfigure(1, weight=1)
 
-        self._make_field(g3, "الأصناف المتحصل عليها سابقاً",
-                         "previous_licenses", "entry", row=0, col=0)
         self._make_field(g3, "الممرن المُكلَّف",
-                         "instructor_name", "combo", opts, row=0, col=1)
+                         "instructor_name", "combo", opts, row=0, col=0)
         self._make_field(g3, "المبلغ الإجمالي للتكوين (دج) *",
-                         "total_amount", "entry", row=1, col=0)
+                         "total_amount", "entry", row=0, col=1)
         if not self.candidate:
-            self._make_field(g3, "المبلغ المدفوع (الدفعة الأولى)",
-                             "initial_payment", "entry", row=1, col=1)
+            self._make_field(g3, "المبلغ المدفوع عند التسجيل (دج)",
+                             "initial_payment", "entry", row=1, col=0)
 
+        # -- الأصناف المتحصل عليها من قبل --
+        section_title(tab3, "الأصناف المتحصل عليها من قبل", icon="📋")
+        prev_note = tk.Frame(tab3, bg="#fffbeb", padx=10, pady=6)
+        prev_note.pack(fill="x", pady=(0, 6))
+        tk.Label(prev_note,
+                 text="أدخل رموز الأصناف القديمة مفصولة بفاصلة — مثال:  B, A1, C1",
+                 font=FONT_SMALL, bg="#fffbeb", fg="#92400e", anchor="e").pack(anchor="e")
+        prev_cell = tk.Frame(tab3, bg=COLOR_CARD)
+        prev_cell.pack(fill="x", padx=10, pady=2)
+        make_label(prev_cell, "الأصناف السابقة (مثال: A, B, C1)", font=FONT_BOLD).pack(anchor="e")
+        v_prev = tk.StringVar(); self.vars["previous_licenses"] = v_prev
+        make_entry(prev_cell, v_prev, width=60).pack(fill="x", ipady=4, pady=(2, 0))
+
+        # ══════════════════════════════════════════════
         # القيم الافتراضية
+        # ══════════════════════════════════════════════
         self.vars["nationality"].set("جزائرية")
         self.vars["birth_country"].set("الجزائر")
         self.vars["license_type"].set("B")
 
-        # أزرار الحفظ والإلغاء
-        bf = tk.Frame(self, bg=COLOR_BG, pady=12)
-        bf.pack(side="bottom", fill="x", padx=20)
-        ModernButton(bf, "إلغاء", self.destroy, icon="✗",
-                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
-        save_lbl = "حفظ التعديل" if self.candidate else "تسجيل المترشح"
-        ModernButton(bf, save_lbl, self._save, icon="✅",
-                     color=COLOR_SUCCESS).pack(side="right", padx=5)
-
     def _toggle_abroad_fields(self):
-        """يفعّل/يعطّل حقول السفارة والقنصلية حسب الحالة."""
         enabled = self.born_abroad_var.get() == 1
         for cell in getattr(self, "_abroad_widgets", []):
             for child in cell.winfo_children():
@@ -1277,33 +1348,34 @@ class CandidateDialog(tk.Toplevel):
 
     def _save(self):
         try:
-            total_str = self.vars["total_amount"].get().replace(",", ".").replace(" ", "")
-            total = float(total_str or 0)
+            total = float(self.vars["total_amount"].get().replace(",", ".").replace(" ", "") or 0)
         except ValueError:
             total = 0
-            
+
         initial = 0
         if "initial_payment" in self.vars:
             try:
-                init_str = self.vars["initial_payment"].get().replace(",", ".").replace(" ", "")
-                initial = float(init_str or 0)
+                initial = float(self.vars["initial_payment"].get().replace(",", ".").replace(" ", "") or 0)
             except ValueError:
                 initial = 0
+
         instr = self.instructor_map.get(self.vars["instructor_name"].get())
-        d = {k: self.vars[k].get().strip()
-             for k in ["first_name","last_name","birth_date","birth_place_commune",
-                       "birth_place_wilaya","father_name","mother_name","phone",
-                       "disability","previous_licenses","national_id",
-                       "second_nationality","current_address","embassy","consulate"]}
-        for k in ["gender","marital_status","blood_type","license_type"]:
+
+        text_keys = ["first_name", "last_name", "birth_date", "birth_place_commune",
+                     "birth_place_wilaya", "father_name", "mother_name", "phone",
+                     "disability", "previous_licenses", "national_id",
+                     "second_nationality", "current_address", "embassy", "consulate",
+                     "file_number", "file_date", "address_commune", "address_wilaya"]
+        d = {k: self.vars[k].get().strip() for k in text_keys}
+        for k in ["gender", "marital_status", "blood_type", "license_type"]:
             d[k] = self.vars[k].get()
         d["nationality"]    = self.vars["nationality"].get().strip() or "جزائرية"
         d["birth_country"]  = self.vars["birth_country"].get().strip() or "الجزائر"
         d["instructor_id"]  = instr
         d["total_amount"]   = total
+        d["is_born_abroad"] = self.born_abroad_var.get()
         if not self.candidate:
             d["initial_payment"] = initial
-        d["is_born_abroad"] = self.born_abroad_var.get()
 
         if not d["first_name"] or not d["last_name"]:
             show_error("الاسم واللقب إلزاميان"); return
@@ -1311,7 +1383,7 @@ class CandidateDialog(tk.Toplevel):
             show_error("يرجى تحديد نوع الرخصة المطلوبة"); return
         if d["is_born_abroad"] and not (d["embassy"] or d["consulate"]):
             if not messagebox.askyesno("تأكيد",
-                "حدّدت أن المترشح مولود بالخارج لكنك لم تُدخل السفارة/القنصلية.\nهل تريد المتابعة؟"):
+                "حدّدت أن المترشح مولود بالخارج لكن لم تُدخل السفارة/القنصلية.\nهل تريد المتابعة؟"):
                 return
 
         self.on_save(d)
@@ -1439,19 +1511,10 @@ class CandidatesFrame(tk.Frame):
     def _print_training_card(self):
         if not self.selected_id:
             show_error("يرجى تحديد مترشح من القائمة أولاً"); return
-        
-        # البحث عن واجهة الوثائق لاستخدام دالة الطباعة منها (لأنها تحتوي على التصميم المحدث)
-        # إذا لم تكن موجودة سنقوم بإنشاء نسخة مؤقتة لتنفيذ المهمة
-        for tab in self.master.winfo_children():
-            if isinstance(tab, DocumentsFrame):
-                tab.selected_candidate_id = self.selected_id
-                tab._doc_training_card()
-                return
-        
-        # في حالة لم نجد الواجهة (وهذا غير متوقع)
         temp_doc = DocumentsFrame(self)
         temp_doc.selected_candidate_id = self.selected_id
         temp_doc._doc_training_card()
+        temp_doc.destroy()
 
 
 # ============================================================================
@@ -4192,10 +4255,10 @@ class DrivingSchoolApp:
         upgrade_db()
         seed_demo_data()
         self.root = tk.Tk()
-        self.root.title("نظام إدارة مدرسة تعليم السياقة - الجزائر")
-        self.root.geometry("1024x720")
-        self.root.minsize(900, 600)
-        self.root.configure(bg=COLOR_BG)
+        self.root.title("برنامج ميدانيك — إدارة مدرسة تعليم السياقة")
+        self.root.geometry("1280x800")
+        self.root.minsize(1000, 650)
+        self.root.configure(bg="#f1f5f9")
         try:
             self.root.state('zoomed')
         except Exception:
@@ -4204,23 +4267,27 @@ class DrivingSchoolApp:
             except Exception:
                 pass
 
+        self._nav_refs     = []
+        self._current_idx  = -1
+        self._page_frames  = []
+        self._topbar_title = None
+
         self._setup_styles()
-        self._title_bar()
-        self._build_tabs()
-        self._status_bar()
+        self._build_layout()
+        self._build_status_bar()
         self.root.mainloop()
 
+    # ──────────────────────────────────────────────────────────
     def _setup_styles(self):
         style = ttk.Style()
         style.theme_use("clam")
 
-        # Notebook
-        style.configure("Modern.TNotebook", background=COLOR_BG, borderwidth=0,
-                        tabmargins=[2, 8, 2, 0])
+        # Notebook (للنوافذ المنبثقة)
+        style.configure("Modern.TNotebook", background=COLOR_CARD, borderwidth=0,
+                        tabmargins=[2, 5, 2, 0])
         style.configure("Modern.TNotebook.Tab",
-                        font=(FONT_FAMILY, 11, "bold"), padding=[18, 10],
-                        background="#e2e8f0", foreground=COLOR_TEXT,
-                        borderwidth=0)
+                        font=(FONT_FAMILY, 10, "bold"), padding=[14, 8],
+                        background="#e2e8f0", foreground=COLOR_TEXT, borderwidth=0)
         style.map("Modern.TNotebook.Tab",
                   background=[("selected", COLOR_PRIMARY), ("active", "#cbd5e1")],
                   foreground=[("selected", "white")])
@@ -4245,81 +4312,275 @@ class DrivingSchoolApp:
                         background=COLOR_CARD, borderwidth=1,
                         relief="flat", padding=4)
 
-    def _title_bar(self):
-        bar = tk.Frame(self.root, bg=COLOR_SIDEBAR, padx=15, pady=10)
-        bar.pack(fill="x")
+        # ── أشرطة تمرير رفيعة وعصرية ──
+        for orient in ("Vertical", "Horizontal"):
+            style.configure(f"Thin.{orient}.TScrollbar",
+                            background="#cbd5e1", troughcolor="#f1f5f9",
+                            borderwidth=0, arrowsize=0, width=8, relief="flat")
+            style.map(f"Thin.{orient}.TScrollbar",
+                      background=[("active", "#94a3b8"),
+                                  ("pressed", "#64748b"),
+                                  ("disabled", "#e2e8f0")])
 
+    # ──────────────────────────────────────────────────────────
+    def _build_layout(self):
+        """البنية الكاملة: شريط جانبي يمين + منطقة محتوى يسار."""
+        main = tk.Frame(self.root, bg="#f1f5f9")
+        main.pack(fill="both", expand=True)
+
+        # ── الشريط الجانبي (يمين — RTL) ──
+        self.sidebar = tk.Frame(main, bg=COLOR_SIDEBAR, width=228)
+        self.sidebar.pack(side="right", fill="y")
+        self.sidebar.pack_propagate(False)
+        self._build_sidebar()
+
+        # ── منطقة المحتوى (يسار) ──
+        content_wrapper = tk.Frame(main, bg="#f1f5f9")
+        content_wrapper.pack(side="right", fill="both", expand=True)
+
+        self._build_topbar(content_wrapper)
+
+        self.content = tk.Frame(content_wrapper, bg="#f1f5f9")
+        self.content.pack(fill="both", expand=True, padx=14, pady=(8, 12))
+
+        self._build_frames()
+        self._navigate(0)
+
+    # ──────────────────────────────────────────────────────────
+    def _build_sidebar(self):
+        sb = self.sidebar
+
+        # ── قسم اللوجو ──
+        logo_area = tk.Frame(sb, bg=COLOR_HEADER, padx=0, pady=16)
+        logo_area.pack(fill="x")
+
+        self._sidebar_logo = None
+        logo_shown = False
+        for lp in [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "attached_assets",
+                         "WhatsApp_Image_2026-05-01_at_18.32.38_1777665526194.jpeg"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "attached_assets",
+                         "WhatsApp_Image_2026-05-01_at_18.32.38_1777660833359.jpeg"),
+        ]:
+            if HAS_PIL and os.path.exists(lp) and not logo_shown:
+                try:
+                    from PIL import ImageDraw
+                    size = 88
+                    img  = Image.open(lp).convert("RGBA").resize((size, size), Image.LANCZOS)
+                    mask = Image.new("L", (size, size), 0)
+                    ImageDraw.Draw(mask).ellipse((0, 0, size-1, size-1), fill=255)
+                    out  = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+                    out.paste(img, (0, 0), mask=mask)
+                    self._sidebar_logo = ImageTk.PhotoImage(out)
+                    tk.Label(logo_area, image=self._sidebar_logo,
+                             bg=COLOR_HEADER).pack(pady=(0, 6))
+                    logo_shown = True
+                except Exception:
+                    pass
+
+        if not logo_shown:
+            tk.Label(logo_area, text="🚗", font=(FONT_FAMILY, 34),
+                     bg=COLOR_HEADER, fg=COLOR_ACCENT).pack(pady=(0, 4))
+
+        tk.Label(logo_area, text="ميدانيك",
+                 font=(FONT_FAMILY, 17, "bold"),
+                 bg=COLOR_HEADER, fg="white").pack()
+        tk.Label(logo_area, text="إدارة مدرسة السياقة",
+                 font=(FONT_FAMILY, 9),
+                 bg=COLOR_HEADER, fg="#94a3b8").pack(pady=(2, 0))
+
+        # فاصل
+        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=(0, 6))
+
+        # ── عناصر التنقل ──
+        nav_container = tk.Frame(sb, bg=COLOR_SIDEBAR)
+        nav_container.pack(fill="both", expand=True)
+
+        nav_defs = [
+            ("🏠", "الرئيسية"),
+            ("🏫", "معلومات المدرسة"),
+            ("🧾", "المترشحون"),
+            ("🚗", "الممرنون"),
+            ("📚", "مراحل التكوين"),
+            ("💰", "المدفوعات"),
+            ("💸", "المصاريف"),
+            ("📊", "التقارير"),
+            ("🖨️", "طباعة الوثائق"),
+        ]
+        self._nav_refs = []
+        for i, (icon, label) in enumerate(nav_defs):
+            self._make_nav_item(nav_container, icon, label, i)
+
+        # فاصل سفلي
+        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=6)
+
+        # ── معلومات في أسفل السايدبار ──
+        bot = tk.Frame(sb, bg=COLOR_SIDEBAR, padx=12, pady=8)
+        bot.pack(fill="x", side="bottom")
         info = SchoolInfoDB.get()
+        sname = (info.get("name") or "المدرسة")[:24]
+        tk.Label(bot, text=f"🏫 {sname}", font=(FONT_FAMILY, 9),
+                 bg=COLOR_SIDEBAR, fg="#64748b",
+                 anchor="e", wraplength=200, justify="right").pack(fill="x")
+        tk.Label(bot, text=f"📅 {date.today().strftime('%Y-%m-%d')}",
+                 font=(FONT_FAMILY, 9), bg=COLOR_SIDEBAR, fg="#64748b",
+                 anchor="e").pack(fill="x", pady=(4, 0))
+        tk.Label(bot, text="v2.0  |  🇩🇿 الجزائر",
+                 font=(FONT_FAMILY, 8), bg=COLOR_SIDEBAR, fg="#475569",
+                 anchor="e").pack(fill="x", pady=(3, 0))
 
-        # يمين: لوقو + اسم النظام
-        right = tk.Frame(bar, bg=COLOR_SIDEBAR); right.pack(side="right")
+    def _make_nav_item(self, parent, icon, label, index):
+        outer = tk.Frame(parent, bg=COLOR_SIDEBAR, cursor="hand2")
+        outer.pack(fill="x")
 
-        # --- عرض اللوقو ---
-        LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 "attached_assets",
-                                 "WhatsApp_Image_2026-05-01_at_18.32.38_1777660833359.jpeg")
-        self._logo_img = None
-        if HAS_PIL and os.path.exists(LOGO_PATH):
-            try:
-                img = Image.open(LOGO_PATH).convert("RGBA")
-                img = img.resize((56, 56), Image.LANCZOS)
-                self._logo_img = ImageTk.PhotoImage(img)
-                tk.Label(right, image=self._logo_img,
-                         bg=COLOR_SIDEBAR).pack(side="right", padx=(0, 10))
-            except Exception:
-                tk.Label(right, text="🚗", font=(FONT_FAMILY, 26),
-                         bg=COLOR_SIDEBAR, fg=COLOR_ACCENT).pack(side="right", padx=(0, 12))
-        else:
-            tk.Label(right, text="🚗", font=(FONT_FAMILY, 26),
-                     bg=COLOR_SIDEBAR, fg=COLOR_ACCENT).pack(side="right", padx=(0, 12))
+        # شريط اللون النشط (يمين — بجانب المحتوى)
+        accent = tk.Frame(outer, bg=COLOR_SIDEBAR, width=4)
+        accent.pack(side="right", fill="y")
 
-        rt = tk.Frame(right, bg=COLOR_SIDEBAR); rt.pack(side="right")
-        tk.Label(rt, text="برنامج ميدانيك - نظام إدارة مدرسة تعليم السياقة",
-                 font=(FONT_FAMILY, 15, "bold"),
-                 bg=COLOR_SIDEBAR, fg="white", anchor="e").pack(anchor="e")
-        if info.get("name"):
-            tk.Label(rt, text=info["name"], font=FONT_MAIN,
-                     bg=COLOR_SIDEBAR, fg=COLOR_ACCENT, anchor="e").pack(anchor="e")
+        inner = tk.Frame(outer, bg=COLOR_SIDEBAR, padx=14, pady=11)
+        inner.pack(side="right", fill="both", expand=True)
 
-        # يسار: التاريخ
-        left = tk.Frame(bar, bg=COLOR_SIDEBAR); left.pack(side="left")
-        tk.Label(left, text=f"📅  {date.today().strftime('%Y-%m-%d')}",
-                 font=FONT_BOLD, bg=COLOR_SIDEBAR, fg="#cbd5e1").pack(side="left", padx=10)
-        tk.Label(left, text="🇩🇿 الجزائر", font=FONT_BOLD,
-                 bg=COLOR_SIDEBAR, fg=COLOR_ACCENT).pack(side="left", padx=10)
+        icon_lbl = tk.Label(inner, text=icon, font=(FONT_FAMILY, 13),
+                            bg=COLOR_SIDEBAR, fg="#64748b")
+        icon_lbl.pack(side="right", padx=(0, 10))
 
-    def _build_tabs(self):
-        self.nb = ttk.Notebook(self.root, style="Modern.TNotebook")
-        self.nb.pack(fill="both", expand=True, padx=10, pady=(8, 0))
+        text_lbl = tk.Label(inner, text=label, font=(FONT_FAMILY, 11, "bold"),
+                            bg=COLOR_SIDEBAR, fg="#94a3b8", anchor="e")
+        text_lbl.pack(side="right", fill="x", expand=True)
 
-        tabs = [("🏠  الرئيسية",       DashboardFrame),
-                ("🏫  معلومات المدرسة", SchoolInfoFrame),
-                ("🧾  المترشحون",       CandidatesFrame),
-                ("🚗  الممرنون",        InstructorsFrame),
-                ("📚  مراحل التكوين",   TrainingFrame),
-                ("💰  المدفوعات",       PaymentsFrame),
-                ("💸  المصاريف",        ExpensesFrame),
-                ("📊  التقارير",        ReportsFrame),
-                ("🖨️  طباعة الوثائق",  DocumentsFrame)]
-        self.frames = []
-        for label, FrameClass in tabs:
-            self.frames.append(FrameClass)
-            # إنشاء كسول: يبني الإطار أول مرة يُختار فيه
-        # نبني كل التبويبات مباشرةً (السرعة لن تتأثر بشكل ملحوظ)
-        for label, FrameClass in tabs:
-            self.nb.add(FrameClass(self.nb), text=label)
+        ref = {"outer": outer, "inner": inner,
+               "icon": icon_lbl, "text": text_lbl, "accent": accent}
+        self._nav_refs.append(ref)
 
-    def _status_bar(self):
-        bar = tk.Frame(self.root, bg=COLOR_HEADER, padx=15, pady=6)
+        for w in [outer, inner, icon_lbl, text_lbl]:
+            w.bind("<Enter>",    lambda e, i=index: self._nav_hover(i))
+            w.bind("<Leave>",    lambda e, i=index: self._nav_leave(i))
+            w.bind("<Button-1>", lambda e, i=index: self._navigate(i))
+
+    def _nav_hover(self, index):
+        if index == self._current_idx:
+            return
+        r = self._nav_refs[index]
+        for w in [r["outer"], r["inner"]]:
+            w.configure(bg=COLOR_SIDEBAR_HOVER)
+        r["icon"].configure(bg=COLOR_SIDEBAR_HOVER, fg="#cbd5e1")
+        r["text"].configure(bg=COLOR_SIDEBAR_HOVER, fg="#e2e8f0")
+
+    def _nav_leave(self, index):
+        if index == self._current_idx:
+            return
+        r = self._nav_refs[index]
+        for w in [r["outer"], r["inner"]]:
+            w.configure(bg=COLOR_SIDEBAR)
+        r["icon"].configure(bg=COLOR_SIDEBAR, fg="#64748b")
+        r["text"].configure(bg=COLOR_SIDEBAR, fg="#94a3b8")
+
+    def _navigate(self, index):
+        # إلغاء تفعيل الصفحة الحالية
+        if 0 <= self._current_idx < len(self._nav_refs):
+            old = self._nav_refs[self._current_idx]
+            for w in [old["outer"], old["inner"]]:
+                w.configure(bg=COLOR_SIDEBAR)
+            old["icon"].configure(bg=COLOR_SIDEBAR, fg="#64748b")
+            old["text"].configure(bg=COLOR_SIDEBAR, fg="#94a3b8")
+            old["accent"].configure(bg=COLOR_SIDEBAR)
+
+        # إخفاء كل الصفحات
+        for frame, _ in self._page_frames:
+            frame.pack_forget()
+
+        # تفعيل الصفحة الجديدة
+        self._current_idx = index
+        ref = self._nav_refs[index]
+        for w in [ref["outer"], ref["inner"]]:
+            w.configure(bg="#1e3a8a")
+        ref["icon"].configure(bg="#1e3a8a", fg="white")
+        ref["text"].configure(bg="#1e3a8a", fg="white")
+        ref["accent"].configure(bg=COLOR_ACCENT)
+
+        if 0 <= index < len(self._page_frames):
+            frame, title = self._page_frames[index]
+            frame.pack(fill="both", expand=True)
+            if self._topbar_title:
+                self._topbar_title.configure(text=title)
+
+    # ──────────────────────────────────────────────────────────
+    def _build_topbar(self, parent):
+        topbar = tk.Frame(parent, bg=COLOR_CARD, padx=20, pady=0)
+        topbar.pack(fill="x", side="top")
+        tk.Frame(parent, bg=COLOR_BORDER, height=1).pack(fill="x")
+
+        inner = tk.Frame(topbar, bg=COLOR_CARD, pady=11)
+        inner.pack(fill="both")
+
+        # يمين: عنوان الصفحة
+        right_bar = tk.Frame(inner, bg=COLOR_CARD)
+        right_bar.pack(side="right")
+        self._topbar_title = tk.Label(right_bar, text="الرئيسية",
+                                       font=(FONT_FAMILY, 17, "bold"),
+                                       bg=COLOR_CARD, fg=COLOR_HEADER, anchor="e")
+        self._topbar_title.pack(side="right")
+
+        # يسار: التاريخ + التنبيهات
+        left_bar = tk.Frame(inner, bg=COLOR_CARD)
+        left_bar.pack(side="left")
+
+        try:
+            v_alerts = VehicleDB.get_alerts()
+            cands    = CandidateDB.get_all()
+            unpaid   = [c for c in cands
+                        if sum(p["amount"] for p in PaymentDB.get_by_candidate(c["id"]))
+                        < c["total_amount"]]
+            ac = len(v_alerts) + (1 if unpaid else 0)
+        except Exception:
+            ac = 0
+
+        bell_clr  = COLOR_DANGER if ac > 0 else COLOR_TEXT_LIGHT
+        bell_text = f"🔔 {ac}" if ac > 0 else "🔔"
+        tk.Label(left_bar, text=bell_text, font=(FONT_FAMILY, 13),
+                 bg=COLOR_CARD, fg=bell_clr, cursor="hand2").pack(side="left", padx=(0, 14))
+
+        today  = date.today()
+        d_str  = f"{today.day} {MONTHS_AR.get(today.strftime('%m'), '')} {today.year}"
+        tk.Label(left_bar, text=f"📅  {d_str}", font=(FONT_FAMILY, 11),
+                 bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(side="left")
+
+    # ──────────────────────────────────────────────────────────
+    def _build_frames(self):
+        nav_defs = [
+            ("الرئيسية",          DashboardFrame),
+            ("معلومات المدرسة",   SchoolInfoFrame),
+            ("المترشحون",         CandidatesFrame),
+            ("الممرنون",          InstructorsFrame),
+            ("مراحل التكوين",     TrainingFrame),
+            ("المدفوعات",         PaymentsFrame),
+            ("المصاريف",          ExpensesFrame),
+            ("التقارير",          ReportsFrame),
+            ("طباعة الوثائق",    DocumentsFrame),
+        ]
+        self._page_frames = []
+        for title, FrameClass in nav_defs:
+            f = FrameClass(self.content)
+            f.pack_forget()
+            self._page_frames.append((f, title))
+
+    # ──────────────────────────────────────────────────────────
+    def _build_status_bar(self):
+        bar = tk.Frame(self.root, bg=COLOR_HEADER, padx=15, pady=5)
         bar.pack(fill="x", side="bottom")
-        nc = len(CandidateDB.get_all()); ni = len(InstructorDB.get_all())
-        ar_status = "العربية: ✓" if HAS_ARABIC_LIBS else "العربية: ✗"
-        pdf_status = "PDF: ✓" if HAS_REPORTLAB else "PDF: ✗"
+        nc = len(CandidateDB.get_all())
+        ni = len(InstructorDB.get_all())
+        ar_s  = "العربية ✓" if HAS_ARABIC_LIBS  else "العربية ✗"
+        pdf_s = "PDF ✓"     if HAS_REPORTLAB    else "PDF ✗"
         tk.Label(bar,
-                 text=f"المترشحون: {nc}   |   الممرنون: {ni}   |   {pdf_status}   |   {ar_status}   |   قاعدة البيانات: نشطة ✓",
+                 text=f"المترشحون: {nc}   |   الممرنون: {ni}   |   {pdf_s}   |   {ar_s}   |   قاعدة البيانات ✓",
                  font=FONT_SMALL, bg=COLOR_HEADER, fg="white").pack(side="right")
-        tk.Label(bar, text="v2.0  |  مدرسة السياقة - الجزائر",
+        tk.Label(bar, text="v2.0  |  برنامج ميدانيك  |  الجزائر",
                  font=FONT_SMALL, bg=COLOR_HEADER, fg="#94a3b8").pack(side="left")
+
+    pass  # placeholder — الأساليب القديمة أُزيلت
 
 
 if __name__ == "__main__":
