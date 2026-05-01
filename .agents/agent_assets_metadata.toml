@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "8DLZwCdAahOx2x-YSQ6D0"
+uri = "file://driving_school_modified.zip"
+type = "unspecified"
+title = "driving_school_single.py - النسخة المحدّثة"
