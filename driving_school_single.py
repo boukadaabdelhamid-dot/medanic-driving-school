@@ -4246,14 +4246,166 @@ class DocumentsFrame(tk.Frame):
 
 
 # ============================================================================
+#  شاشة تسجيل الدخول
+# ============================================================================
+
+# بيانات افتراضية (يمكن تغييرها لاحقاً عبر قاعدة البيانات)
+_DEFAULT_USERS = {
+    "admin": "1234",
+    "مدير":  "0000",
+}
+
+
+class LoginWindow:
+    """نافذة تسجيل دخول احترافية تُعرض قبل النافذة الرئيسية."""
+
+    def __init__(self):
+        init_db()
+        upgrade_db()
+
+        self.root = tk.Tk()
+        self.root.title("برنامج ميدانيك — تسجيل الدخول")
+        self.root.geometry("480x600")
+        self.root.resizable(False, False)
+        self.root.configure(bg=COLOR_HEADER)
+        # توسيط النافذة
+        self.root.eval('tk::PlaceWindow . center')
+        self._logged_user = None
+        self._build()
+        self.root.mainloop()
+
+    # ──────────────────────────────────────────────────────────
+    def _build(self):
+        root = self.root
+
+        # ── خلفية متدرجة (محاكاة بإطارات) ──
+        top_band = tk.Frame(root, bg=COLOR_HEADER, height=260)
+        top_band.pack(fill="x")
+        top_band.pack_propagate(False)
+
+        # ── اللوجو 150×150 ──
+        logo_shown = False
+        for lp in [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "attached_assets",
+                         "WhatsApp_Image_2026-05-01_at_18.32.38_1777665526194.jpeg"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "attached_assets",
+                         "WhatsApp_Image_2026-05-01_at_18.32.38_1777660833359.jpeg"),
+        ]:
+            if HAS_PIL and os.path.exists(lp) and not logo_shown:
+                try:
+                    from PIL import ImageDraw
+                    size = 150
+                    img  = Image.open(lp).convert("RGBA").resize((size, size), Image.LANCZOS)
+                    mask = Image.new("L", (size, size), 0)
+                    ImageDraw.Draw(mask).ellipse((0, 0, size-1, size-1), fill=255)
+                    out  = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+                    out.paste(img, mask=mask)
+                    self._logo_img = ImageTk.PhotoImage(out)
+                    tk.Label(top_band, image=self._logo_img,
+                             bg=COLOR_HEADER).pack(pady=(28, 10))
+                    logo_shown = True
+                except Exception:
+                    pass
+
+        if not logo_shown:
+            tk.Label(top_band, text="🚗", font=(FONT_FAMILY, 64),
+                     bg=COLOR_HEADER, fg=COLOR_ACCENT).pack(pady=(20, 6))
+
+        tk.Label(top_band, text="ميدانيك",
+                 font=(FONT_FAMILY, 22, "bold"),
+                 bg=COLOR_HEADER, fg="white").pack()
+        tk.Label(top_band, text="نظام إدارة مدرسة تعليم السياقة",
+                 font=(FONT_FAMILY, 11),
+                 bg=COLOR_HEADER, fg="#94a3b8").pack(pady=(2, 0))
+
+        # ── بطاقة الدخول ──
+        card = tk.Frame(root, bg=COLOR_CARD, padx=36, pady=30)
+        card.pack(fill="both", expand=True, padx=0, pady=0)
+
+        tk.Label(card, text="تسجيل الدخول",
+                 font=(FONT_FAMILY, 16, "bold"),
+                 bg=COLOR_CARD, fg=COLOR_HEADER).pack(anchor="e", pady=(0, 18))
+
+        # حقل اسم المستخدم
+        tk.Label(card, text="اسم المستخدم", font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._user_var = tk.StringVar(value="admin")
+        ue = tk.Entry(card, textvariable=self._user_var,
+                      font=FONT_MAIN, relief="solid", bd=1,
+                      justify="right", fg=COLOR_TEXT, bg="white",
+                      insertbackground=COLOR_PRIMARY)
+        ue.pack(fill="x", ipady=8, pady=(4, 14))
+
+        # حقل كلمة المرور
+        tk.Label(card, text="كلمة المرور", font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._pass_var = tk.StringVar()
+        pe = tk.Entry(card, textvariable=self._pass_var, show="●",
+                      font=FONT_MAIN, relief="solid", bd=1,
+                      justify="right", fg=COLOR_TEXT, bg="white",
+                      insertbackground=COLOR_PRIMARY)
+        pe.pack(fill="x", ipady=8, pady=(4, 6))
+
+        # تلميح كلمة المرور الافتراضية
+        tk.Label(card, text="(الافتراضي: admin / 1234)",
+                 font=(FONT_FAMILY, 8), bg=COLOR_CARD, fg="#94a3b8",
+                 anchor="e").pack(fill="x", pady=(0, 20))
+
+        # رسالة الخطأ
+        self._err_var = tk.StringVar()
+        self._err_lbl = tk.Label(card, textvariable=self._err_var,
+                                 font=FONT_SMALL, bg=COLOR_CARD, fg="#ef4444",
+                                 anchor="e")
+        self._err_lbl.pack(fill="x", pady=(0, 10))
+
+        # زر الدخول
+        login_btn = tk.Frame(card, bg=COLOR_PRIMARY, cursor="hand2")
+        login_btn.pack(fill="x")
+        self._login_lbl = tk.Label(login_btn, text="دخول",
+                                   font=(FONT_FAMILY, 13, "bold"),
+                                   bg=COLOR_PRIMARY, fg="white", pady=11)
+        self._login_lbl.pack(fill="x")
+
+        def _do_login(e=None):
+            u = self._user_var.get().strip()
+            p = self._pass_var.get().strip()
+            if u in _DEFAULT_USERS and _DEFAULT_USERS[u] == p:
+                self._logged_user = u
+                self.root.destroy()
+                app = DrivingSchoolApp(logged_user=u)
+            else:
+                self._err_var.set("❌  اسم المستخدم أو كلمة المرور غير صحيحة")
+
+        login_btn.bind("<Button-1>", _do_login)
+        self._login_lbl.bind("<Button-1>", _do_login)
+        pe.bind("<Return>", _do_login)
+        ue.bind("<Return>", lambda e: pe.focus())
+
+        def _btn_hover(e):
+            login_btn.configure(bg=COLOR_PRIMARY_DARK)
+            self._login_lbl.configure(bg=COLOR_PRIMARY_DARK)
+        def _btn_leave(e):
+            login_btn.configure(bg=COLOR_PRIMARY)
+            self._login_lbl.configure(bg=COLOR_PRIMARY)
+        login_btn.bind("<Enter>", _btn_hover)
+        login_btn.bind("<Leave>", _btn_leave)
+        self._login_lbl.bind("<Enter>", _btn_hover)
+        self._login_lbl.bind("<Leave>", _btn_leave)
+
+        # تركيز تلقائي
+        pe.focus_set()
+
+
+# ============================================================================
 #  التطبيق الرئيسي
 # ============================================================================
 
 class DrivingSchoolApp:
-    def __init__(self):
-        init_db()
-        upgrade_db()
+    def __init__(self, logged_user: str = "مدير النظام"):
         seed_demo_data()
+        self._logged_user = logged_user
         self.root = tk.Tk()
         self.root.title("برنامج ميدانيك — إدارة مدرسة تعليم السياقة")
         self.root.geometry("1280x800")
@@ -4324,19 +4476,19 @@ class DrivingSchoolApp:
 
     # ──────────────────────────────────────────────────────────
     def _build_layout(self):
-        """البنية الكاملة: شريط جانبي يمين + منطقة محتوى يسار."""
+        """البنية الكاملة: شريط جانبي يسار 200px + منطقة محتوى يمين."""
         main = tk.Frame(self.root, bg="#f1f5f9")
         main.pack(fill="both", expand=True)
 
-        # ── الشريط الجانبي (يمين — RTL) ──
-        self.sidebar = tk.Frame(main, bg=COLOR_SIDEBAR, width=228)
-        self.sidebar.pack(side="right", fill="y")
+        # ── الشريط الجانبي (يسار — 200px) ──
+        self.sidebar = tk.Frame(main, bg=COLOR_SIDEBAR, width=200)
+        self.sidebar.pack(side="left", fill="y")
         self.sidebar.pack_propagate(False)
         self._build_sidebar()
 
-        # ── منطقة المحتوى (يسار) ──
+        # ── منطقة المحتوى (يمين — يملأ الباقي) ──
         content_wrapper = tk.Frame(main, bg="#f1f5f9")
-        content_wrapper.pack(side="right", fill="both", expand=True)
+        content_wrapper.pack(side="left", fill="both", expand=True)
 
         self._build_topbar(content_wrapper)
 
@@ -4416,39 +4568,70 @@ class DrivingSchoolApp:
         # فاصل سفلي
         tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=6)
 
-        # ── معلومات في أسفل السايدبار ──
-        bot = tk.Frame(sb, bg=COLOR_SIDEBAR, padx=12, pady=8)
+        # ── تذييل الشريط الجانبي: المستخدم + خروج ──
+        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=10, pady=(6, 0))
+
+        bot = tk.Frame(sb, bg=COLOR_HEADER, padx=12, pady=10)
         bot.pack(fill="x", side="bottom")
-        info = SchoolInfoDB.get()
-        sname = (info.get("name") or "المدرسة")[:24]
-        tk.Label(bot, text=f"🏫 {sname}", font=(FONT_FAMILY, 9),
-                 bg=COLOR_SIDEBAR, fg="#64748b",
-                 anchor="e", wraplength=200, justify="right").pack(fill="x")
-        tk.Label(bot, text=f"📅 {date.today().strftime('%Y-%m-%d')}",
-                 font=(FONT_FAMILY, 9), bg=COLOR_SIDEBAR, fg="#64748b",
-                 anchor="e").pack(fill="x", pady=(4, 0))
-        tk.Label(bot, text="v2.0  |  🇩🇿 الجزائر",
-                 font=(FONT_FAMILY, 8), bg=COLOR_SIDEBAR, fg="#475569",
-                 anchor="e").pack(fill="x", pady=(3, 0))
+
+        # بيانات المستخدم
+        user_row = tk.Frame(bot, bg=COLOR_HEADER)
+        user_row.pack(fill="x", pady=(0, 8))
+        tk.Label(user_row, text="👤", font=(FONT_FAMILY, 16),
+                 bg=COLOR_HEADER, fg=COLOR_ACCENT).pack(side="left")
+        ubox = tk.Frame(user_row, bg=COLOR_HEADER)
+        ubox.pack(side="left", padx=(8, 0))
+        tk.Label(ubox, text=getattr(self, "_logged_user", "مدير النظام"),
+                 font=(FONT_FAMILY, 10, "bold"),
+                 bg=COLOR_HEADER, fg="white", anchor="w").pack(anchor="w")
+        tk.Label(ubox, text="مسؤول النظام",
+                 font=(FONT_FAMILY, 8),
+                 bg=COLOR_HEADER, fg="#64748b", anchor="w").pack(anchor="w")
+
+        # زر تسجيل الخروج
+        logout_btn = tk.Frame(bot, bg="#ef4444", cursor="hand2")
+        logout_btn.pack(fill="x", pady=(4, 0))
+        tk.Label(logout_btn, text="  ⏻  تسجيل الخروج",
+                 font=(FONT_FAMILY, 10, "bold"),
+                 bg="#ef4444", fg="white", pady=7, anchor="center").pack(fill="x")
+        def _do_logout(e=None):
+            if messagebox.askyesno("تسجيل الخروج", "هل تريد الخروج من البرنامج؟"):
+                self.root.destroy()
+        logout_btn.bind("<Button-1>", _do_logout)
+        for ch in logout_btn.winfo_children():
+            ch.bind("<Button-1>", _do_logout)
+        def _logout_hover(e):
+            logout_btn.configure(bg="#dc2626")
+            for ch in logout_btn.winfo_children(): ch.configure(bg="#dc2626")
+        def _logout_leave(e):
+            logout_btn.configure(bg="#ef4444")
+            for ch in logout_btn.winfo_children(): ch.configure(bg="#ef4444")
+        logout_btn.bind("<Enter>", _logout_hover)
+        logout_btn.bind("<Leave>", _logout_leave)
+
+        # تاريخ وإصدار
+        tk.Label(bot, text=f"📅 {date.today().strftime('%Y-%m-%d')}  |  v2.0  🇩🇿",
+                 font=(FONT_FAMILY, 8), bg=COLOR_HEADER, fg="#475569",
+                 anchor="w").pack(fill="x", pady=(8, 0))
 
     def _make_nav_item(self, parent, icon, label, index):
         outer = tk.Frame(parent, bg=COLOR_SIDEBAR, cursor="hand2")
         outer.pack(fill="x")
 
-        # شريط اللون النشط (يمين — بجانب المحتوى)
+        # شريط اللون النشط (يسار — بجانب محتوى التطبيق)
         accent = tk.Frame(outer, bg=COLOR_SIDEBAR, width=4)
-        accent.pack(side="right", fill="y")
+        accent.pack(side="left", fill="y")
 
-        inner = tk.Frame(outer, bg=COLOR_SIDEBAR, padx=14, pady=11)
-        inner.pack(side="right", fill="both", expand=True)
+        inner = tk.Frame(outer, bg=COLOR_SIDEBAR, padx=12, pady=10)
+        inner.pack(side="left", fill="both", expand=True)
 
         icon_lbl = tk.Label(inner, text=icon, font=(FONT_FAMILY, 13),
                             bg=COLOR_SIDEBAR, fg="#64748b")
-        icon_lbl.pack(side="right", padx=(0, 10))
+        icon_lbl.pack(side="left", padx=(0, 8))
 
-        text_lbl = tk.Label(inner, text=label, font=(FONT_FAMILY, 11, "bold"),
-                            bg=COLOR_SIDEBAR, fg="#94a3b8", anchor="e")
-        text_lbl.pack(side="right", fill="x", expand=True)
+        text_lbl = tk.Label(inner, text=label, font=(FONT_FAMILY, 10, "bold"),
+                            bg=COLOR_SIDEBAR, fg="#94a3b8", anchor="w")
+        text_lbl.pack(side="left", fill="x", expand=True)
 
         ref = {"outer": outer, "inner": inner,
                "icon": icon_lbl, "text": text_lbl, "accent": accent}
@@ -4584,4 +4767,4 @@ class DrivingSchoolApp:
 
 
 if __name__ == "__main__":
-    DrivingSchoolApp()
+    LoginWindow()
