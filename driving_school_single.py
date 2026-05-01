@@ -5209,71 +5209,265 @@ class DocumentsFrame(tk.Frame):
         self._trigger_print(path, "وصل الدفع")
 
     def _doc_dispatch_table(self):
-        if not self._check(): return
-        
-        selected = self._get_candidate() if self.selected_candidate_id else None
-        cands = [selected] if selected else CandidateDB.get_all()
-        
-        if not cands:
-            show_error("لا يوجد مترشحون للطباعة"); return
-            
-        import tempfile, os
-        from datetime import datetime
-        temp_dir = tempfile.gettempdir()
-        path = os.path.join(temp_dir, f"dispatch_table_{int(datetime.now().timestamp())}.pdf")
-        
+        """نافذة اختيار متعدد للمترشحين ثم توليد PDF جدول الإرسال."""
+        if not self._check():
+            return
+
+        all_cands = CandidateDB.get_all()
+        if not all_cands:
+            show_error("لا يوجد مترشحون في القاعدة"); return
+
         school = SchoolInfoDB.get()
+        addr = school.get('address', '')
+        default_wilaya = addr.split()[-1] if addr else ""
+
+        # =========================================================
+        #  نافذة الإعداد الحوارية
+        # =========================================================
+        dlg = tk.Toplevel(self)
+        dlg.title("إعداد جدول الإرسال")
+        dlg.geometry("820x640")
+        dlg.configure(bg=COLOR_BG)
+        dlg.transient(self); dlg.grab_set()
+
+        # --- رأس النافذة ---
+        head = tk.Frame(dlg, bg=COLOR_PRIMARY, pady=14, padx=20)
+        head.pack(fill="x")
+        tk.Label(head, text="📋  إعداد جدول الإرسال — اختر المترشحين",
+                 font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white",
+                 anchor="e").pack(side="right")
+
+        body = tk.Frame(dlg, bg=COLOR_BG)
+        body.pack(fill="both", expand=True, padx=15, pady=10)
+
+        # =========================================================
+        #  العمود الأيمن: إعدادات الوثيقة
+        # =========================================================
+        right_col = tk.Frame(body, bg=COLOR_BG, width=240)
+        right_col.pack(side="right", fill="y", padx=(10, 0))
+        right_col.pack_propagate(False)
+
+        ro, rc_frame = make_card(right_col)
+        ro.pack(fill="both", expand=True)
+
+        section_title(rc_frame, "إعدادات الوثيقة", icon="⚙️")
+
+        opts_vars = {}
+
+        def lbl_entry(parent, label, key, default=""):
+            tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
+                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+            v = tk.StringVar(value=default)
+            opts_vars[key] = v
+            make_entry(parent, v, width=26).pack(fill="x", ipady=4)
+
+        lbl_entry(rc_frame, "التاريخ", "dispatch_date",
+                  date.today().strftime("%d/%m/%Y"))
+        lbl_entry(rc_frame, "رقم المحضر", "record_number", "")
+        lbl_entry(rc_frame, "مكان الإرسال (الولاية)", "wilaya", default_wilaya)
+
+        # =========================================================
+        #  العمود الأيسر: قائمة المترشحين
+        # =========================================================
+        left_col = tk.Frame(body, bg=COLOR_BG)
+        left_col.pack(side="left", fill="both", expand=True)
+
+        # شريط البحث
+        top_bar = tk.Frame(left_col, bg=COLOR_CARD, padx=8, pady=6)
+        top_bar.pack(fill="x")
+        tk.Label(top_bar, text="👥  اختر المترشحين",
+                 font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
+                 fg=COLOR_PRIMARY, anchor="e").pack(fill="x")
+
+        sv = tk.StringVar()
+        sr = tk.Frame(top_bar, bg=COLOR_CARD); sr.pack(fill="x", pady=(4, 0))
+        tk.Label(sr, text="🔍", bg=COLOR_CARD, fg=COLOR_PRIMARY,
+                 font=(FONT_FAMILY, 11)).pack(side="right", padx=(0, 4))
+        make_entry(sr, sv, width=30).pack(side="right", fill="x", expand=True, ipady=3)
+
+        # أزرار تحديد / إلغاء الكل
+        sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
+        sel_row.pack(fill="x")
+
+        selected_set = set()
+
+        def select_all():
+            for c in all_cands:
+                selected_set.add(c['id'])
+            populate_tree(sv.get().strip())
+
+        def deselect_all():
+            selected_set.clear()
+            populate_tree(sv.get().strip())
+
+        tk.Button(sel_row, text="✓ تحديد الكل", font=FONT_SMALL,
+                  bg=COLOR_SUCCESS, fg="white", relief="flat", padx=10, pady=4,
+                  cursor="hand2", command=select_all).pack(side="right", padx=3)
+        tk.Button(sel_row, text="✗ إلغاء الكل", font=FONT_SMALL,
+                  bg="#94a3b8", fg="white", relief="flat", padx=10, pady=4,
+                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
+        tk.Label(sel_row, text="اضغط على أي صف لتحديده / إلغاء تحديده",
+                 font=FONT_TINY, bg="#e0f2fe", fg="#0369a1",
+                 anchor="e").pack(side="right", padx=8)
+
+        # Treeview
+        tree_frame = tk.Frame(left_col, bg=COLOR_CARD)
+        tree_frame.pack(fill="both", expand=True)
+
+        cand_tree = ttk.Treeview(tree_frame,
+                                  columns=("sel", "num", "name", "lic", "birth"),
+                                  show="headings",
+                                  style="Modern.Treeview",
+                                  selectmode="browse")
+        cand_tree.heading("sel",   text="✓",            anchor="center")
+        cand_tree.heading("num",   text="رقم",           anchor="center")
+        cand_tree.heading("name",  text="اللقب والاسم",  anchor="center")
+        cand_tree.heading("lic",   text="الصنف",         anchor="center")
+        cand_tree.heading("birth", text="تاريخ الميلاد", anchor="center")
+        cand_tree.column("sel",   width=35,  anchor="center", stretch=False)
+        cand_tree.column("num",   width=45,  anchor="center", stretch=False)
+        cand_tree.column("name",  width=220, anchor="center")
+        cand_tree.column("lic",   width=55,  anchor="center", stretch=False)
+        cand_tree.column("birth", width=110, anchor="center")
+
+        vsb_c = ttk.Scrollbar(tree_frame, orient="vertical", command=cand_tree.yview)
+        cand_tree.configure(yscrollcommand=vsb_c.set)
+        vsb_c.pack(side="right", fill="y")
+        cand_tree.pack(side="left", fill="both", expand=True)
+
+        # إذا كان مترشح محدد مسبقاً في الصفحة — حدّده مبدئياً
+        if self.selected_candidate_id:
+            selected_set.add(self.selected_candidate_id)
+
+        def populate_tree(filter_text=""):
+            for item in cand_tree.get_children():
+                cand_tree.delete(item)
+            idx = 0
+            for cand in all_cands:
+                full = f"{cand['last_name']} {cand['first_name']}"
+                if filter_text and filter_text.lower() not in full.lower() \
+                        and filter_text not in cand.get('phone', ''):
+                    continue
+                iid = str(cand['id'])
+                chk = "✓" if cand['id'] in selected_set else "○"
+                tag = "sel" if cand['id'] in selected_set else ("even" if idx % 2 == 0 else "odd")
+                cand_tree.insert("", "end", iid=iid, tags=(tag,),
+                                 values=(chk, idx + 1, full,
+                                         cand.get('license_type', 'B'),
+                                         cand.get('birth_date', '')))
+                idx += 1
+            cand_tree.tag_configure("sel",  background="#bfdbfe", foreground="#1e3a8a")
+            cand_tree.tag_configure("even", background="#f8fafc",  foreground=COLOR_TEXT)
+            cand_tree.tag_configure("odd",  background=COLOR_CARD, foreground=COLOR_TEXT)
+
+        populate_tree()
+
+        def toggle_item(event):
+            item = cand_tree.identify_row(event.y)
+            if not item:
+                return
+            cid = int(item)
+            if cid in selected_set:
+                selected_set.discard(cid)
+            else:
+                selected_set.add(cid)
+            populate_tree(sv.get().strip())
+
+        cand_tree.bind("<Button-1>", toggle_item)
+        sv.trace("w", lambda *a: populate_tree(sv.get().strip()))
+
+        # =========================================================
+        #  شريط الأزرار السفلي
+        # =========================================================
+        bf = tk.Frame(dlg, bg=COLOR_BG, pady=12)
+        bf.pack(side="bottom", fill="x", padx=20)
+        ModernButton(bf, "إلغاء", dlg.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
+
+        def do_generate():
+            if not selected_set:
+                show_error("يرجى تحديد مترشح واحد على الأقل"); return
+
+            selected_cands = [c for c in all_cands if c['id'] in selected_set]
+            settings = {
+                "dispatch_date":  opts_vars["dispatch_date"].get().strip()
+                                  or date.today().strftime("%d/%m/%Y"),
+                "record_number":  opts_vars["record_number"].get().strip(),
+                "wilaya":         opts_vars["wilaya"].get().strip() or ".......",
+            }
+            path = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF Files", "*.pdf")],
+                initialfile=f"جدول_الإرسال_{settings['dispatch_date'].replace('/','_')}.pdf",
+                parent=dlg)
+            if not path:
+                return
+            dlg.destroy()
+            self._generate_dispatch_table_pdf(path, selected_cands, settings)
+
+        ModernButton(bf, "توليد PDF", do_generate,
+                     icon="📄", color=COLOR_PRIMARY).pack(side="right", padx=5)
+
+    def _generate_dispatch_table_pdf(self, path, cands, settings):
+        """يُنتج PDF جدول إرسال يضم قائمة المترشحين المحددين."""
+        school = SchoolInfoDB.get()
+        wilaya = settings.get("wilaya", ".........")
+        dispatch_date = settings.get("dispatch_date", date.today().strftime("%d/%m/%Y"))
+        record_number = settings.get("record_number", "")
+
         doc = self._make_doc(path)
         s = _pdf_styles()
         story = []
-        
-        # Header - matching the image
+
+        # ترويسة الجمهورية
         story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["center"]))
-        story.append(Spacer(1, 0.4*cm))
+        story.append(Spacer(1, 0.3*cm))
         story.append(Paragraph(ar("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية"), s["center"]))
         story.append(Paragraph(ar("المندوبية الوطنية للأمن في الطرق"), s["center"]))
-        
-        # Extract wilaya from school address (last word usually)
-        addr = school.get('address', '')
-        wilaya = addr.split(' ')[-1] if addr else '.......'
         story.append(Paragraph(ar(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya}"), s["center"]))
-        
-        story.append(Spacer(1, 1.2*cm))
-        # Title: جدول ارسال (Underlined)
+
+        if record_number:
+            story.append(Spacer(1, 0.4*cm))
+            story.append(Paragraph(ar(f"رقم المحضر: {record_number}"), s["right"]))
+
+        story.append(Spacer(1, 1.0*cm))
         story.append(Paragraph(f"<u><b>{ar('جدول ارسال')}</b></u>", s["title"]))
-        story.append(Spacer(1, 1*cm))
-        
-        # Table
-        rows = [["تاريخ الميلاد", "الاسم واللقب"]]
-        for c in cands:
-            rows.append([c.get('birth_date',''), f"{c.get('last_name','')} {c.get('first_name','')}"])
-            
-        processed = [[ar(c) for c in row] for row in rows]
-        t = Table(processed, colWidths=[7*cm, 10*cm])
-        t.setStyle(TableStyle([
-            ('FONTNAME', (0,0), (-1,-1), ARABIC_FONT),
-            ('FONTNAME', (0,0), (-1,0),  ARABIC_FONT_BOLD),
-            ('GRID', (0,0), (-1,-1), 0.8, colors.black),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('FONTSIZE', (0,0), (-1,-1), 12),
-            ('TOPPADDING', (0,0), (-1,-1), 8),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        story.append(Spacer(1, 0.8*cm))
+
+        # جدول المترشحين — رقم / اسم / تاريخ الميلاد
+        rows = [["الرقم", "الاسم واللقب", "تاريخ الميلاد"]]
+        for i, c in enumerate(cands, 1):
+            rows.append([
+                str(i),
+                f"{c.get('last_name','')} {c.get('first_name','')}",
+                c.get('birth_date', ''),
+            ])
+
+        processed = [[ar(cell) for cell in row] for row in rows]
+        tbl = Table(processed, colWidths=[2*cm, 10*cm, 5*cm])
+        tbl.setStyle(TableStyle([
+            ('FONTNAME',    (0, 0), (-1, -1), ARABIC_FONT),
+            ('FONTNAME',    (0, 0), (-1,  0), ARABIC_FONT_BOLD),
+            ('GRID',        (0, 0), (-1, -1), 0.8, colors.black),
+            ('ALIGN',       (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN',      (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE',    (0, 0), (-1, -1), 12),
+            ('TOPPADDING',  (0, 0), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+            ('BACKGROUND',  (0, 0), (-1,  0), colors.HexColor("#DBEAFE")),
         ]))
-        story.append(t)
-        
-        story.append(Spacer(1, 1*cm))
-        # Date and Location
-        story.append(Paragraph(ar(f"{wilaya} يوم: {date.today().strftime('%Y/%m/%d')}"), s["right"]))
-        story.append(Spacer(1, 1*cm))
+        story.append(tbl)
+
+        story.append(Spacer(1, 0.8*cm))
+        story.append(Paragraph(
+            ar(f"حُرِّرَ بـ {wilaya}، يوم: {dispatch_date}"), s["right"]))
+        story.append(Spacer(1, 1.2*cm))
         story.append(Paragraph(ar("ختم وتوقيع مدرسة تعليم السياقة"), s["center"]))
-        
+        story.append(Spacer(1, 2*cm))
+        story.append(Paragraph(ar("___________________________"), s["center"]))
+
         doc.build(story)
-        try:
-            os.startfile(path, 'print')
-        except Exception:
-            try: os.startfile(path)
-            except Exception as e: show_error(f"خطأ في فتح الملف: {e}")
+        self._trigger_print(path, "جدول الإرسال")
 
     # --- وثائق جماعية ---------------------------------------------------------
 
