@@ -5272,6 +5272,23 @@ class DocumentsFrame(tk.Frame):
         lbl_entry(rc_frame, "رقم المحضر", "record_number", "")
         lbl_entry(rc_frame, "مكان الإرسال (الولاية)", "wilaya", default_wilaya)
 
+        # --- ترتيب المترشحين ---
+        tk.Label(rc_frame, text="ترتيب المترشحين", font=FONT_BOLD, bg=COLOR_CARD,
+                 fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(12, 4))
+        sort_var = tk.StringVar(value="default")
+        sort_options = [
+            ("الترتيب الافتراضي", "default"),
+            ("أبجدياً (اللقب)",   "alpha"),
+            ("حسب تاريخ الميلاد", "birth"),
+        ]
+        for label, value in sort_options:
+            tk.Radiobutton(
+                rc_frame, text=label, variable=sort_var, value=value,
+                font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT,
+                selectcolor=COLOR_PRIMARY, activebackground=COLOR_CARD,
+                anchor="e", justify="right"
+            ).pack(fill="x", pady=1)
+
         # =========================================================
         #  العمود الأيسر: قائمة المترشحين
         # =========================================================
@@ -5395,6 +5412,34 @@ class DocumentsFrame(tk.Frame):
                 show_error("يرجى تحديد مترشح واحد على الأقل"); return
 
             selected_cands = [c for c in all_cands if c['id'] in selected_set]
+
+            order = sort_var.get()
+            if order == "alpha":
+                selected_cands = sorted(
+                    selected_cands,
+                    key=lambda c: (c.get('last_name', '') + ' ' + c.get('first_name', '')).strip().lower()
+                )
+            elif order == "birth":
+                def _birth_key(c):
+                    bd = (c.get('birth_date', '') or '').strip()
+                    try:
+                        parts = bd.replace('/', '-').split('-')
+                        if len(parts) == 3:
+                            y, m, d = (int(parts[0]), int(parts[1]), int(parts[2])) \
+                                if len(parts[0]) == 4 \
+                                else (int(parts[2]), int(parts[1]), int(parts[0]))
+                            return (y, m, d,
+                                    c.get('last_name', '').lower(),
+                                    c.get('first_name', '').lower(),
+                                    c.get('id', 0))
+                    except (ValueError, IndexError):
+                        pass
+                    return (9999, 12, 31,
+                            c.get('last_name', '').lower(),
+                            c.get('first_name', '').lower(),
+                            c.get('id', 0))
+                selected_cands = sorted(selected_cands, key=_birth_key)
+
             settings = {
                 "dispatch_date":  opts_vars["dispatch_date"].get().strip()
                                   or date.today().strftime("%d/%m/%Y"),
