@@ -1413,6 +1413,7 @@ class DashboardFrame(tk.Frame):
         go_insts  = (lambda: nav(3)) if nav else None
         go_pay    = (lambda: nav(6)) if nav else None
         go_exp    = (lambda: nav(7)) if nav else None
+        go_stages = (lambda: nav(4)) if nav else None
 
         # صف البطاقات الإحصائية
         stats_row = tk.Frame(wrap, bg=COLOR_BG)
@@ -1451,16 +1452,28 @@ class DashboardFrame(tk.Frame):
             color = COLOR_SUCCESS if rate >= 50 else COLOR_WARNING
             if total == 0: color = COLOR_TEXT_LIGHT
 
+            card_cursor = "hand2" if go_stages else "arrow"
             sc = tk.Frame(rates_frame, bg=COLOR_CARD, padx=15, pady=10,
-                          highlightthickness=1, highlightbackground=COLOR_BORDER)
+                          highlightthickness=1, highlightbackground=COLOR_BORDER,
+                          cursor=card_cursor)
             sc.pack(side="right", fill="both", expand=True, padx=5)
 
-            tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(anchor="e")
-            tk.Label(sc, text=f"{rate:.1f}%  نجاح", font=(FONT_FAMILY, 16, "bold"),
-                     bg=COLOR_CARD, fg=color).pack(anchor="e")
-            tk.Label(sc,
+            lbl_title  = tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT)
+            lbl_title.pack(anchor="e")
+            lbl_rate   = tk.Label(sc, text=f"{rate:.1f}%  نجاح", font=(FONT_FAMILY, 16, "bold"),
+                     bg=COLOR_CARD, fg=color)
+            lbl_rate.pack(anchor="e")
+            lbl_detail = tk.Label(sc,
                      text=f"المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
-                     font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor="e")
+                     font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
+            lbl_detail.pack(anchor="e")
+            lbl_link   = tk.Label(sc, text="← عرض التفاصيل", font=FONT_TINY,
+                     bg=COLOR_CARD, fg=COLOR_PRIMARY, cursor=card_cursor)
+            lbl_link.pack(anchor="e")
+
+            if go_stages:
+                for w in (sc, lbl_title, lbl_rate, lbl_detail, lbl_link):
+                    w.bind("<Button-1>", lambda e, f=go_stages: f())
 
         # التنبيهات والإشعارات (Notifications & Alerts)
         v_alerts = VehicleDB.get_alerts()
