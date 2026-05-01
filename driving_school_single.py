@@ -16,7 +16,7 @@ import sys
 import sqlite3
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from datetime import date
+from datetime import date, datetime, timedelta
 
 try:
     from PIL import Image, ImageTk
@@ -302,6 +302,19 @@ def init_db():
             model TEXT NOT NULL, plate_number TEXT DEFAULT '',
             insurance_expiry TEXT DEFAULT '', tech_inspection_expiry TEXT DEFAULT '',
             notes TEXT DEFAULT ''
+        );
+
+        CREATE TABLE IF NOT EXISTS sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            candidate_id INTEGER NOT NULL,
+            instructor_id INTEGER NOT NULL,
+            session_date TEXT NOT NULL,
+            session_time TEXT NOT NULL DEFAULT '08:00',
+            duration INTEGER NOT NULL DEFAULT 60,
+            session_type TEXT DEFAULT 'كرينو',
+            notes TEXT DEFAULT '',
+            FOREIGN KEY (candidate_id) REFERENCES candidates(id),
+            FOREIGN KEY (instructor_id) REFERENCES instructors(id)
         );
 
     """)
@@ -705,7 +718,6 @@ class VehicleDB:
     def get_alerts():
         conn = get_connection()
         today = date.today().strftime('%Y-%m-%d')
-        # تنبيهات التأمين والمراقبة التقنية (قبل 15 يوم)
         rows = conn.execute("""
             SELECT * FROM vehicles 
             WHERE insurance_expiry <= date(?, '+15 days')
@@ -715,6 +727,134 @@ class VehicleDB:
         return [dict(r) for r in rows]
 
 
+class SessionDB:
+    """طبقة الوصول لجدول الحصص التدريبية."""
+
+    @staticmethod
+    def get_all(date_filter="", instructor_id=None, candidate_id=None):
+        conn = get_connection()
+        sql = """
+            SELECT s.*,
+                   c.first_name||' '||c.last_name  AS candidate_name,
+                   i.first_name||' '||i.last_name  AS instructor_name
+            FROM sessions s
+            JOIN candidates  c ON s.candidate_id  = c.id
+            JOIN instructors i ON s.instructor_id  = i.id
+            WHERE 1=1
+        """
+        params = []
+        if date_filter:
+            sql += " AND s.session_date = ?"
+            params.append(date_filter)
+        if instructor_id:
+            sql += " AND s.instructor_id = ?"
+            params.append(instructor_id)
+        if candidate_id:
+            sql += " AND s.candidate_id = ?"
+            params.append(candidate_id)
+        sql += " ORDER BY s.session_date, s.session_time"
+        rows = conn.execute(sql, params).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_today():
+        return SessionDB.get_all(date_filter=date.today().strftime('%Y-%m-%d'))
+
+    @staticmethod
+    def get_week():
+        """حصص الأسبوع القادم (اليوم + 6 أيام)."""
+        conn = get_connection()
+        today = date.today().strftime('%Y-%m-%d')
+        end   = (date.today() + timedelta(days=6)).strftime('%Y-%m-%d')
+        rows  = conn.execute("""
+            SELECT s.*,
+                   c.first_name||' '||c.last_name  AS candidate_name,
+                   i.first_name||' '||i.last_name  AS instructor_name
+            FROM sessions s
+            JOIN candidates  c ON s.candidate_id  = c.id
+            JOIN instructors i ON s.instructor_id  = i.id
+            WHERE s.session_date BETWEEN ? AND ?
+            ORDER BY s.session_date, s.session_time
+        """, (today, end)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get(sid):
+        conn = get_connection()
+        row = conn.execute("SELECT * FROM sessions WHERE id=?", (sid,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    @staticmethod
+    def add(d):
+        conn = get_connection()
+        conn.execute("""
+            INSERT INTO sessions
+                (candidate_id, instructor_id, session_date, session_time,
+                 duration, session_type, notes)
+            VALUES (?,?,?,?,?,?,?)""",
+            (d['candidate_id'], d['instructor_id'], d['session_date'],
+             d['session_time'], d['duration'], d.get('session_type', 'كرينو'),
+             d.get('notes', '')))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def update(sid, d):
+        conn = get_connection()
+        conn.execute("""
+            UPDATE sessions SET candidate_id=?, instructor_id=?,
+                session_date=?, session_time=?, duration=?,
+                session_type=?, notes=?
+            WHERE id=?""",
+            (d['candidate_id'], d['instructor_id'], d['session_date'],
+             d['session_time'], d['duration'], d.get('session_type', 'كرينو'),
+             d.get('notes', ''), sid))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def delete(sid):
+        conn = get_connection()
+        conn.execute("DELETE FROM sessions WHERE id=?", (sid,))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def check_conflict(instructor_id, session_date, session_time, duration,
+                       exclude_id=None):
+        """يبحث عن تعارض زمني لنفس الممرّن في نفس اليوم."""
+        conn   = get_connection()
+        rows   = conn.execute("""
+            SELECT * FROM sessions
+            WHERE instructor_id=? AND session_date=?
+              AND id != COALESCE(?,0)
+        """, (instructor_id, session_date, exclude_id)).fetchall()
+        conn.close()
+
+        try:
+            new_start = datetime.strptime(session_time, "%H:%M")
+            new_end   = new_start + timedelta(minutes=int(duration))
+        except Exception:
+            return []
+
+        conflicts = []
+        for r in rows:
+            try:
+                ex_start = datetime.strptime(r['session_time'], "%H:%M")
+                ex_end   = ex_start + timedelta(minutes=int(r['duration']))
+                if new_start < ex_end and new_end > ex_start:
+                    conflicts.append(dict(r))
+            except Exception:
+                pass
+        return conflicts
+
+
+SESSION_TYPE_OPTIONS = ["كرينو", "طريق", "كود (نظري)", "مناورة حرة"]
+TIME_OPTIONS = [f"{h:02d}:{m:02d}" for h in range(7, 20) for m in (0, 30)]
+DURATION_OPTIONS = ["30", "45", "60", "90", "120"]
 
 
 # ============================================================================
@@ -983,6 +1123,49 @@ class DashboardFrame(tk.Frame):
                 tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_WARNING, anchor="e").pack(fill="x")
 
 
+        # ── حصص اليوم والأسبوع ──
+        today_sessions = []
+        week_sessions  = []
+        try:
+            today_sessions = SessionDB.get_today()
+            week_sessions  = SessionDB.get_week()
+        except Exception:
+            pass
+
+        sched_outer, sched_body = make_card(wrap, padding=15)
+        sched_outer.pack(fill="x", pady=(0, 16))
+        sh = tk.Frame(sched_body, bg=COLOR_CARD)
+        sh.pack(fill="x", pady=(0, 8))
+        section_title(sched_body, f"حصص اليوم  ({len(today_sessions)})", icon="📅")
+
+        if today_sessions:
+            sess_tree = create_treeview(sched_body,
+                ("time", "candidate", "instructor", "type", "dur"),
+                ("الوقت", "المترشح", "الممرن", "النوع", "المدة(د)"),
+                (80, 180, 160, 110, 70), height=min(len(today_sessions), 5))
+            rows_s = [(s['session_time'], s['candidate_name'],
+                       s['instructor_name'], s['session_type'],
+                       str(s['duration']))
+                      for s in today_sessions]
+            insert_zebra(sess_tree, rows_s)
+        else:
+            tk.Label(sched_body, text="لا توجد حصص مجدولة لهذا اليوم",
+                     font=FONT_MAIN, bg=COLOR_CARD,
+                     fg=COLOR_TEXT_LIGHT, anchor="e").pack(fill="x", pady=6)
+
+        # أول حصة قادمة (غداً+)
+        future = [s for s in week_sessions
+                  if s['session_date'] > date.today().strftime('%Y-%m-%d')]
+        if future:
+            nxt = future[0]
+            nxt_bar = tk.Frame(sched_body, bg=COLOR_PRIMARY_LIGHT,
+                               padx=12, pady=8)
+            nxt_bar.pack(fill="x", pady=(8, 0))
+            tk.Label(nxt_bar,
+                     text=f"⏭  أقرب حصة قادمة:  {nxt['session_date']}  {nxt['session_time']}  —  {nxt['candidate_name']}  /  {nxt['instructor_name']}",
+                     font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
+                     fg=COLOR_PRIMARY, anchor="e").pack(fill="x")
+
         # المترشحون الأخيرون
         outer, body = make_card(wrap)
         outer.pack(fill="both", expand=True)
@@ -992,7 +1175,7 @@ class DashboardFrame(tk.Frame):
             ("name", "phone", "license", "instructor", "amount", "date"),
             ("الاسم الكامل", "الهاتف", "نوع الرخصة", "الممرن",
              "المبلغ الإجمالي", "تاريخ التسجيل"),
-            (180, 120, 100, 160, 130, 130), height=8)
+            (180, 120, 100, 160, 130, 130), height=6)
 
         latest = sorted(cands, key=lambda x: x.get('registration_date', ''),
                         reverse=True)[:10]
@@ -2744,6 +2927,393 @@ def _styled_table(data_rows, col_widths):
     ]))
     return t
 
+
+# ============================================================================
+#  نافذة إضافة / تعديل حصة تدريبية
+# ============================================================================
+
+class SessionDialog(tk.Toplevel):
+    """نافذة Toplevel لإدخال بيانات حصة مع فحص التعارض."""
+
+    def __init__(self, parent, session_id=None, on_save=None):
+        super().__init__(parent)
+        self.session_id = session_id
+        self.on_save    = on_save
+        self.title("تعديل حصة تدريبية" if session_id else "إضافة حصة جديدة")
+        self.geometry("560x520")
+        self.resizable(False, False)
+        self.grab_set()
+        self.configure(bg=COLOR_BG)
+        self._vars = {}
+        self._cand_map = {}   # name -> id
+        self._inst_map = {}   # name -> id
+        self._build()
+        if session_id:
+            self._load()
+
+    # ──────────────────────────────────────────────────────────
+    def _build(self):
+        # عنوان
+        hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=16, pady=12)
+        hdr.pack(fill="x")
+        icon = "✏️" if self.session_id else "➕"
+        tk.Label(hdr,
+                 text=f"{icon}  {'تعديل حصة تدريبية' if self.session_id else 'إضافة حصة جديدة'}",
+                 font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
+
+        # محتوى
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=24, pady=16)
+        wrap.pack(fill="both", expand=True)
+
+        cands = CandidateDB.get_all()
+        insts = InstructorDB.get_all()
+        self._cand_map = {f"{c['last_name']} {c['first_name']}": c['id'] for c in cands}
+        self._inst_map = {f"{i['last_name']} {i['first_name']}": i['id'] for i in insts}
+
+        def row(lbl, widget_fn, key, pady=(4, 10)):
+            tk.Label(wrap, text=lbl, font=FONT_BOLD, bg=COLOR_BG,
+                     fg=COLOR_TEXT, anchor="e").pack(fill="x")
+            w = widget_fn()
+            w.pack(fill="x", ipady=4, pady=pady)
+            return w
+
+        # المترشح
+        self._vars['candidate'] = tk.StringVar()
+        cand_names = list(self._cand_map.keys())
+        cb_c = ttk.Combobox(wrap, textvariable=self._vars['candidate'],
+                            values=cand_names, state="readonly",
+                            font=FONT_MAIN, justify="right")
+        tk.Label(wrap, text="المترشح *", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        cb_c.pack(fill="x", ipady=4, pady=(4, 10))
+
+        # الممرّن
+        self._vars['instructor'] = tk.StringVar()
+        inst_names = list(self._inst_map.keys())
+        tk.Label(wrap, text="الممرّن *", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        cb_i = ttk.Combobox(wrap, textvariable=self._vars['instructor'],
+                            values=inst_names, state="readonly",
+                            font=FONT_MAIN, justify="right")
+        cb_i.pack(fill="x", ipady=4, pady=(4, 10))
+
+        # صف: التاريخ + الوقت
+        dt_row = tk.Frame(wrap, bg=COLOR_BG)
+        dt_row.pack(fill="x", pady=(0, 10))
+
+        # التاريخ
+        left_col = tk.Frame(dt_row, bg=COLOR_BG)
+        left_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        tk.Label(left_col, text="التاريخ *", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._vars['session_date'] = tk.StringVar(value=date.today().strftime('%Y-%m-%d'))
+        tk.Entry(left_col, textvariable=self._vars['session_date'],
+                 font=FONT_MAIN, justify="right",
+                 relief="solid", bd=1).pack(fill="x", ipady=5)
+
+        # الوقت
+        right_col = tk.Frame(dt_row, bg=COLOR_BG)
+        right_col.pack(side="left", fill="both", expand=True)
+        tk.Label(right_col, text="الوقت *", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._vars['session_time'] = tk.StringVar(value="08:00")
+        cb_t = ttk.Combobox(right_col, textvariable=self._vars['session_time'],
+                            values=TIME_OPTIONS, font=FONT_MAIN, justify="right")
+        cb_t.pack(fill="x", ipady=4)
+
+        # صف: المدة + نوع الحصة
+        dd_row = tk.Frame(wrap, bg=COLOR_BG)
+        dd_row.pack(fill="x", pady=(0, 10))
+
+        dur_col = tk.Frame(dd_row, bg=COLOR_BG)
+        dur_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        tk.Label(dur_col, text="المدة (دقيقة)", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._vars['duration'] = tk.StringVar(value="60")
+        ttk.Combobox(dur_col, textvariable=self._vars['duration'],
+                     values=DURATION_OPTIONS, font=FONT_MAIN,
+                     justify="right").pack(fill="x", ipady=4)
+
+        type_col = tk.Frame(dd_row, bg=COLOR_BG)
+        type_col.pack(side="left", fill="both", expand=True)
+        tk.Label(type_col, text="نوع الحصة", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._vars['session_type'] = tk.StringVar(value=SESSION_TYPE_OPTIONS[0])
+        ttk.Combobox(type_col, textvariable=self._vars['session_type'],
+                     values=SESSION_TYPE_OPTIONS, state="readonly",
+                     font=FONT_MAIN, justify="right").pack(fill="x", ipady=4)
+
+        # ملاحظات
+        tk.Label(wrap, text="ملاحظات", font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+        self._notes_txt = tk.Text(wrap, height=3, font=FONT_MAIN,
+                                  relief="solid", bd=1)
+        self._notes_txt.pack(fill="x", pady=(4, 0))
+
+        # رسالة تعارض
+        self._conflict_var = tk.StringVar()
+        tk.Label(wrap, textvariable=self._conflict_var,
+                 font=FONT_SMALL, bg=COLOR_BG, fg=COLOR_DANGER,
+                 anchor="e", wraplength=500).pack(fill="x", pady=(6, 0))
+
+        # أزرار
+        bf = tk.Frame(self, bg=COLOR_BG, padx=24, pady=12)
+        bf.pack(fill="x")
+        ModernButton(bf, text="حفظ", icon="💾",
+                     color=COLOR_SUCCESS, command=self._save).pack(side="right")
+        ModernButton(bf, text="إلغاء", icon="✖",
+                     color=COLOR_DANGER, command=self.destroy).pack(side="right", padx=(0, 8))
+
+    # ──────────────────────────────────────────────────────────
+    def _load(self):
+        s = SessionDB.get(self.session_id)
+        if not s:
+            return
+        # ربط المترشح
+        cand = CandidateDB.get(s['candidate_id'])
+        if cand:
+            name = f"{cand['last_name']} {cand['first_name']}"
+            self._vars['candidate'].set(name)
+        # ربط الممرّن
+        inst = InstructorDB.get(s['instructor_id'])
+        if inst:
+            name = f"{inst['last_name']} {inst['first_name']}"
+            self._vars['instructor'].set(name)
+        self._vars['session_date'].set(s.get('session_date', ''))
+        self._vars['session_time'].set(s.get('session_time', '08:00'))
+        self._vars['duration'].set(str(s.get('duration', 60)))
+        self._vars['session_type'].set(s.get('session_type', SESSION_TYPE_OPTIONS[0]))
+        self._notes_txt.insert("1.0", s.get('notes', ''))
+
+    # ──────────────────────────────────────────────────────────
+    def _save(self):
+        cand_name = self._vars['candidate'].get().strip()
+        inst_name = self._vars['instructor'].get().strip()
+        s_date    = self._vars['session_date'].get().strip()
+        s_time    = self._vars['session_time'].get().strip()
+        duration  = self._vars['duration'].get().strip()
+
+        if not all([cand_name, inst_name, s_date, s_time, duration]):
+            show_error("يرجى ملء جميع الحقول الإلزامية (*)"); return
+
+        if cand_name not in self._cand_map:
+            show_error("المترشح غير موجود"); return
+        if inst_name not in self._inst_map:
+            show_error("الممرّن غير موجود"); return
+
+        # التحقق من صيغة التاريخ
+        try:
+            datetime.strptime(s_date, '%Y-%m-%d')
+        except ValueError:
+            show_error("صيغة التاريخ غير صحيحة، استخدم: YYYY-MM-DD"); return
+
+        # فحص التعارض
+        inst_id = self._inst_map[inst_name]
+        conflicts = SessionDB.check_conflict(inst_id, s_date, s_time, duration,
+                                              exclude_id=self.session_id)
+        if conflicts:
+            c0 = conflicts[0]
+            self._conflict_var.set(
+                f"⚠️  تعارض! الممرّن لديه حصة في {c0['session_time']} "
+                f"(مدة {c0['duration']} د.) في نفس اليوم. هل تريد الحفظ رغم ذلك؟"
+            )
+            if not messagebox.askyesno("تعارض في الجدول",
+                    f"الممرّن {inst_name} لديه حصة أخرى في {c0['session_time']} بتاريخ {s_date}.\n"
+                    "هل تريد الحفظ رغم التعارض؟"):
+                return
+
+        d = {
+            'candidate_id':  self._cand_map[cand_name],
+            'instructor_id': inst_id,
+            'session_date':  s_date,
+            'session_time':  s_time,
+            'duration':      int(duration),
+            'session_type':  self._vars['session_type'].get(),
+            'notes':         self._notes_txt.get("1.0", "end-1c").strip(),
+        }
+        if self.session_id:
+            SessionDB.update(self.session_id, d)
+        else:
+            SessionDB.add(d)
+
+        if self.on_save:
+            self.on_save()
+        self.destroy()
+
+
+# ============================================================================
+#  واجهة: الجدول الزمني للحصص
+# ============================================================================
+
+class ScheduleFrame(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, bg=COLOR_BG)
+        self.selected_id = None
+        self._build()
+        self._load()
+
+    # ──────────────────────────────────────────────────────────
+    def _build(self):
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=16)
+        wrap.pack(fill="both", expand=True)
+
+        # ── العنوان ──
+        tk.Label(wrap, text="📅  الجدول الزمني للحصص",
+                 font=(FONT_FAMILY, 20, "bold"),
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 4))
+        tk.Label(wrap, text="إدارة وتنظيم حصص التدريب — عرض، إضافة، تعديل وحذف",
+                 font=FONT_MAIN, bg=COLOR_BG,
+                 fg=COLOR_TEXT_LIGHT, anchor="e").pack(fill="x", pady=(0, 14))
+
+        # ── شريط الفلاتر والأزرار ──
+        ctl = tk.Frame(wrap, bg=COLOR_BG)
+        ctl.pack(fill="x", pady=(0, 10))
+
+        # أزرار (يمين)
+        btn_row = tk.Frame(ctl, bg=COLOR_BG)
+        btn_row.pack(side="right")
+        ModernButton(btn_row, text="إضافة حصة", icon="➕",
+                     color=COLOR_SUCCESS,
+                     command=self._add).pack(side="right")
+        ModernButton(btn_row, text="تعديل", icon="✏️",
+                     color=COLOR_PRIMARY,
+                     command=self._edit).pack(side="right", padx=(0, 6))
+        ModernButton(btn_row, text="حذف", icon="🗑",
+                     color=COLOR_DANGER,
+                     command=self._delete).pack(side="right", padx=(0, 6))
+
+        # فلاتر (يسار)
+        filter_row = tk.Frame(ctl, bg=COLOR_BG)
+        filter_row.pack(side="left")
+
+        tk.Label(filter_row, text="🔍", font=(FONT_FAMILY, 14),
+                 bg=COLOR_BG).pack(side="left", padx=(0, 4))
+
+        # فلتر التاريخ
+        tk.Label(filter_row, text="التاريخ:", font=FONT_SMALL,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="left")
+        self._date_var = tk.StringVar()
+        tk.Entry(filter_row, textvariable=self._date_var, width=12,
+                 font=FONT_MAIN, relief="solid", bd=1,
+                 justify="right").pack(side="left", padx=4)
+
+        # فلتر الممرّن
+        tk.Label(filter_row, text="الممرّن:", font=FONT_SMALL,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="left", padx=(8, 0))
+        self._inst_filter_var = tk.StringVar()
+        insts = ["الكل"] + [f"{i['last_name']} {i['first_name']}"
+                            for i in InstructorDB.get_all()]
+        self._inst_combo = ttk.Combobox(filter_row,
+                                         textvariable=self._inst_filter_var,
+                                         values=insts, state="readonly",
+                                         width=14, font=FONT_SMALL)
+        self._inst_combo.current(0)
+        self._inst_combo.pack(side="left", padx=4)
+
+        ModernButton(filter_row, text="تصفية", icon="🔎",
+                     color=COLOR_INFO, size="small",
+                     command=self._load).pack(side="left", padx=4)
+        ModernButton(filter_row, text="كل الحصص", icon="↺",
+                     color=COLOR_TEXT_LIGHT, size="small",
+                     command=self._reset_filter).pack(side="left")
+
+        # ── ملخص سريع للأسبوع ──
+        self._week_lbl = tk.Label(wrap, text="",
+                                   font=FONT_SMALL, bg=COLOR_BG,
+                                   fg=COLOR_TEXT_LIGHT, anchor="e")
+        self._week_lbl.pack(fill="x", pady=(0, 6))
+
+        # ── الجدول ──
+        tbl_outer, tbl_body = make_card(wrap)
+        tbl_outer.pack(fill="both", expand=True)
+
+        self.tree = create_treeview(tbl_body,
+            ("date", "time", "dur", "type", "candidate", "instructor", "notes"),
+            ("التاريخ", "الوقت", "مدة(د)", "النوع", "المترشح", "الممرّن", "ملاحظات"),
+            (100, 70, 60, 100, 180, 160, 160), height=18)
+        self.tree.bind("<<TreeviewSelect>>", self._on_select)
+        self.tree.bind("<Double-Button-1>", lambda e: self._edit())
+
+    # ──────────────────────────────────────────────────────────
+    def _reset_filter(self):
+        self._date_var.set("")
+        self._inst_filter_var.set("الكل")
+        self._inst_combo.current(0)
+        self._load()
+
+    def _load(self):
+        self.selected_id = None
+        date_f = self._date_var.get().strip()
+
+        # فلتر الممرّن
+        inst_filter_name = self._inst_filter_var.get()
+        inst_id = None
+        if inst_filter_name and inst_filter_name != "الكل":
+            for i in InstructorDB.get_all():
+                if f"{i['last_name']} {i['first_name']}" == inst_filter_name:
+                    inst_id = i['id']
+                    break
+
+        sessions = SessionDB.get_all(date_filter=date_f, instructor_id=inst_id)
+
+        rows = [(s['session_date'], s['session_time'], str(s['duration']),
+                 s['session_type'], s['candidate_name'],
+                 s['instructor_name'], s.get('notes', ''))
+                for s in sessions]
+        insert_zebra(self.tree, rows)
+
+        # تلوين حصص اليوم
+        today_str = date.today().strftime('%Y-%m-%d')
+        for item in self.tree.get_children():
+            vals = self.tree.item(item, 'values')
+            if vals and vals[0] == today_str:
+                self.tree.item(item, tags=("today",))
+        self.tree.tag_configure("today", background="#dcfce7",
+                                foreground="#166534")
+
+        # ربط session_id بكل صف
+        self._id_map = {}
+        for item, s in zip(self.tree.get_children(), sessions):
+            self._id_map[item] = s['id']
+
+        # ملخص الأسبوع
+        week = SessionDB.get_week()
+        self._week_lbl.configure(
+            text=f"حصص الأسبوع القادم: {len(week)}  |  حصص اليوم: {len(SessionDB.get_today())}"
+        )
+
+    def _on_select(self, event=None):
+        sel = self.tree.selection()
+        self.selected_id = self._id_map.get(sel[0]) if sel else None
+
+    # ──────────────────────────────────────────────────────────
+    def _add(self):
+        SessionDialog(self, on_save=self._load)
+
+    def _edit(self):
+        if not self.selected_id:
+            show_error("يرجى تحديد حصة من الجدول أولاً"); return
+        SessionDialog(self, session_id=self.selected_id, on_save=self._load)
+
+    def _delete(self):
+        if not self.selected_id:
+            show_error("يرجى تحديد حصة من الجدول أولاً"); return
+        s = SessionDB.get(self.selected_id)
+        if not s:
+            return
+        msg = (f"هل تريد حذف الحصة:\n"
+               f"التاريخ: {s['session_date']}  الوقت: {s['session_time']}\n"
+               f"هل أنت متأكد؟")
+        if messagebox.askyesno("تأكيد الحذف", msg):
+            SessionDB.delete(self.selected_id)
+            self.selected_id = None
+            self._load()
+            show_info("تم حذف الحصة بنجاح")
+
+
+# ============================================================================
+#  واجهة: طباعة الوثائق
+# ============================================================================
 
 class DocumentsFrame(tk.Frame):
     def __init__(self, parent):
@@ -4556,6 +5126,7 @@ class DrivingSchoolApp:
             ("🧾", "المترشحون"),
             ("🚗", "الممرنون"),
             ("📚", "مراحل التكوين"),
+            ("📅", "الجدول الزمني"),
             ("💰", "المدفوعات"),
             ("💸", "المصاريف"),
             ("📊", "التقارير"),
@@ -4738,6 +5309,7 @@ class DrivingSchoolApp:
             ("المترشحون",         CandidatesFrame),
             ("الممرنون",          InstructorsFrame),
             ("مراحل التكوين",     TrainingFrame),
+            ("الجدول الزمني",     ScheduleFrame),
             ("المدفوعات",         PaymentsFrame),
             ("المصاريف",          ExpensesFrame),
             ("التقارير",          ReportsFrame),
