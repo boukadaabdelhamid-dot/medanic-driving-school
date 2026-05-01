@@ -1064,8 +1064,9 @@ def stat_card(parent, title, value, icon, color, command=None):
 # ============================================================================
 
 class DashboardFrame(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, navigate_cb=None):
         super().__init__(parent, bg=COLOR_BG)
+        self._navigate_cb = navigate_cb
         self._build()
 
     def _build(self):
@@ -1087,13 +1088,24 @@ class DashboardFrame(tk.Frame):
         total_exp = ExpenseDB.get_total_by_year(y)
         profit = total_pay - total_exp
 
+        # دوال التنقل (تعمل فقط إذا مُرّر navigate_cb)
+        nav = self._navigate_cb
+        go_cands  = (lambda: nav(2)) if nav else None
+        go_insts  = (lambda: nav(3)) if nav else None
+        go_pay    = (lambda: nav(6)) if nav else None
+        go_exp    = (lambda: nav(7)) if nav else None
+
         # صف البطاقات الإحصائية
         stats_row = tk.Frame(wrap, bg=COLOR_BG)
         stats_row.pack(fill="x", pady=(0, 20))
-        stat_card(stats_row, "المترشحون", str(len(cands)), "👥", COLOR_PRIMARY)
-        stat_card(stats_row, "الممرنون",  str(len(instructors)), "🚗", COLOR_PURPLE)
-        stat_card(stats_row, "المدفوعات (دج)", f"{total_pay:,.0f}", "💰", COLOR_SUCCESS)
-        stat_card(stats_row, "المصاريف (دج)", f"{total_exp:,.0f}", "💸", COLOR_DANGER)
+        stat_card(stats_row, "المترشحون", str(len(cands)), "👥", COLOR_PRIMARY,
+                  command=go_cands)
+        stat_card(stats_row, "الممرنون",  str(len(instructors)), "🚗", COLOR_PURPLE,
+                  command=go_insts)
+        stat_card(stats_row, "المدفوعات (دج)", f"{total_pay:,.0f}", "💰", COLOR_SUCCESS,
+                  command=go_pay)
+        stat_card(stats_row, "المصاريف (دج)", f"{total_exp:,.0f}", "💸", COLOR_DANGER,
+                  command=go_exp)
 
         # صف الأرباح الكبير
         profit_color = COLOR_SUCCESS if profit >= 0 else COLOR_DANGER
@@ -2813,8 +2825,9 @@ class ExpensesFrame(tk.Frame):
 # ============================================================================
 
 class ReportsFrame(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, navigate_cb=None):
         super().__init__(parent, bg=COLOR_BG)
+        self._navigate_cb = navigate_cb
         self._build()
 
     def _build(self):
@@ -2868,8 +2881,13 @@ class ReportsFrame(tk.Frame):
 
         # إعادة بناء البطاقات
         for w in self.stats_row.winfo_children(): w.destroy()
-        stat_card(self.stats_row, f"مدفوعات {y}",  f"{tp:,.0f}", "💰", COLOR_SUCCESS)
-        stat_card(self.stats_row, f"مصاريف {y}",   f"{te:,.0f}", "💸", COLOR_DANGER)
+        nav = self._navigate_cb
+        go_pay = (lambda: nav(6)) if nav else None
+        go_exp = (lambda: nav(7)) if nav else None
+        stat_card(self.stats_row, f"مدفوعات {y}",  f"{tp:,.0f}", "💰", COLOR_SUCCESS,
+                  command=go_pay)
+        stat_card(self.stats_row, f"مصاريف {y}",   f"{te:,.0f}", "💸", COLOR_DANGER,
+                  command=go_exp)
         stat_card(self.stats_row, f"أرباح {y}",    f"{prof:,.0f}", "💎",
                   COLOR_PRIMARY if prof >= 0 else COLOR_DANGER)
         mn = MONTHS_AR.get(m, m)
@@ -5407,9 +5425,14 @@ class DrivingSchoolApp:
             ("التقارير",          ReportsFrame),
             ("طباعة الوثائق",    DocumentsFrame),
         ]
+        # يحتاج DashboardFrame وReportsFrame لـ callback للتنقل
+        navigate_aware = (DashboardFrame, ReportsFrame)
         self._page_frames = []
         for title, FrameClass in nav_defs:
-            f = FrameClass(self.content)
+            if FrameClass in navigate_aware:
+                f = FrameClass(self.content, navigate_cb=self._navigate)
+            else:
+                f = FrameClass(self.content)
             f.pack_forget()
             self._page_frames.append((f, title))
 
