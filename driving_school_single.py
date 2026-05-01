@@ -1834,7 +1834,7 @@ class CandidateDialog(tk.Toplevel):
         self._make_field(g2, "بلدية / مدينة الميلاد",
                          "birth_place_commune", "entry", row=1, col=0)
         self._make_field(g2, "ولاية الميلاد",
-                         "birth_place_wilaya", "entry", row=1, col=1)
+                         "birth_place_wilaya", "combo", ALGERIA_WILAYAS, row=1, col=1)
 
         _, _w_emb, c_emb = self._make_field(
             g2, "السفارة (للمولودين بالخارج)", "embassy", "entry", row=2, col=0)
@@ -1850,7 +1850,7 @@ class CandidateDialog(tk.Toplevel):
         self._make_field(g_addr, "بلدية / مدينة السكن",
                          "address_commune", "entry", row=0, col=0)
         self._make_field(g_addr, "ولاية السكن",
-                         "address_wilaya",  "entry", row=0, col=1)
+                         "address_wilaya",  "combo", ALGERIA_WILAYAS, row=0, col=1)
 
         addr_cell = tk.Frame(tab2, bg=COLOR_CARD)
         addr_cell.pack(fill="x", padx=10, pady=4)
