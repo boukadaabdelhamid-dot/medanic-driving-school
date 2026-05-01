@@ -5407,6 +5407,14 @@ class DocumentsFrame(tk.Frame):
         ModernButton(bf, "إلغاء", dlg.destroy, icon="✗",
                      color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
 
+        direct_print_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(
+            bf, text="طباعة مباشرة", variable=direct_print_var,
+            font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
+            selectcolor=COLOR_PRIMARY, activebackground=COLOR_BG,
+            cursor="hand2"
+        ).pack(side="left", padx=(12, 0))
+
         def do_generate():
             if not selected_set:
                 show_error("يرجى تحديد مترشح واحد على الأقل"); return
@@ -5446,20 +5454,31 @@ class DocumentsFrame(tk.Frame):
                 "record_number":  opts_vars["record_number"].get().strip(),
                 "wilaya":         opts_vars["wilaya"].get().strip() or ".......",
             }
-            path = filedialog.asksaveasfilename(
-                defaultextension=".pdf",
-                filetypes=[("PDF Files", "*.pdf")],
-                initialfile=f"جدول_الإرسال_{settings['dispatch_date'].replace('/','_')}.pdf",
-                parent=dlg)
-            if not path:
-                return
-            dlg.destroy()
-            self._generate_dispatch_table_pdf(path, selected_cands, settings)
+
+            if direct_print_var.get():
+                import tempfile
+                temp_dir = tempfile.gettempdir()
+                date_str = settings['dispatch_date'].replace('/', '_')
+                ts = int(datetime.now().timestamp())
+                path = os.path.join(temp_dir, f"dispatch_table_{date_str}_{ts}.pdf")
+                dlg.destroy()
+                self._generate_dispatch_table_pdf(path, selected_cands, settings,
+                                                  direct_print=True)
+            else:
+                path = filedialog.asksaveasfilename(
+                    defaultextension=".pdf",
+                    filetypes=[("PDF Files", "*.pdf")],
+                    initialfile=f"جدول_الإرسال_{settings['dispatch_date'].replace('/','_')}.pdf",
+                    parent=dlg)
+                if not path:
+                    return
+                dlg.destroy()
+                self._generate_dispatch_table_pdf(path, selected_cands, settings)
 
         ModernButton(bf, "توليد PDF", do_generate,
                      icon="📄", color=COLOR_PRIMARY).pack(side="right", padx=5)
 
-    def _generate_dispatch_table_pdf(self, path, cands, settings):
+    def _generate_dispatch_table_pdf(self, path, cands, settings, direct_print=False):
         """يُنتج PDF جدول إرسال يضم قائمة المترشحين المحددين."""
         school = SchoolInfoDB.get()
         wilaya = settings.get("wilaya", ".........")
@@ -5518,7 +5537,18 @@ class DocumentsFrame(tk.Frame):
         story.append(Paragraph(ar("___________________________"), s["center"]))
 
         doc.build(story)
-        self._trigger_print(path, "جدول الإرسال")
+        if direct_print:
+            self._send_to_printer(path, "الطابعة الافتراضية", "جدول الإرسال")
+            import threading, time
+            def _cleanup_temp():
+                time.sleep(30)
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
+            threading.Thread(target=_cleanup_temp, daemon=True).start()
+        else:
+            self._trigger_print(path, "جدول الإرسال")
 
     # --- وثائق جماعية ---------------------------------------------------------
 
