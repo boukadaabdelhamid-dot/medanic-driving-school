@@ -103,6 +103,9 @@ EXPENSE_TYPES          = ["وقود","صيانة","كراء","رواتب","تأ�
 EXAM_TYPE_OPTIONS      = ["نظري", "تطبيقي"]
 EXAM_RESULT_OPTIONS    = ["ناجح", "راسب"]
 
+# ── المستخدم الحالي (يُسنَّد عند الدخول) ───────────────────────────────────
+CURRENT_USER: dict = {}
+
 # ── الصلاحيات ──────────────────────────────────────────────────────────────
 PERMISSION_LABELS = {
     "view_candidates":    "عرض المترشحين",
@@ -2157,16 +2160,19 @@ class CandidatesFrame(tk.Frame):
                  anchor="e").pack(anchor="e")
 
         left_head = tk.Frame(head, bg=COLOR_BG); left_head.pack(side="left")
-        ModernButton(left_head, "تسجيل مترشح جديد", self._add_dialog,
-                     icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
-        ModernButton(left_head, "تعديل المحدد", self._edit_dialog,
-                     icon="✏️", color=COLOR_PRIMARY).pack(side="right", padx=4)
+        _can_edit = UserDB.has_perm(CURRENT_USER, "edit_candidates")
+        if _can_edit:
+            ModernButton(left_head, "تسجيل مترشح جديد", self._add_dialog,
+                         icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
+            ModernButton(left_head, "تعديل المحدد", self._edit_dialog,
+                         icon="✏️", color=COLOR_PRIMARY).pack(side="right", padx=4)
         ModernButton(left_head, "نتائج الامتحانات", self._open_exam_results,
                      icon="📊", color=COLOR_PURPLE).pack(side="right", padx=4)
         ModernButton(left_head, "بطاقة التكوين", self._print_training_card,
                      icon="📋", color=COLOR_ACCENT).pack(side="right", padx=4)
-        ModernButton(left_head, "حذف", self._delete,
-                     icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
+        if _can_edit:
+            ModernButton(left_head, "حذف", self._delete,
+                         icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
 
         # تنبيه إرشادي بارز
         hint = tk.Frame(wrap, bg=COLOR_PRIMARY_LIGHT, padx=15, pady=10)
@@ -3142,8 +3148,14 @@ class PaymentsFrame(tk.Frame):
         bf = tk.Frame(fc, bg=COLOR_CARD); bf.pack(fill="x", pady=(10, 0))
         
         row1 = tk.Frame(bf, bg=COLOR_CARD); row1.pack(fill="x")
-        ModernButton(row1, "إضافة دفعة", self._add, icon="💾", color=COLOR_SUCCESS).pack(side="right", fill="x", expand=True, padx=(0, 2), ipady=2)
-        ModernButton(row1, "استرداد", self._refund, icon="↩️", color=COLOR_WARNING).pack(side="left", fill="x", expand=True, padx=(2, 0), ipady=2)
+        _can_pay = UserDB.has_perm(CURRENT_USER, "add_payments")
+        if _can_pay:
+            ModernButton(row1, "إضافة دفعة", self._add, icon="💾", color=COLOR_SUCCESS).pack(side="right", fill="x", expand=True, padx=(0, 2), ipady=2)
+            ModernButton(row1, "استرداد", self._refund, icon="↩️", color=COLOR_WARNING).pack(side="left", fill="x", expand=True, padx=(2, 0), ipady=2)
+        else:
+            tk.Label(row1, text="🔒  صلاحية العرض فقط",
+                     font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT,
+                     anchor="e").pack(fill="x", pady=4)
         
         ModernButton(bf, "طباعة وصل الدفع", self._print_receipt, icon="🖨️", color=COLOR_PURPLE).pack(fill="x", pady=(4, 0), ipady=2)
 
@@ -5803,159 +5815,6 @@ class DocumentsFrame(tk.Frame):
 
 
 # ============================================================================
-#  شاشة تسجيل الدخول
-# ============================================================================
-
-# بيانات افتراضية (يمكن تغييرها لاحقاً عبر قاعدة البيانات)
-_DEFAULT_USERS = {
-    "admin": "1234",
-    "مدير":  "0000",
-}
-
-
-class LoginWindow:
-    """نافذة تسجيل دخول احترافية تُعرض قبل النافذة الرئيسية."""
-
-    def __init__(self):
-        init_db()
-        upgrade_db()
-
-        self.root = tk.Tk()
-        self.root.title("برنامج ميدانيك — تسجيل الدخول")
-        self.root.geometry("480x600")
-        self.root.resizable(False, False)
-        self.root.configure(bg=COLOR_HEADER)
-        # توسيط النافذة
-        self.root.eval('tk::PlaceWindow . center')
-        self._logged_user = None
-        self._build()
-        self.root.mainloop()
-
-    # ──────────────────────────────────────────────────────────
-    def _build(self):
-        root = self.root
-
-        # ── خلفية متدرجة (محاكاة بإطارات) ──
-        top_band = tk.Frame(root, bg=COLOR_HEADER, height=260)
-        top_band.pack(fill="x")
-        top_band.pack_propagate(False)
-
-        # ── اللوجو 150×150 ──
-        logo_shown = False
-        for lp in [
-            os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "attached_assets",
-                         "WhatsApp_Image_2026-05-01_at_18.32.38_1777665526194.jpeg"),
-            os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "attached_assets",
-                         "WhatsApp_Image_2026-05-01_at_18.32.38_1777660833359.jpeg"),
-        ]:
-            if HAS_PIL and os.path.exists(lp) and not logo_shown:
-                try:
-                    from PIL import ImageDraw
-                    size = 150
-                    img  = Image.open(lp).convert("RGBA").resize((size, size), Image.LANCZOS)
-                    mask = Image.new("L", (size, size), 0)
-                    ImageDraw.Draw(mask).ellipse((0, 0, size-1, size-1), fill=255)
-                    out  = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-                    out.paste(img, mask=mask)
-                    self._logo_img = ImageTk.PhotoImage(out)
-                    tk.Label(top_band, image=self._logo_img,
-                             bg=COLOR_HEADER).pack(pady=(28, 10))
-                    logo_shown = True
-                except Exception:
-                    pass
-
-        if not logo_shown:
-            tk.Label(top_band, text="🚗", font=(FONT_FAMILY, 64),
-                     bg=COLOR_HEADER, fg=COLOR_ACCENT).pack(pady=(20, 6))
-
-        tk.Label(top_band, text="ميدانيك",
-                 font=(FONT_FAMILY, 22, "bold"),
-                 bg=COLOR_HEADER, fg="white").pack()
-        tk.Label(top_band, text="نظام إدارة مدرسة تعليم السياقة",
-                 font=(FONT_FAMILY, 11),
-                 bg=COLOR_HEADER, fg="#94a3b8").pack(pady=(2, 0))
-
-        # ── بطاقة الدخول ──
-        card = tk.Frame(root, bg=COLOR_CARD, padx=36, pady=30)
-        card.pack(fill="both", expand=True, padx=0, pady=0)
-
-        tk.Label(card, text="تسجيل الدخول",
-                 font=(FONT_FAMILY, 16, "bold"),
-                 bg=COLOR_CARD, fg=COLOR_HEADER).pack(anchor="e", pady=(0, 18))
-
-        # حقل اسم المستخدم
-        tk.Label(card, text="اسم المستخدم", font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
-        self._user_var = tk.StringVar(value="admin")
-        ue = tk.Entry(card, textvariable=self._user_var,
-                      font=FONT_MAIN, relief="solid", bd=1,
-                      justify="right", fg=COLOR_TEXT, bg="white",
-                      insertbackground=COLOR_PRIMARY)
-        ue.pack(fill="x", ipady=8, pady=(4, 14))
-
-        # حقل كلمة المرور
-        tk.Label(card, text="كلمة المرور", font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
-        self._pass_var = tk.StringVar()
-        pe = tk.Entry(card, textvariable=self._pass_var, show="●",
-                      font=FONT_MAIN, relief="solid", bd=1,
-                      justify="right", fg=COLOR_TEXT, bg="white",
-                      insertbackground=COLOR_PRIMARY)
-        pe.pack(fill="x", ipady=8, pady=(4, 6))
-
-        # تلميح كلمة المرور الافتراضية
-        tk.Label(card, text="(الافتراضي: admin / 1234)",
-                 font=(FONT_FAMILY, 8), bg=COLOR_CARD, fg="#94a3b8",
-                 anchor="e").pack(fill="x", pady=(0, 20))
-
-        # رسالة الخطأ
-        self._err_var = tk.StringVar()
-        self._err_lbl = tk.Label(card, textvariable=self._err_var,
-                                 font=FONT_SMALL, bg=COLOR_CARD, fg="#ef4444",
-                                 anchor="e")
-        self._err_lbl.pack(fill="x", pady=(0, 10))
-
-        # زر الدخول
-        login_btn = tk.Frame(card, bg=COLOR_PRIMARY, cursor="hand2")
-        login_btn.pack(fill="x")
-        self._login_lbl = tk.Label(login_btn, text="دخول",
-                                   font=(FONT_FAMILY, 13, "bold"),
-                                   bg=COLOR_PRIMARY, fg="white", pady=11)
-        self._login_lbl.pack(fill="x")
-
-        def _do_login(e=None):
-            u = self._user_var.get().strip()
-            p = self._pass_var.get().strip()
-            if u in _DEFAULT_USERS and _DEFAULT_USERS[u] == p:
-                self._logged_user = u
-                self.root.destroy()
-                app = DrivingSchoolApp(logged_user=u)
-            else:
-                self._err_var.set("❌  اسم المستخدم أو كلمة المرور غير صحيحة")
-
-        login_btn.bind("<Button-1>", _do_login)
-        self._login_lbl.bind("<Button-1>", _do_login)
-        pe.bind("<Return>", _do_login)
-        ue.bind("<Return>", lambda e: pe.focus())
-
-        def _btn_hover(e):
-            login_btn.configure(bg=COLOR_PRIMARY_DARK)
-            self._login_lbl.configure(bg=COLOR_PRIMARY_DARK)
-        def _btn_leave(e):
-            login_btn.configure(bg=COLOR_PRIMARY)
-            self._login_lbl.configure(bg=COLOR_PRIMARY)
-        login_btn.bind("<Enter>", _btn_hover)
-        login_btn.bind("<Leave>", _btn_leave)
-        self._login_lbl.bind("<Enter>", _btn_hover)
-        self._login_lbl.bind("<Leave>", _btn_leave)
-
-        # تركيز تلقائي
-        pe.focus_set()
-
-
-# ============================================================================
 #  نافذة تسجيل الدخول
 # ============================================================================
 
@@ -6382,6 +6241,9 @@ class DrivingSchoolApp:
                             "full_name": "مدير النظام", "role": "admin",
                             "permissions": {}}
         self._current_user = current_user
+        # نشر المستخدم الحالي على مستوى الوحدة لتستفيد منه الـframes
+        global CURRENT_USER
+        CURRENT_USER = current_user
         self.root = tk.Tk()
         self.root.title("برنامج ميدانيك — إدارة مدرسة تعليم السياقة")
         self.root.geometry("1280x800")
