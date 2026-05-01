@@ -102,6 +102,23 @@ BLOOD_TYPE_OPTIONS     = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 EXPENSE_TYPES          = ["وقود","صيانة","كراء","رواتب","تأمين","إعلان","مستلزمات مكتبية","أخرى"]
 EXAM_TYPE_OPTIONS      = ["نظري", "تطبيقي"]
 EXAM_RESULT_OPTIONS    = ["ناجح", "راسب"]
+ALGERIA_WILAYAS = [
+    "01 - أدرار", "02 - الشلف", "03 - الأغواط", "04 - أم البواقي",
+    "05 - باتنة", "06 - بجاية", "07 - بسكرة", "08 - بشار",
+    "09 - البليدة", "10 - البويرة", "11 - تمنراست", "12 - تبسة",
+    "13 - تلمسان", "14 - تيارت", "15 - تيزي وزو", "16 - الجزائر",
+    "17 - الجلفة", "18 - جيجل", "19 - سطيف", "20 - سعيدة",
+    "21 - سكيكدة", "22 - سيدي بلعباس", "23 - عنابة", "24 - قالمة",
+    "25 - قسنطينة", "26 - المدية", "27 - مستغانم", "28 - المسيلة",
+    "29 - معسكر", "30 - ورقلة", "31 - وهران", "32 - البيض",
+    "33 - إليزي", "34 - برج بوعريريج", "35 - بومرداس", "36 - الطارف",
+    "37 - تندوف", "38 - تيسمسيلت", "39 - الوادي", "40 - خنشلة",
+    "41 - سوق أهراس", "42 - تيبازة", "43 - ميلة", "44 - عين الدفلى",
+    "45 - النعامة", "46 - عين تموشنت", "47 - غرداية", "48 - غليزان",
+    "49 - تيميمون", "50 - برج باجي مختار", "51 - أولاد جلال",
+    "52 - بني عباس", "53 - عين صالح", "54 - عين قزام",
+    "55 - توقرت", "56 - جانت", "57 - المغير", "58 - المنيعة",
+]
 
 # ── المستخدم الحالي (يُسنَّد عند الدخول) ───────────────────────────────────
 CURRENT_USER: dict = {}
@@ -1642,7 +1659,9 @@ class SchoolInfoFrame(tk.Frame):
         make_label(f_wilaya, "الولاية", font=FONT_BOLD).pack(anchor="e")
         v_wilaya = tk.StringVar()
         self.vars["wilaya"] = v_wilaya
-        make_entry(f_wilaya, v_wilaya, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+        cb_wilaya = ttk.Combobox(f_wilaya, textvariable=v_wilaya,
+                                 values=ALGERIA_WILAYAS, width=30, state="readonly")
+        cb_wilaya.pack(fill="x", ipady=4, pady=(2, 0))
         
         # 3. بقية الحقول (CR, Accreditation, NIF, NIS, Article)
         other_fields = [
@@ -5488,10 +5507,19 @@ class DocumentsFrame(tk.Frame):
             opts_vars[key] = v
             make_entry(parent, v, width=26).pack(fill="x", ipady=4)
 
+        def lbl_combobox(parent, label, key, default="", values=None):
+            tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
+                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+            v = tk.StringVar(value=default)
+            opts_vars[key] = v
+            ttk.Combobox(parent, textvariable=v, values=values or [],
+                         width=24, state="readonly").pack(fill="x", ipady=4)
+
         lbl_entry(rc_frame, "التاريخ", "dispatch_date",
                   date.today().strftime("%d/%m/%Y"))
         lbl_entry(rc_frame, "رقم المحضر", "record_number", "")
-        lbl_entry(rc_frame, "مكان الإرسال (الولاية)", "wilaya", default_wilaya)
+        lbl_combobox(rc_frame, "مكان الإرسال (الولاية)", "wilaya",
+                     default_wilaya, ALGERIA_WILAYAS)
 
         # --- ترتيب المترشحين ---
         tk.Label(rc_frame, text="ترتيب المترشحين", font=FONT_BOLD, bg=COLOR_CARD,
@@ -5907,12 +5935,21 @@ class DocumentsFrame(tk.Frame):
             opts_vars[key] = v
             make_entry(parent, v, width=26).pack(fill="x", ipady=4)
 
+        def lbl_combobox(parent, label, key, default="", values=None):
+            tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
+                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+            v = tk.StringVar(value=default)
+            opts_vars[key] = v
+            ttk.Combobox(parent, textvariable=v, values=values or [],
+                         width=24, state="readonly").pack(fill="x", ipady=4)
+
         lbl_entry(rc_frame, "تاريخ الامتحان", "exam_date",
                   date.today().strftime("%d/%m/%Y"))
         lbl_entry(rc_frame, "مركز الامتحان", "exam_center", "")
         lbl_entry(rc_frame, "رقم الوثيقة (ر.ت)", "doc_ref", "")
-        lbl_entry(rc_frame, "الولاية", "wilaya",
-                  school.get('wilaya', '').strip() or (school.get('address','').split()[-1] if school.get('address') else ""))
+        lbl_combobox(rc_frame, "الولاية", "wilaya",
+                     school.get('wilaya', '').strip() or (school.get('address','').split()[-1] if school.get('address') else ""),
+                     ALGERIA_WILAYAS)
 
         tk.Frame(rc_frame, bg=COLOR_BORDER, height=1).pack(fill="x", pady=10)
         section_title(rc_frame, "طبيعة الامتحان", icon="📝")
