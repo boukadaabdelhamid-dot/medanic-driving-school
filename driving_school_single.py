@@ -522,6 +522,77 @@ STRINGS: dict = {
     "sched_conflict_dur": {"ar": "مدة",              "fr": "durée"},
     "filter_all":     {"ar": "الكل",                 "fr": "Tous"},
     "btn_filter":     {"ar": "تصفية",                "fr": "Filtrer"},
+    # ── TrainingFrame ─────────────────────────────────────────────────────────
+    "train_cand_label":{"ar": "المترشح:",            "fr": "Candidat:"},
+    "train_no_stages": {"ar": "لا توجد مراحل",       "fr": "Aucune étape"},
+    "train_graduated": {"ar": "🎓 تخرج بنجاح!",      "fr": "🎓 Diplômé!"},
+    "train_all_done":  {"ar": "أنهى جميع المراحل (الكود، الكرينو، السيركوي)",
+                        "fr": "Toutes les étapes terminées"},
+    # ── PaymentsFrame ─────────────────────────────────────────────────────────
+    "pay_search_lbl":  {"ar": "بحث:",                "fr": "Rechercher:"},
+    "pay_col_id":      {"ar": "رقم",                 "fr": "N°"},
+    "pay_col_last":    {"ar": "اللقب",               "fr": "Nom"},
+    "pay_col_first":   {"ar": "الاسم",               "fr": "Prénom"},
+    "pay_col_phone2":  {"ar": "الهاتف",              "fr": "Tél"},
+    "pay_col_total":   {"ar": "المبلغ الإجمالي",     "fr": "Montant total"},
+    "pay_lbl_total":   {"ar": "المبلغ الإجمالي:",    "fr": "Total:"},
+    "pay_lbl_paid":    {"ar": "المدفوع:",             "fr": "Versé:"},
+    "pay_lbl_remaining":{"ar": "المتبقي:",           "fr": "Reste:"},
+    "pay_history_title":{"ar": "سجل المدفوعات",      "fr": "Historique des paiements"},
+    "pay_history_for": {"ar": "سجل المدفوعات للمترشح:", "fr": "Historique pour:"},
+    # ── ReportsFrame ──────────────────────────────────────────────────────────
+    "report_no_data":  {"ar": "لا توجد بيانات في هذه الفترة",
+                        "fr": "Aucune donnée pour cette période"},
+    # ── Document names for _trigger_print ─────────────────────────────────────
+    "doc_enroll_form": {"ar": "استمارة الترشح",      "fr": "Formulaire d'inscription"},
+    "doc_training_card":{"ar": "بطاقة التكوين",      "fr": "Fiche de formation"},
+    "doc_admin_cert":  {"ar": "الشهادة الإدارية",    "fr": "Certificat administratif"},
+    "doc_payment_receipt":{"ar": "وصل الدفع",        "fr": "Reçu de paiement"},
+    "doc_cand_list":   {"ar": "قائمة المترشحين",     "fr": "Liste des candidats"},
+    "doc_inst_list":   {"ar": "قائمة الممرنين",      "fr": "Liste des moniteurs"},
+    "doc_expenses":    {"ar": "تقرير المصاريف",       "fr": "Rapport des dépenses"},
+    "doc_payments_report":{"ar": "تقرير المدفوعات",  "fr": "Rapport des paiements"},
+    "doc_exam_cand_list":{"ar": "قائمة المترشحين للامتحان", "fr": "Liste candidats examen"},
+    # ── Dispatch dialog ───────────────────────────────────────────────────────
+    "dispatch_dlg_title":{"ar": "إعداد جدول الإرسال",
+                          "fr": "Préparer tableau de convoi"},
+    "dispatch_dlg_head":{"ar": "إعداد جدول الإرسال — اختر المترشحين",
+                         "fr": "Tableau de convoi — Choisir les candidats"},
+    "dispatch_doc_settings":{"ar": "إعدادات الوثيقة","fr": "Paramètres du document"},
+    "dispatch_lbl_date":{"ar": "التاريخ",             "fr": "Date"},
+    "dispatch_lbl_record_no":{"ar": "رقم المحضر",    "fr": "N° procès-verbal"},
+    "dispatch_lbl_wilaya":{"ar": "مكان الإرسال (الولاية)", "fr": "Wilaya de convoi"},
+    "dispatch_sort_title":{"ar": "ترتيب المترشحين",  "fr": "Ordre des candidats"},
+    "dispatch_sort_default":{"ar": "الترتيب الافتراضي","fr": "Ordre par défaut"},
+    "dispatch_sort_alpha":{"ar": "أبجدياً (اللقب)",  "fr": "Alphabétique (nom)"},
+    "dispatch_sort_birth":{"ar": "حسب تاريخ الميلاد","fr": "Par date de naissance"},
+    "dispatch_choose_cands":{"ar": "اختر المترشحين", "fr": "Choisir les candidats"},
+    "dispatch_select_all":{"ar": "✓ تحديد الكل",     "fr": "✓ Sélectionner tout"},
+    "dispatch_deselect_all":{"ar": "✗ إلغاء الكل",  "fr": "✗ Désélectionner"},
+    "dispatch_click_hint":{"ar": "اضغط على أي صف لتحديده / إلغاء تحديده",
+                           "fr": "Cliquez pour sélectionner/désélectionner"},
+    "dispatch_col_num":{"ar": "رقم",                  "fr": "N°"},
+    "dispatch_col_name":{"ar": "اللقب والاسم",        "fr": "Nom et prénom"},
+    "dispatch_col_lic": {"ar": "الصنف",               "fr": "Catégorie"},
+    "dispatch_col_birth":{"ar": "تاريخ الميلاد",     "fr": "Date naissance"},
+    "dispatch_print_direct":{"ar": "طباعة مباشرة",   "fr": "Impression directe"},
+    "dispatch_gen_pdf": {"ar": "توليد PDF",           "fr": "Générer PDF"},
+    # ── Exam list dialog ──────────────────────────────────────────────────────
+    "examlist_dlg_title":{"ar": "إعداد قائمة المترشحين للامتحان",
+                          "fr": "Préparer liste candidats examen"},
+    "examlist_dlg_head":{"ar": "إعداد قائمة المترشحين لنيل رخصة السياقة",
+                         "fr": "Liste candidats pour permis de conduire"},
+    "examlist_exam_data":{"ar": "بيانات الامتحان",   "fr": "Données de l'examen"},
+    "examlist_exam_date":{"ar": "تاريخ الامتحان",    "fr": "Date d'examen"},
+    "examlist_exam_center":{"ar": "مركز الامتحان",   "fr": "Centre d'examen"},
+    "examlist_doc_ref": {"ar": "رقم الوثيقة (ر.ت)",  "fr": "N° document (R.T)"},
+    "examlist_wilaya":  {"ar": "الولاية",             "fr": "Wilaya"},
+    "examlist_nature":  {"ar": "طبيعة الامتحان",      "fr": "Nature de l'examen"},
+    "examlist_all_types":{"ar": "كل الأنواع",         "fr": "Tous les types"},
+    "examlist_code":    {"ar": "قانون المرور (كود)",  "fr": "Code de la route"},
+    "examlist_creneau": {"ar": "المناورات (كرينو)",   "fr": "Manœuvres (créneau)"},
+    "examlist_circuit": {"ar": "السياقة (طريق)",      "fr": "Conduite (circuit)"},
+    "examlist_gen_pdf": {"ar": "توليد الوثيقة PDF",   "fr": "Générer le document PDF"},
     # ── تسجيل الدخول ────────────────────────────────────────────────────────
     "login_title":     {"ar": "تسجيل الدخول — برنامج ميدانيك", "fr": "Connexion — Meidanic"},
     "login_app_sub":   {"ar": "إدارة مدرسة تعليم السياقة — الجزائر", "fr": "Gestion auto-école — Algérie"},
@@ -3980,11 +4051,11 @@ class TrainingFrame(tk.Frame):
 
     def _update_action_panel(self):
         name = self._get_candidate_name()
-        self.lbl_cand_name.config(text=f"المترشح: {name}")
+        self.lbl_cand_name.config(text=f"{T('train_cand_label')} {name}")
 
         active = self._get_active_stage()
         if not active:
-            self.lbl_current_stage.config(text="لا توجد مراحل")
+            self.lbl_current_stage.config(text=T("train_no_stages"))
             self.lbl_stage_status.config(text="")
             self._set_buttons_state("disabled")
             return
@@ -3992,8 +4063,8 @@ class TrainingFrame(tk.Frame):
         stage_name = STAGE_LABELS.get(active['stage_type'], active['stage_type'])
 
         if active['status'] == STATUS_PASS and active['stage_type'] == "circuit":
-            self.lbl_current_stage.config(text="🎓 تخرج بنجاح!")
-            self.lbl_stage_status.config(text="أنهى جميع المراحل (الكود، الكرينو، السيركوي)")
+            self.lbl_current_stage.config(text=T("train_graduated"))
+            self.lbl_stage_status.config(text=T("train_all_done"))
             self._set_buttons_state("disabled")
             return
 
@@ -4377,14 +4448,15 @@ class PaymentsFrame(tk.Frame):
         co, cc = make_card(left, padding=5); co.pack(fill="both", expand=True, pady=(0, 10))
         
         sc = tk.Frame(cc, bg=COLOR_CARD); sc.pack(fill="x", pady=(0, 5))
-        tk.Label(sc, text="بحث:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(side="right", padx=5)
+        tk.Label(sc, text=T("pay_search_lbl"), font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(side=S(), padx=5)
         self.search_var = tk.StringVar()
         self.search_var.trace("w", lambda *a: self._load_candidates())
         make_entry(sc, self.search_var, width=25).pack(side="right", fill="x", expand=True, ipady=3, padx=5)
 
         self.cand_tree = create_treeview(cc,
             ("id","last_name","first_name","phone","total_amount"),
-            ("رقم","اللقب","الاسم","الهاتف","المبلغ الإجمالي"),
+            (T("pay_col_id"), T("pay_col_last"), T("pay_col_first"),
+             T("pay_col_phone2"), T("pay_col_total")),
             (50,140,140,120,140), height=12)
         self.cand_tree.bind("<<TreeviewSelect>>", self._on_candidate_select)
 
@@ -4405,10 +4477,10 @@ class PaymentsFrame(tk.Frame):
         total = cand['total_amount'] if cand else 0
         paid = PaymentDB.get_total_by_candidate(self.selected_candidate_id) if cand else 0
         rem = total - paid
-        self.lbl_total.config(text=f"المبلغ الإجمالي: {total:,.0f} دج")
-        self.lbl_paid.config(text=f"المدفوع: {paid:,.0f} دج")
+        self.lbl_total.config(text=f"{T('pay_lbl_total')} {total:,.0f} دج")
+        self.lbl_paid.config(text=f"{T('pay_lbl_paid')} {paid:,.0f} دج")
         self.lbl_remaining.config(
-            text=f"المتبقي: {rem:,.0f} دج",
+            text=f"{T('pay_lbl_remaining')} {rem:,.0f} دج",
             fg=COLOR_ACCENT if rem > 0 else "#a7f3d0")
         self._load_payments()
 
@@ -4427,12 +4499,12 @@ class PaymentsFrame(tk.Frame):
         win = tk.Toplevel(self)
         cand = CandidateDB.get(self.selected_candidate_id)
         name = f"{cand['first_name']} {cand['last_name']}" if cand else ""
-        win.title(f"سجل المدفوعات - {name}")
+        win.title(f"{T('pay_history_title')} - {name}")
         win.geometry("850x450")
         win.configure(bg=COLOR_BG)
         win.transient(self.winfo_toplevel())
         
-        lbl = tk.Label(win, text=f"سجل المدفوعات للمترشح: {name}", font=(FONT_FAMILY, 16, "bold"), bg=COLOR_BG, fg=COLOR_HEADER)
+        lbl = tk.Label(win, text=f"{T('pay_history_for')} {name}", font=(FONT_FAMILY, 16, "bold"), bg=COLOR_BG, fg=COLOR_HEADER)
         lbl.pack(pady=15)
         
         self.pay_tree = create_treeview(win,
@@ -4958,7 +5030,7 @@ class ReportsFrame(tk.Frame):
                 str(tat['passed']) if tat['total']  else "—",
             ))
         if not exam_rows:
-            exam_rows = [("لا توجد بيانات في هذه الفترة", "—", "—", "—", "—")]
+            exam_rows = [(T("report_no_data"), "—", "—", "—", "—")]
         insert_zebra(self._exam_monthly_tree, exam_rows)
 
         # ── رسم المخطط الشريطي (كل الفترة المختارة) ─────────────────────
@@ -4979,7 +5051,7 @@ class ReportsFrame(tk.Frame):
 
         if not sorted_keys:
             canvas.create_text(W // 2, H // 2,
-                               text="لا توجد بيانات في هذه الفترة",
+                               text=T("report_no_data"),
                                font=FONT_SMALL, fill=COLOR_TEXT_LIGHT)
             canvas.bind("<Configure>", lambda e: self._draw_exam_bar_chart(em))
             return
@@ -6201,7 +6273,7 @@ class DocumentsFrame(tk.Frame):
         draw_text(19.5, yt_f, "و", ARABIC_FONT, 9, "center")
 
         c.save()
-        self._trigger_print(path, "استمارة الترشح")
+        self._trigger_print(path, T("doc_enroll_form"))
 
     def _doc_training_card(self):
         if not self._check(): return
@@ -6333,7 +6405,7 @@ class DocumentsFrame(tk.Frame):
             # في حال فشل الطباعة المباشرة، نكتفي بفتح الملف
             try: os.startfile(path)
             except Exception as e: show_error(f"خطأ: {e}")
-        self._trigger_print(path, "بطاقة التكوين")
+        self._trigger_print(path, T("doc_training_card"))
 
     def _doc_contract(self):
         if not self._check(): return
@@ -6375,7 +6447,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
         
         doc.build(story)
-        self._trigger_print(path, "عقد التكوين")
+        self._trigger_print(path, T("doc_contract"))
 
 
 
@@ -6487,7 +6559,7 @@ class DocumentsFrame(tk.Frame):
         txt_right(f"حُرّر بتاريخ:  {today_str}", 7.5, size=10)
 
         c.save()
-        self._trigger_print(path, "الشهادة الإدارية")
+        self._trigger_print(path, T("doc_admin_cert"))
 
     def _doc_payment_receipt(self):
         if not self._check(): return
@@ -6524,7 +6596,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Spacer(1, 0.5*cm))
         story.append(Paragraph(ar("ختم وتوقيع المسؤول: ___________________"), s["right"]))
         doc.build(story)
-        self._trigger_print(path, "وصل الدفع")
+        self._trigger_print(path, T("doc_payment_receipt"))
 
     def _doc_dispatch_table(self):
         """نافذة اختيار متعدد للمترشحين ثم توليد PDF جدول الإرسال."""
@@ -6543,7 +6615,7 @@ class DocumentsFrame(tk.Frame):
         #  نافذة الإعداد الحوارية
         # =========================================================
         dlg = tk.Toplevel(self)
-        dlg.title("إعداد جدول الإرسال")
+        dlg.title(T("dispatch_dlg_title"))
         dlg.geometry("820x640")
         dlg.configure(bg=COLOR_BG)
         dlg.transient(self); dlg.grab_set()
@@ -6551,9 +6623,9 @@ class DocumentsFrame(tk.Frame):
         # --- رأس النافذة ---
         head = tk.Frame(dlg, bg=COLOR_PRIMARY, pady=14, padx=20)
         head.pack(fill="x")
-        tk.Label(head, text="📋  إعداد جدول الإرسال — اختر المترشحين",
+        tk.Label(head, text=f"📋  {T('dispatch_dlg_head')}",
                  font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white",
-                 anchor=A()).pack(side="right")
+                 anchor=A()).pack(side=S())
 
         body = tk.Frame(dlg, bg=COLOR_BG)
         body.pack(fill="both", expand=True, padx=15, pady=10)
@@ -6568,7 +6640,7 @@ class DocumentsFrame(tk.Frame):
         ro, rc_frame = make_card(right_col)
         ro.pack(fill="both", expand=True)
 
-        section_title(rc_frame, "إعدادات الوثيقة", icon="⚙️")
+        section_title(rc_frame, T("dispatch_doc_settings"), icon="⚙️")
 
         opts_vars = {}
 
@@ -6587,20 +6659,20 @@ class DocumentsFrame(tk.Frame):
             ttk.Combobox(parent, textvariable=v, values=values or [],
                          width=24, state="readonly").pack(fill="x", ipady=4)
 
-        lbl_entry(rc_frame, "التاريخ", "dispatch_date",
+        lbl_entry(rc_frame, T("dispatch_lbl_date"), "dispatch_date",
                   date.today().strftime("%d/%m/%Y"))
-        lbl_entry(rc_frame, "رقم المحضر", "record_number", "")
-        lbl_combobox(rc_frame, "مكان الإرسال (الولاية)", "wilaya",
+        lbl_entry(rc_frame, T("dispatch_lbl_record_no"), "record_number", "")
+        lbl_combobox(rc_frame, T("dispatch_lbl_wilaya"), "wilaya",
                      default_wilaya, ALGERIA_WILAYAS)
 
         # --- ترتيب المترشحين ---
-        tk.Label(rc_frame, text="ترتيب المترشحين", font=FONT_BOLD, bg=COLOR_CARD,
+        tk.Label(rc_frame, text=T("dispatch_sort_title"), font=FONT_BOLD, bg=COLOR_CARD,
                  fg=COLOR_TEXT, anchor=A()).pack(fill="x", pady=(12, 4))
         sort_var = tk.StringVar(value="default")
         sort_options = [
-            ("الترتيب الافتراضي", "default"),
-            ("أبجدياً (اللقب)",   "alpha"),
-            ("حسب تاريخ الميلاد", "birth"),
+            (T("dispatch_sort_default"), "default"),
+            (T("dispatch_sort_alpha"),   "alpha"),
+            (T("dispatch_sort_birth"),   "birth"),
         ]
         for label, value in sort_options:
             tk.Radiobutton(
@@ -6619,15 +6691,15 @@ class DocumentsFrame(tk.Frame):
         # شريط البحث
         top_bar = tk.Frame(left_col, bg=COLOR_CARD, padx=8, pady=6)
         top_bar.pack(fill="x")
-        tk.Label(top_bar, text="👥  اختر المترشحين",
+        tk.Label(top_bar, text=f"👥  {T('dispatch_choose_cands')}",
                  font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
                  fg=COLOR_PRIMARY, anchor=A()).pack(fill="x")
 
         sv = tk.StringVar()
         sr = tk.Frame(top_bar, bg=COLOR_CARD); sr.pack(fill="x", pady=(4, 0))
         tk.Label(sr, text="🔍", bg=COLOR_CARD, fg=COLOR_PRIMARY,
-                 font=(FONT_FAMILY, 11)).pack(side="right", padx=(0, 4))
-        make_entry(sr, sv, width=30).pack(side="right", fill="x", expand=True, ipady=3)
+                 font=(FONT_FAMILY, 11)).pack(side=S(), padx=(0, 4))
+        make_entry(sr, sv, width=30).pack(side=S(), fill="x", expand=True, ipady=3)
 
         # أزرار تحديد / إلغاء الكل
         sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
@@ -6644,15 +6716,15 @@ class DocumentsFrame(tk.Frame):
             selected_set.clear()
             populate_tree(sv.get().strip())
 
-        tk.Button(sel_row, text="✓ تحديد الكل", font=FONT_SMALL,
+        tk.Button(sel_row, text=T("dispatch_select_all"), font=FONT_SMALL,
                   bg=COLOR_SUCCESS, fg="white", relief="flat", padx=10, pady=4,
-                  cursor="hand2", command=select_all).pack(side="right", padx=3)
-        tk.Button(sel_row, text="✗ إلغاء الكل", font=FONT_SMALL,
+                  cursor="hand2", command=select_all).pack(side=S(), padx=3)
+        tk.Button(sel_row, text=T("dispatch_deselect_all"), font=FONT_SMALL,
                   bg="#94a3b8", fg="white", relief="flat", padx=10, pady=4,
-                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
-        tk.Label(sel_row, text="اضغط على أي صف لتحديده / إلغاء تحديده",
+                  cursor="hand2", command=deselect_all).pack(side=S(), padx=3)
+        tk.Label(sel_row, text=T("dispatch_click_hint"),
                  font=FONT_TINY, bg="#e0f2fe", fg="#0369a1",
-                 anchor=A()).pack(side="right", padx=8)
+                 anchor=A()).pack(side=S(), padx=8)
 
         # Treeview
         tree_frame = tk.Frame(left_col, bg=COLOR_CARD)
@@ -6664,10 +6736,10 @@ class DocumentsFrame(tk.Frame):
                                   style="Modern.Treeview",
                                   selectmode="browse")
         cand_tree.heading("sel",   text="✓",            anchor="center")
-        cand_tree.heading("num",   text="رقم",           anchor="center")
-        cand_tree.heading("name",  text="اللقب والاسم",  anchor="center")
-        cand_tree.heading("lic",   text="الصنف",         anchor="center")
-        cand_tree.heading("birth", text="تاريخ الميلاد", anchor="center")
+        cand_tree.heading("num",   text=T("dispatch_col_num"),   anchor="center")
+        cand_tree.heading("name",  text=T("dispatch_col_name"),  anchor="center")
+        cand_tree.heading("lic",   text=T("dispatch_col_lic"),   anchor="center")
+        cand_tree.heading("birth", text=T("dispatch_col_birth"), anchor="center")
         cand_tree.column("sel",   width=35,  anchor="center", stretch=False)
         cand_tree.column("num",   width=45,  anchor="center", stretch=False)
         cand_tree.column("name",  width=220, anchor="center")
@@ -6725,16 +6797,16 @@ class DocumentsFrame(tk.Frame):
         # =========================================================
         bf = tk.Frame(dlg, bg=COLOR_BG, pady=12)
         bf.pack(side="bottom", fill="x", padx=20)
-        ModernButton(bf, "إلغاء", dlg.destroy, icon="✗",
-                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
+        ModernButton(bf, T("btn_cancel"), dlg.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
 
         direct_print_var = tk.BooleanVar(value=False)
         tk.Checkbutton(
-            bf, text="طباعة مباشرة", variable=direct_print_var,
+            bf, text=T("dispatch_print_direct"), variable=direct_print_var,
             font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
             selectcolor=COLOR_PRIMARY, activebackground=COLOR_BG,
             cursor="hand2"
-        ).pack(side="left", padx=(12, 0))
+        ).pack(side=So(), padx=(12, 0))
 
         def do_generate():
             if not selected_set:
@@ -6796,8 +6868,8 @@ class DocumentsFrame(tk.Frame):
                 dlg.destroy()
                 self._generate_dispatch_table_pdf(path, selected_cands, settings)
 
-        ModernButton(bf, "توليد PDF", do_generate,
-                     icon="📄", color=COLOR_PRIMARY).pack(side="right", padx=5)
+        ModernButton(bf, T("dispatch_gen_pdf"), do_generate,
+                     icon="📄", color=COLOR_PRIMARY).pack(side=S(), padx=5)
 
     def _generate_dispatch_table_pdf(self, path, cands, settings, direct_print=False):
         """يُنتج PDF جدول إرسال يضم قائمة المترشحين المحددين."""
@@ -6869,7 +6941,7 @@ class DocumentsFrame(tk.Frame):
                     pass
             threading.Thread(target=_cleanup_temp, daemon=True).start()
         else:
-            self._trigger_print(path, "جدول الإرسال")
+            self._trigger_print(path, T("doc_dispatch"))
 
     # --- وثائق جماعية ---------------------------------------------------------
 
@@ -6898,7 +6970,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Spacer(1, 0.5*cm))
         story.append(Paragraph(ar(f"المجموع: {len(cands)} مترشح"), s["h2"]))
         doc.build(story)
-        self._trigger_print(path, "قائمة المترشحين")
+        self._trigger_print(path, T("doc_cand_list"))
 
     def _doc_instructors_list(self):
         if not self._check(): return
@@ -6918,7 +6990,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Spacer(1, 0.5*cm))
         story.append(Paragraph(ar(f"المجموع: {len(instructors)} ممرن"), s["h2"]))
         doc.build(story)
-        self._trigger_print(path, "قائمة الممرنين")
+        self._trigger_print(path, T("doc_inst_list"))
 
     def _doc_expenses_report(self):
         if not self._check(): return
@@ -6944,7 +7016,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Spacer(1, 0.5*cm))
         story.append(Paragraph(ar(f"المجموع الكلي للمصاريف: {total:,.0f} دج"), s["h2"]))
         doc.build(story)
-        self._trigger_print(path, "تقرير المصاريف")
+        self._trigger_print(path, T("doc_expenses"))
 
     def _doc_payments_report(self):
         if not self._check(): return
@@ -6979,7 +7051,7 @@ class DocumentsFrame(tk.Frame):
                    ["المبلغ الإجمالي المتفق عليه", f"{total_global:,.0f} دج"]]
         story.append(_styled_table(summary, [9*cm, 8*cm]))
         doc.build(story)
-        self._trigger_print(path, "تقرير المدفوعات")
+        self._trigger_print(path, T("doc_payments_report"))
 
 
     def _doc_exam_candidates_list(self):
@@ -6995,7 +7067,7 @@ class DocumentsFrame(tk.Frame):
 
         # ========== نافذة الإعداد ==========
         dlg = tk.Toplevel(self)
-        dlg.title("إعداد قائمة المترشحين للامتحان")
+        dlg.title(T("examlist_dlg_title"))
         dlg.geometry("820x680")
         dlg.configure(bg=COLOR_BG)
         dlg.transient(self); dlg.grab_set()
@@ -7003,9 +7075,9 @@ class DocumentsFrame(tk.Frame):
         # --- رأس النافذة ---
         head = tk.Frame(dlg, bg="#0369a1", pady=14, padx=20)
         head.pack(fill="x")
-        tk.Label(head, text="📋  إعداد قائمة المترشحين لنيل رخصة السياقة",
+        tk.Label(head, text=f"📋  {T('examlist_dlg_head')}",
                  font=(FONT_FAMILY, 14, "bold"), bg="#0369a1", fg="white",
-                 anchor=A()).pack(side="right")
+                 anchor=A()).pack(side=S())
 
         body = tk.Frame(dlg, bg=COLOR_BG); body.pack(fill="both", expand=True, padx=15, pady=10)
 
@@ -7017,7 +7089,7 @@ class DocumentsFrame(tk.Frame):
         ro, rc_frame = make_card(right_col)
         ro.pack(fill="both", expand=True)
 
-        section_title(rc_frame, "بيانات الامتحان", icon="🗓️")
+        section_title(rc_frame, T("examlist_exam_data"), icon="🗓️")
 
         opts_vars = {}
 
@@ -7036,23 +7108,23 @@ class DocumentsFrame(tk.Frame):
             ttk.Combobox(parent, textvariable=v, values=values or [],
                          width=24, state="readonly").pack(fill="x", ipady=4)
 
-        lbl_entry(rc_frame, "تاريخ الامتحان", "exam_date",
+        lbl_entry(rc_frame, T("examlist_exam_date"), "exam_date",
                   date.today().strftime("%d/%m/%Y"))
-        lbl_entry(rc_frame, "مركز الامتحان", "exam_center", "")
-        lbl_entry(rc_frame, "رقم الوثيقة (ر.ت)", "doc_ref", "")
-        lbl_combobox(rc_frame, "الولاية", "wilaya",
+        lbl_entry(rc_frame, T("examlist_exam_center"), "exam_center", "")
+        lbl_entry(rc_frame, T("examlist_doc_ref"), "doc_ref", "")
+        lbl_combobox(rc_frame, T("examlist_wilaya"), "wilaya",
                      school.get('wilaya', '').strip() or (school.get('address','').split()[-1] if school.get('address') else ""),
                      ALGERIA_WILAYAS)
 
         tk.Frame(rc_frame, bg=COLOR_BORDER, height=1).pack(fill="x", pady=10)
-        section_title(rc_frame, "طبيعة الامتحان", icon="📝")
+        section_title(rc_frame, T("examlist_nature"), icon="📝")
 
         stage_var = tk.StringVar(value="all")
         stages_opts = [
-            ("كل الأنواع", "all"),
-            ("قانون المرور (كود)", "code"),
-            ("المناورات (كرينو)", "creneau"),
-            ("السياقة (طريق)", "circuit"),
+            (T("examlist_all_types"), "all"),
+            (T("examlist_code"),      "code"),
+            (T("examlist_creneau"),   "creneau"),
+            (T("examlist_circuit"),   "circuit"),
         ]
         for txt, val in stages_opts:
             tk.Radiobutton(rc_frame, text=txt, variable=stage_var, value=val,
@@ -7070,15 +7142,15 @@ class DocumentsFrame(tk.Frame):
                            relief="flat", bd=0)
         top_bar.pack(fill="x")
 
-        tk.Label(top_bar, text="👥  اختر المترشحين",
+        tk.Label(top_bar, text=f"👥  {T('dispatch_choose_cands')}",
                  font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
                  fg=COLOR_PRIMARY, anchor=A()).pack(fill="x")
 
         sv = tk.StringVar()
         sr = tk.Frame(top_bar, bg=COLOR_CARD); sr.pack(fill="x", pady=(4, 0))
         tk.Label(sr, text="🔍", bg=COLOR_CARD, fg=COLOR_PRIMARY,
-                 font=(FONT_FAMILY, 11)).pack(side="right", padx=(0, 4))
-        make_entry(sr, sv, width=30).pack(side="right", fill="x", expand=True, ipady=3)
+                 font=(FONT_FAMILY, 11)).pack(side=S(), padx=(0, 4))
+        make_entry(sr, sv, width=30).pack(side=S(), fill="x", expand=True, ipady=3)
 
         # أزرار تحديد الكل / إلغاء الكل
         sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
@@ -7095,16 +7167,16 @@ class DocumentsFrame(tk.Frame):
             selected_set.clear()
             populate_tree(sv.get().strip())
 
-        tk.Button(sel_row, text="✓ تحديد الكل", font=FONT_SMALL,
+        tk.Button(sel_row, text=T("dispatch_select_all"), font=FONT_SMALL,
                   bg=COLOR_SUCCESS, fg="white", relief="flat", padx=10, pady=4,
-                  cursor="hand2", command=select_all).pack(side="right", padx=3)
-        tk.Button(sel_row, text="✗ إلغاء الكل", font=FONT_SMALL,
+                  cursor="hand2", command=select_all).pack(side=S(), padx=3)
+        tk.Button(sel_row, text=T("dispatch_deselect_all"), font=FONT_SMALL,
                   bg="#94a3b8", fg="white", relief="flat", padx=10, pady=4,
-                  cursor="hand2", command=deselect_all).pack(side="right", padx=3)
+                  cursor="hand2", command=deselect_all).pack(side=S(), padx=3)
         tk.Label(sel_row,
-                 text="اضغط على أي صف لتحديده / إلغاء تحديده",
+                 text=T("dispatch_click_hint"),
                  font=FONT_TINY, bg="#e0f2fe", fg="#0369a1",
-                 anchor=A()).pack(side="right", padx=8)
+                 anchor=A()).pack(side=S(), padx=8)
 
         # حاوية الجدول
         tree_frame = tk.Frame(left_col, bg=COLOR_CARD)
@@ -7117,10 +7189,10 @@ class DocumentsFrame(tk.Frame):
                                  style="Modern.Treeview",
                                  selectmode="browse")
         cand_tree.heading("sel",   text="✓",             anchor="center")
-        cand_tree.heading("num",   text="رقم",            anchor="center")
-        cand_tree.heading("name",  text="اللقب والاسم",   anchor="center")
-        cand_tree.heading("lic",   text="الصنف",          anchor="center")
-        cand_tree.heading("birth", text="تاريخ الميلاد",  anchor="center")
+        cand_tree.heading("num",   text=T("dispatch_col_num"),   anchor="center")
+        cand_tree.heading("name",  text=T("dispatch_col_name"),  anchor="center")
+        cand_tree.heading("lic",   text=T("dispatch_col_lic"),   anchor="center")
+        cand_tree.heading("birth", text=T("dispatch_col_birth"), anchor="center")
         cand_tree.column("sel",   width=35,  anchor="center", stretch=False)
         cand_tree.column("num",   width=45,  anchor="center", stretch=False)
         cand_tree.column("name",  width=220, anchor="center")
@@ -7175,8 +7247,8 @@ class DocumentsFrame(tk.Frame):
 
         # --- شريط الأزرار السفلي ---
         bf = tk.Frame(dlg, bg=COLOR_BG, pady=12); bf.pack(side="bottom", fill="x", padx=20)
-        ModernButton(bf, "إلغاء", dlg.destroy, icon="✗",
-                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
+        ModernButton(bf, T("btn_cancel"), dlg.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
 
         def do_generate():
             selected_ids = list(selected_set)
@@ -7203,8 +7275,8 @@ class DocumentsFrame(tk.Frame):
                 path, selected_cands, school, exam_date,
                 exam_center, doc_ref, wilaya_val, stage_type)
 
-        ModernButton(bf, "توليد الوثيقة PDF", do_generate,
-                     icon="📄", color="#0369a1").pack(side="right", padx=5)
+        ModernButton(bf, T("examlist_gen_pdf"), do_generate,
+                     icon="📄", color="#0369a1").pack(side=S(), padx=5)
 
     def _generate_exam_list_pdf(self, path, cands, school, exam_date,
                                  exam_center, doc_ref, wilaya_val, stage_type):
