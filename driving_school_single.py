@@ -1111,6 +1111,49 @@ def ar(text):
     return s
 
 
+def _ptxt(text):
+    """Process text for PDF: apply bidi for Arabic, plain for French."""
+    if text is None or text == "":
+        return ""
+    return ar(str(text)) if LANG != "fr" else str(text)
+
+
+def _pdf_t(ar_text, fr_text):
+    """Return Arabic or French text based on current language."""
+    return fr_text if LANG == "fr" else ar_text
+
+
+_A4_W_CM = 21.0  # A4 width in cm (used for LTR/RTL mirroring in canvas-based docs)
+
+_FR_VALUE_MAP = {
+    "ذكر": "Masculin",
+    "أنثى": "Féminin",
+    "أعزب": "Célibataire",
+    "عزباء": "Célibataire",
+    "متزوج": "Marié",
+    "متزوجة": "Mariée",
+    "مطلق": "Divorcé",
+    "مطلقة": "Divorcée",
+    "أرمل": "Veuf",
+    "أرملة": "Veuve",
+    "نقدي": "Espèces",
+    "بنكي": "Virement bancaire",
+    "شيك": "Chèque",
+    "ناجح": "Admis",
+    "راسب": "Refusé",
+    "لم يبدأ": "Non commencé",
+    "قيد التكوين": "En cours",
+    "جزائري": "Algérien",
+    "جزائرية": "Algérienne",
+}
+
+def _fr_val(text):
+    """Translate Arabic enum/DB value to French if LANG=='fr', else return as-is."""
+    if LANG != "fr" or not text:
+        return str(text) if text else ""
+    return _FR_VALUE_MAP.get(str(text).strip(), str(text))
+
+
 # ============================================================================
 #  قاعدة البيانات SQLite
 # ============================================================================
@@ -5218,46 +5261,59 @@ class ReportsFrame(tk.Frame):
 # ============================================================================
 
 def _pdf_styles():
-    """يبني أنماط فقرات تدعم العربية."""
+    """يبني أنماط فقرات تدعم العربية والفرنسية."""
     base = ParagraphStyle('base', fontName=ARABIC_FONT, fontSize=11, leading=18)
+    body_align = TA_LEFT if LANG == "fr" else TA_RIGHT
     return {
         "title":  ParagraphStyle('title',  parent=base, fontName=ARABIC_FONT_BOLD,
                                   fontSize=16, alignment=TA_CENTER, leading=22),
         "h2":     ParagraphStyle('h2',     parent=base, fontName=ARABIC_FONT_BOLD,
-                                  fontSize=13, alignment=TA_RIGHT, leading=20),
-        "right":  ParagraphStyle('right',  parent=base, alignment=TA_RIGHT, leading=20),
+                                  fontSize=13, alignment=body_align, leading=20),
+        "right":  ParagraphStyle('right',  parent=base, alignment=body_align, leading=20),
         "center": ParagraphStyle('center', parent=base, alignment=TA_CENTER, leading=20),
-        "small_right": ParagraphStyle('sr', parent=base, alignment=TA_RIGHT,
+        "small_right": ParagraphStyle('sr', parent=base, alignment=body_align,
                                        fontSize=10, leading=14),
     }
 
 
 def _pdf_header(story, school, title):
     s = _pdf_styles()
-    story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["small_right"]))
-    if school.get('name'):
-        story.append(Paragraph(ar(school['name']), s["h2"]))
-    info_line = []
-    if school.get('phone'):    info_line.append(f"الهاتف: {school['phone']}")
-    if school.get('address'):  info_line.append(f"العنوان: {school['address']}")
-    if info_line:
-        story.append(Paragraph(ar(" | ".join(info_line)), s["small_right"]))
-    if school.get('accreditation_number'):
-        story.append(Paragraph(ar(f"رقم الاعتماد: {school['accreditation_number']}"),
-                               s["small_right"]))
+    if LANG == "fr":
+        story.append(Paragraph("République Algérienne Démocratique et Populaire", s["small_right"]))
+        if school.get('name'):
+            story.append(Paragraph(school['name'], s["h2"]))
+        info_line = []
+        if school.get('phone'):   info_line.append(f"Tél: {school['phone']}")
+        if school.get('address'): info_line.append(f"Adresse: {school['address']}")
+        if info_line:
+            story.append(Paragraph(" | ".join(info_line), s["small_right"]))
+        if school.get('accreditation_number'):
+            story.append(Paragraph(f"N° Agrément: {school['accreditation_number']}",
+                                   s["small_right"]))
+    else:
+        story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["small_right"]))
+        if school.get('name'):
+            story.append(Paragraph(ar(school['name']), s["h2"]))
+        info_line = []
+        if school.get('phone'):    info_line.append(f"الهاتف: {school['phone']}")
+        if school.get('address'):  info_line.append(f"العنوان: {school['address']}")
+        if info_line:
+            story.append(Paragraph(ar(" | ".join(info_line)), s["small_right"]))
+        if school.get('accreditation_number'):
+            story.append(Paragraph(ar(f"رقم الاعتماد: {school['accreditation_number']}"),
+                                   s["small_right"]))
     story.append(Spacer(1, 0.4*cm))
-    # خط فاصل
     line_table = Table([[""]], colWidths=[17*cm])
     line_table.setStyle(TableStyle([('LINEBELOW', (0,0), (-1,-1), 1.2, colors.HexColor('#2563eb'))]))
     story.append(line_table)
     story.append(Spacer(1, 0.3*cm))
-    story.append(Paragraph(ar(title), s["title"]))
+    story.append(Paragraph(_ptxt(title), s["title"]))
     story.append(Spacer(1, 0.6*cm))
 
 
 def _styled_table(data_rows, col_widths):
-    """يصنع جدولاً منسقاً بنصوص عربية مُعالجة."""
-    processed = [[ar(c) for c in row] for row in data_rows]
+    """يصنع جدولاً منسقاً بنصوص معالجة (عربية أو فرنسية)."""
+    processed = [[_ptxt(c) for c in row] for row in data_rows]
     t = Table(processed, colWidths=col_widths)
     t.setStyle(TableStyle([
         ('FONTNAME', (0,0), (-1,-1), ARABIC_FONT),
@@ -6144,16 +6200,23 @@ class DocumentsFrame(tk.Frame):
         
         school = SchoolInfoDB.get()
         c = canvas.Canvas(path, pagesize=A4)
-        
+        is_fr = LANG == "fr"
+
         def draw_text(x_cm, y_cm, text, font=ARABIC_FONT, size=11, align="right"):
             c.setFont(font, size)
-            text_ar = ar(str(text))
-            if align == "right":
-                c.drawRightString(x_cm * cm, y_cm * cm, text_ar)
-            elif align == "center":
-                c.drawCentredString(x_cm * cm, y_cm * cm, text_ar)
-            else:
-                c.drawString(x_cm * cm, y_cm * cm, text_ar)
+            txt = str(text) if is_fr else ar(str(text))
+            if align == "center":
+                c.drawCentredString(x_cm * cm, y_cm * cm, txt)
+            elif align == "right":
+                if is_fr:
+                    c.drawString((_A4_W_CM - x_cm) * cm, y_cm * cm, txt)
+                else:
+                    c.drawRightString(x_cm * cm, y_cm * cm, txt)
+            else:  # left
+                if is_fr:
+                    c.drawRightString((_A4_W_CM - x_cm) * cm, y_cm * cm, txt)
+                else:
+                    c.drawString(x_cm * cm, y_cm * cm, txt)
                 
         def draw_line(x1, y1, x2, y2):
             c.line(x1 * cm, y1 * cm, x2 * cm, y2 * cm)
@@ -6167,147 +6230,183 @@ class DocumentsFrame(tk.Frame):
         def draw_rect(x, y, w, h):
             c.rect(x * cm, y * cm, w * cm, h * cm)
 
-        # 1. الترويسة
-        draw_text(10.5, 28.5, "الجمهورية الجزائرية الديمقراطية الشعبية", ARABIC_FONT_BOLD, 14, "center")
-        draw_text(10.5, 27.8, "وزارة الداخلية والجماعات المحلية والتهيئة العمرانية", ARABIC_FONT_BOLD, 12, "center")
-        draw_text(10.5, 27.1, "المندوبية الوطنية للأمن في الطرق", ARABIC_FONT_BOLD, 12, "center")
+        # 1. Header / الترويسة
+        draw_text(10.5, 28.5, _pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
+                                      "République Algérienne Démocratique et Populaire"),
+                  ARABIC_FONT_BOLD, 13 if is_fr else 14, "center")
+        draw_text(10.5, 27.8, _pdf_t("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
+                                      "Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire"),
+                  ARABIC_FONT_BOLD, 9 if is_fr else 12, "center")
+        draw_text(10.5, 27.1, _pdf_t("المندوبية الوطنية للأمن في الطرق",
+                                      "Délégation Nationale à la Sécurité Routière"),
+                  ARABIC_FONT_BOLD, 12, "center")
         
         wilaya = school.get('wilaya', '').strip() or (school.get('address', '').split(' ')[-1] if school.get('address') else '........')
-        draw_text(19.5, 26.3, f"المندوبية الولائية للأمن في الطرق لولاية : {wilaya}", ARABIC_FONT_BOLD, 12, "right")
+        draw_text(19.5, 26.3,
+                  _pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية : {wilaya}",
+                         f"Délégation de Wilaya à la Sécurité Routière - Wilaya de : {wilaya}"),
+                  ARABIC_FONT_BOLD, 10 if is_fr else 12, "right")
         
-        # 2. المربعات العلوية (صورة، عنوان، ختم)
+        # 2. Photo box / مربع الصورة
         c.setLineWidth(1.2)
-        draw_rect(1.5, 24.0, 3.5, 4.5) # مربع الصورة
-        draw_text(3.25, 26.2, "الصورة", ARABIC_FONT, 14, "center")
+        draw_rect(1.5, 24.0, 3.5, 4.5)
+        draw_text(3.25, 26.2, _pdf_t("الصورة", "Photo"), ARABIC_FONT, 14, "center")
         
-        # العنوان في الوسط
-        c.setFont(ARABIC_FONT_BOLD, 20)
-        c.drawCentredString(10.5 * cm, 25.5 * cm, ar("إستمارة الترشح لاجتياز امتحانات رخصة السياقة"))
+        # Main title / العنوان الرئيسي
+        c.setFont(ARABIC_FONT_BOLD, 16 if is_fr else 20)
+        c.drawCentredString(10.5 * cm, 25.5 * cm,
+                            _pdf_t(ar("إستمارة الترشح لاجتياز امتحانات رخصة السياقة"),
+                                   "Formulaire de candidature aux examens du permis de conduire"))
         
-        # الصنف المطلوب (تحت العنوان)
-        draw_text(11.0, 24.5, "الصنف المطلوب :", ARABIC_FONT_BOLD, 14, "right")
+        # Category / الصنف المطلوب
+        draw_text(11.0, 24.5, _pdf_t("الصنف المطلوب :", "Catégorie demandée :"),
+                  ARABIC_FONT_BOLD, 14, "right")
         draw_rect(7.0, 24.2, 1.2, 0.8)
         c.setFont("Helvetica-Bold", 16)
         c.drawCentredString(7.6 * cm, 24.4 * cm, cand.get('license_type','B'))
         
-        # مربع ختم المدرسة (يمين)
+        # School stamp box / مربع ختم المدرسة
         c.setLineWidth(1.5)
         draw_rect(12.5, 20.8, 7.5, 3.2)
-        draw_text(16.25, 23.2, "ختم مدرسة تعليم السياقة", ARABIC_FONT_BOLD, 11, "center")
-        draw_text(16.25, 21.2, "في حالة مترشح حر يوضع ختم المندوبية الولائية للأمن في الطرق", ARABIC_FONT, 8, "center")
+        draw_text(16.25, 23.2, _pdf_t("ختم مدرسة تعليم السياقة", "Cachet de l'auto-école"),
+                  ARABIC_FONT_BOLD, 11, "center")
+        draw_text(16.25, 21.2,
+                  _pdf_t("في حالة مترشح حر يوضع ختم المندوبية الولائية للأمن في الطرق",
+                         "Pour candidat libre: cachet de la délégation de wilaya"),
+                  ARABIC_FONT, 7 if is_fr else 8, "center")
         
-        # مربعات التاريخ ورقم الملف (يسار الختم)
+        # File date & number / التاريخ ورقم الملف
         c.setLineWidth(1.0)
         draw_rect(5.0, 22.4, 4.5, 1.0)
-        draw_text(12.0, 22.8, "تاريخ إيداع الملف", ARABIC_FONT, 11, "right")
+        draw_text(12.0, 22.8, _pdf_t("تاريخ إيداع الملف", "Date de dépôt du dossier"),
+                  ARABIC_FONT, 11, "right")
         draw_text(7.25, 22.75, cand.get('file_date', '') or "", "Helvetica-Bold", 11, "center")
         
         draw_rect(5.0, 21.0, 4.5, 1.0)
-        draw_text(12.0, 21.4, "رقم الملف", ARABIC_FONT, 11, "right")
+        draw_text(12.0, 21.4, _pdf_t("رقم الملف", "N° du dossier"), ARABIC_FONT, 11, "right")
         draw_text(7.25, 21.35, cand.get('file_number', '') or "", "Helvetica-Bold", 11, "center")
         
-        # خط فاصل سميك
+        # Separator / خط فاصل
         c.setLineWidth(2.5)
         draw_line(1.5, 20.2, 20.0, 20.2)
         c.setLineWidth(1)
         
-        # 3. معلومات المترشح
-        draw_text(10.5, 19.4, "معلومات خاصة بالمترشح", ARABIC_FONT_BOLD, 14, "center")
+        # 3. Candidate info / معلومات المترشح
+        draw_text(10.5, 19.4,
+                  _pdf_t("معلومات خاصة بالمترشح", "Informations relatives au candidat"),
+                  ARABIC_FONT_BOLD, 14, "center")
         draw_line(8.0, 19.3, 13.0, 19.3)
         
-        # رقم التعريف والفصيلة
-        draw_text(20.0, 18.3, "رقم التعريف الوطني :", ARABIC_FONT_BOLD, 11, "right")
+        # National ID / رقم التعريف
+        draw_text(20.0, 18.3,
+                  _pdf_t("رقم التعريف الوطني :", "N° d'identification national :"),
+                  ARABIC_FONT_BOLD, 11, "right")
         c.setLineWidth(1.2)
         draw_rect(8.0, 18.0, 8.5, 0.8)
         draw_text(12.25, 18.2, cand.get('national_id','') or "", "Helvetica-Bold", 12, "center")
         
-        draw_text(6.5, 18.3, "فصيلة الدم :", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(6.5, 18.3, _pdf_t("فصيلة الدم :", "Groupe sanguin :"),
+                  ARABIC_FONT_BOLD, 11, "right")
         draw_rect(2.5, 18.0, 1.5, 0.8)
         draw_text(3.25, 18.2, cand.get('blood_type','') or "*", "Helvetica-Bold", 12, "center")
         
-        # اللقب والاسم
-        draw_text(20.0, 17.2, "اللقب :", ARABIC_FONT_BOLD, 11, "right")
+        # Name / الاسم واللقب
+        draw_text(20.0, 17.2, _pdf_t("اللقب :", "Nom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(16.5, 17.2, cand.get('last_name',''), ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(13.0, 17.2, 17.5, 17.2)
         draw_text(1.5, 17.2, f"Nom:  {cand.get('last_name','')}", ARABIC_FONT, 10, "left")
         
-        draw_text(20.0, 16.2, "الاسم :", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prénom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(16.5, 16.2, cand.get('first_name',''), ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(13.0, 16.2, 17.5, 16.2)
         draw_text(1.5, 16.2, f"Prénom:  {cand.get('first_name','')}", ARABIC_FONT, 10, "left")
         
-        # الجنس
-        draw_text(20.0, 15.2, "الجنس :", ARABIC_FONT_BOLD, 11, "right")
-        draw_text(18.0, 15.2, "ذكر", ARABIC_FONT_BOLD, 11, "right")
+        # Gender / الجنس
+        draw_text(20.0, 15.2, _pdf_t("الجنس :", "Sexe :"), ARABIC_FONT_BOLD, 11, "right")
+        draw_text(18.0, 15.2, _pdf_t("ذكر", "Masculin"), ARABIC_FONT_BOLD, 11, "right")
         draw_rect(16.8, 15.2, 0.4, 0.4)
         if cand.get("gender") == "ذكر": draw_text(17.0, 15.35, "X", "Helvetica-Bold", 12, "center")
-        draw_text(15.5, 15.2, "أنثى", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(15.5, 15.2, _pdf_t("أنثى", "Féminin"), ARABIC_FONT_BOLD, 11, "right")
         draw_rect(14.3, 15.2, 0.4, 0.4)
         if cand.get("gender") == "أنثى": draw_text(14.5, 15.35, "X", "Helvetica-Bold", 12, "center")
         
-        # تاريخ ومكان الميلاد
-        draw_text(20.0, 14.2, "تاريخ و مكان الميلاد :", ARABIC_FONT_BOLD, 10, "right")
+        # Birth date & place / تاريخ ومكان الميلاد
+        draw_text(20.0, 14.2, _pdf_t("تاريخ و مكان الميلاد :", "Date et lieu de naissance :"),
+                  ARABIC_FONT_BOLD, 10, "right")
         draw_text(16.0, 14.2, cand.get('birth_date',''), "Helvetica-Bold", 10, "right")
-        draw_text(13.5, 14.2, "بلدية :", ARABIC_FONT_BOLD, 10, "right")
+        draw_text(13.5, 14.2, _pdf_t("بلدية :", "Commune :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(11.0, 14.2, cand.get('birth_place_commune',''), ARABIC_FONT_BOLD, 10, "right")
-        draw_text(7.5, 14.2, "ولاية :", ARABIC_FONT_BOLD, 10, "right")
+        draw_text(7.5, 14.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(5.0, 14.2, cand.get('birth_place_wilaya',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 14.2, 17.5, 14.2)
         
-        # الوالدين
-        draw_text(20.0, 13.2, "اسم الأب :", ARABIC_FONT_BOLD, 10, "right")
+        # Parents / الوالدان
+        draw_text(20.0, 13.2, _pdf_t("اسم الأب :", "Nom du père :"),
+                  ARABIC_FONT_BOLD, 10, "right")
         draw_text(18.0, 13.2, cand.get('father_name',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(12.5, 13.2, 18.0, 13.2)
-        draw_text(12.0, 13.2, "اسم و لقب الأم :", ARABIC_FONT_BOLD, 10, "right")
+        draw_text(12.0, 13.2, _pdf_t("اسم و لقب الأم :", "Nom et prénom de la mère :"),
+                  ARABIC_FONT_BOLD, 10, "right")
         draw_text(9.0, 13.2, cand.get('mother_name',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 13.2, 9.0, 13.2)
         
-        # العنوان
-        draw_text(20.0, 12.2, "العنوان :", ARABIC_FONT_BOLD, 10, "right")
+        # Address / العنوان
+        draw_text(20.0, 12.2, _pdf_t("العنوان :", "Adresse :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(18.5, 12.2, cand.get('current_address',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(13.0, 12.2, 18.5, 12.2)
-        draw_text(12.5, 12.2, "بلدية :", ARABIC_FONT_BOLD, 10, "right")
+        draw_text(12.5, 12.2, _pdf_t("بلدية :", "Commune :"), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(8.0, 12.2, 11.2, 12.2)
-        draw_text(7.5, 12.2, "ولاية :", ARABIC_FONT_BOLD, 10, "right")
+        draw_text(7.5, 12.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 12.2, 6.0, 12.2)
         
-        # الحالة العائلية
-        draw_text(20.0, 11.2, "الحالة العائلية :", ARABIC_FONT_BOLD, 11, "right")
+        # Marital status / الحالة العائلية
+        draw_text(20.0, 11.2, _pdf_t("الحالة العائلية :", "Situation familiale :"),
+                  ARABIC_FONT_BOLD, 11, "right")
         ms = cand.get('marital_status', '')
-        draw_text(17.0, 11.2, "أعزب / عزباء", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(17.0, 11.2, _pdf_t("أعزب / عزباء", "Célibataire"), ARABIC_FONT_BOLD, 11, "right")
         draw_rect(14.3, 11.2, 0.4, 0.4)
         if ms == "أعزب": draw_text(14.5, 11.35, "X", "Helvetica-Bold", 12, "center")
-        draw_text(13.5, 11.2, "متزوج (ة)", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(13.5, 11.2, _pdf_t("متزوج (ة)", "Marié(e)"), ARABIC_FONT_BOLD, 11, "right")
         draw_rect(11.3, 11.2, 0.4, 0.4)
         if ms == "متزوج": draw_text(11.5, 11.35, "X", "Helvetica-Bold", 12, "center")
-        draw_text(10.5, 11.2, "مطلق (ة)", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(10.5, 11.2, _pdf_t("مطلق (ة)", "Divorcé(e)"), ARABIC_FONT_BOLD, 11, "right")
         draw_rect(8.3, 11.2, 0.4, 0.4)
         if ms == "مطلق": draw_text(8.5, 11.35, "X", "Helvetica-Bold", 12, "center")
-        draw_text(7.5, 11.2, "أرمل (ة)", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(7.5, 11.2, _pdf_t("أرمل (ة)", "Veuf(ve)"), ARABIC_FONT_BOLD, 11, "right")
         draw_rect(5.3, 11.2, 0.4, 0.4)
         if ms == "أرمل": draw_text(5.5, 11.35, "X", "Helvetica-Bold", 12, "center")
         
-        # رقم الهاتف
-        draw_text(11.5, 10.2, "رقم الهاتف :", ARABIC_FONT_BOLD, 11, "right")
+        # Phone / الهاتف
+        draw_text(11.5, 10.2, _pdf_t("رقم الهاتف :", "N° de téléphone :"),
+                  ARABIC_FONT_BOLD, 11, "right")
         draw_rect(5.0, 10.0, 5.0, 0.7)
         draw_text(7.5, 10.15, cand.get('phone','') or "", "Helvetica-Bold", 12, "center")
         
-        # الجنسية
-        draw_text(20.0, 9.2, "الجنسية الأصلية :", ARABIC_FONT_BOLD, 11, "right")
+        # Nationality / الجنسية
+        draw_text(20.0, 9.2, _pdf_t("الجنسية الأصلية :", "Nationalité d'origine :"),
+                  ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 9.2, cand.get('nationality',''), ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(11.5, 9.2, 17.5, 9.2)
-        draw_text(11.0, 9.2, "الجنسية المكتسبة :", ARABIC_FONT_BOLD, 11, "right")
+        draw_text(11.0, 9.2, _pdf_t("الجنسية المكتسبة :", "Nationalité acquise :"),
+                  ARABIC_FONT_BOLD, 11, "right")
         draw_text(8.0, 9.2, cand.get('second_nationality',''), ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(1.5, 9.2, 8.0, 9.2)
         
-        # المولودين بالخارج
-        draw_text(20.0, 8.2, "بالنسبة للأشخاص المولودين بالخارج / بلد الميلاد :", ARABIC_FONT_BOLD, 10, "right")
+        # Born abroad / المولودون بالخارج
+        draw_text(20.0, 8.2,
+                  _pdf_t("بالنسبة للأشخاص المولودين بالخارج / بلد الميلاد :",
+                         "Pour les personnes nées à l'étranger / Pays de naissance :"),
+                  ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(10.0, 8.2, 13.0, 8.2)
-        draw_text(9.5, 8.2, "سفارة أو قنصلية التسجيل :", ARABIC_FONT_BOLD, 10, "right")
+        draw_text(9.5, 8.2,
+                  _pdf_t("سفارة أو قنصلية التسجيل :", "Ambassade ou consulat d'enregistrement :"),
+                  ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 8.2, 5.5, 8.2)
         
-        # 4. جدول الأصناف (مطور ومطابق للصورة)
-        draw_text(10.5, 7.3, "الأصناف المتحصل عليها من قبل", ARABIC_FONT_BOLD, 12, "center")
+        # 4. Previously obtained categories table / جدول الأصناف
+        draw_text(10.5, 7.3,
+                  _pdf_t("الأصناف المتحصل عليها من قبل", "Catégories déjà obtenues"),
+                  ARABIC_FONT_BOLD, 12, "center")
         draw_line(8.0, 7.2, 13.0, 7.2)
         
         y_tab = 6.8; rh = 0.45; rows = 11
@@ -6315,40 +6414,35 @@ class DocumentsFrame(tk.Frame):
         c.setLineWidth(1.2)
         draw_rect(1.5, y_bot, 18.5, y_tab - y_bot)
         
-        # أعمدة رئيسية
-        draw_line(7.0, y_bot, 7.0, y_tab)   # هيئة الإصدار
-        draw_line(11.0, y_bot, 11.0, y_tab)  # التاريخ
-        draw_line(14.5, y_bot, 14.5, y_tab)  # الرقم
-        draw_line(16.0, y_bot, 16.0, y_tab)  # الصنف
+        draw_line(7.0, y_bot, 7.0, y_tab)
+        draw_line(11.0, y_bot, 11.0, y_tab)
+        draw_line(14.5, y_bot, 14.5, y_tab)
+        draw_line(16.0, y_bot, 16.0, y_tab)
         
-        # تقسيم عمود الصنف إلى جديد وقديم
-        draw_line(16.0, y_tab - rh, 20.0, y_tab - rh) # خط تحت "الصنف"
-        draw_line(18.0, y_bot, 18.0, y_tab - rh)      # فاصل بين الجديد والقديم
+        draw_line(16.0, y_tab - rh, 20.0, y_tab - rh)
+        draw_line(18.0, y_bot, 18.0, y_tab - rh)
         
-        # تقسيم فرعي للرموز والأسماء
-        draw_line(17.0, y_bot, 17.0, y_tab - 2*rh)    # فاصل في الجديد
-        draw_line(19.0, y_bot, 19.0, y_tab - 2*rh)    # فاصل في القديم
+        draw_line(17.0, y_bot, 17.0, y_tab - 2*rh)
+        draw_line(19.0, y_bot, 19.0, y_tab - 2*rh)
         
-        # خطوط أفقية
-        draw_line(16.0, y_tab - 2*rh, 20.0, y_tab - 2*rh) # خط تحت "الجديد/القديم"
+        draw_line(16.0, y_tab - 2*rh, 20.0, y_tab - 2*rh)
         c.setLineWidth(0.8)
         for i in range(1, rows + 1):
             y = y_tab - 2*rh - i*rh
-            draw_line(1.5, y, 18.0, y) # الخطوط الأفقية حتى بداية "القديم" المدمج
-            if i <= 6 or i == 11: # الخطوط في عمود "القديم" (باستثناء المدمج E)
+            draw_line(1.5, y, 18.0, y)
+            if i <= 6 or i == 11:
                 draw_line(18.0, y, 20.0, y)
         
-        # عناوين الجدول
         yh1 = y_tab - rh/2 - 0.12
         yh2 = y_tab - 1.5*rh - 0.12
-        draw_text(18.0, yh1, "الصنف", ARABIC_FONT_BOLD, 10, "center")
-        draw_text(17.0, yh2, "الجديد", ARABIC_FONT_BOLD, 9, "center")
-        draw_text(19.0, yh2, "القديم", ARABIC_FONT_BOLD, 9, "center")
-        draw_text(15.25, y_tab - rh - 0.12, "الرقم", ARABIC_FONT_BOLD, 10, "center")
-        draw_text(12.75, y_tab - rh - 0.12, "التاريخ", ARABIC_FONT_BOLD, 10, "center")
-        draw_text(4.25, y_tab - rh - 0.12, "هيئة الإصدار", ARABIC_FONT_BOLD, 10, "center")
+        draw_text(18.0, yh1, _pdf_t("الصنف", "Catégorie"), ARABIC_FONT_BOLD, 10, "center")
+        draw_text(17.0, yh2, _pdf_t("الجديد", "Nouvelle"), ARABIC_FONT_BOLD, 9, "center")
+        draw_text(19.0, yh2, _pdf_t("القديم", "Ancienne"), ARABIC_FONT_BOLD, 9, "center")
+        draw_text(15.25, y_tab - rh - 0.12, _pdf_t("الرقم", "N°"), ARABIC_FONT_BOLD, 10, "center")
+        draw_text(12.75, y_tab - rh - 0.12, _pdf_t("التاريخ", "Date"), ARABIC_FONT_BOLD, 10, "center")
+        draw_text(4.25, y_tab - rh - 0.12, _pdf_t("هيئة الإصدار", "Organisme émetteur"),
+                  ARABIC_FONT_BOLD, 10, "center")
         
-        # البيانات
         cats_new = [("A1","أ1"),("A","أ2"),("B","ب"),("D","د"),("C1","ج1"),("C","ج"),
                     ("BE","ب(هـ)"),("C1E","ج1(هـ)"),("CE","ج(هـ)"),("DE","د(هـ)"),("F","و")]
         cats_old = [("A1","أ1"),("A2","أ2"),("B","ب"),("D","د"),("C1","ج1"),("C2","ج2")]
@@ -6357,16 +6451,14 @@ class DocumentsFrame(tk.Frame):
             yt = y_tab - 2*rh - (i+1)*rh + 0.12
             draw_text(16.5, yt, cn, "Helvetica", 9, "center")
             draw_text(17.5, yt, co, ARABIC_FONT, 9, "center")
-            if i < 6: # القديم المنفصل
+            if i < 6:
                 draw_text(18.5, yt, cats_old[i][0], "Helvetica", 9, "center")
                 draw_text(19.5, yt, cats_old[i][1], ARABIC_FONT, 9, "center")
         
-        # القديم المدمج (E / هـ) لـ BE حتى DE
         yt_merged = y_tab - 2*rh - 8.5*rh + 0.12
         draw_text(18.5, yt_merged, "E", "Helvetica-Bold", 11, "center")
         draw_text(19.5, yt_merged, "هـ", ARABIC_FONT_BOLD, 11, "center")
         
-        # الصنف الأخير F
         yt_f = y_tab - 2*rh - 11*rh + 0.12
         draw_text(18.5, yt_f, "F", "Helvetica", 9, "center")
         draw_text(19.5, yt_f, "و", ARABIC_FONT, 9, "center")
@@ -6387,17 +6479,24 @@ class DocumentsFrame(tk.Frame):
         school = SchoolInfoDB.get()
         from reportlab.pdfgen import canvas
         c = canvas.Canvas(path, pagesize=A4)
-        
+        is_fr = LANG == "fr"
+
         def draw_text(x_cm, y_cm, text, font=ARABIC_FONT, size=11, align="right", bold=False):
             f = ARABIC_FONT_BOLD if bold else font
             c.setFont(f, size)
-            text_ar = ar(str(text))
-            if align == "right":
-                c.drawRightString(x_cm * cm, y_cm * cm, text_ar)
-            elif align == "center":
-                c.drawCentredString(x_cm * cm, y_cm * cm, text_ar)
+            txt = str(text) if is_fr else ar(str(text))
+            if align == "center":
+                c.drawCentredString(x_cm * cm, y_cm * cm, txt)
+            elif align == "right":
+                if is_fr:
+                    c.drawString((_A4_W_CM - x_cm) * cm, y_cm * cm, txt)
+                else:
+                    c.drawRightString(x_cm * cm, y_cm * cm, txt)
             else:
-                c.drawString(x_cm * cm, y_cm * cm, text_ar)
+                if is_fr:
+                    c.drawRightString((_A4_W_CM - x_cm) * cm, y_cm * cm, txt)
+                else:
+                    c.drawString(x_cm * cm, y_cm * cm, txt)
 
         def draw_rect(x, y, w, h, lw=1):
             c.setLineWidth(lw)
@@ -6407,77 +6506,117 @@ class DocumentsFrame(tk.Frame):
             c.setLineWidth(lw)
             c.line(x1 * cm, y1 * cm, x2 * cm, y2 * cm)
 
-        # 1. الترويسة
-        draw_text(10.5, 28.7, "الجمهورية الجزائرية الديمقراطية الشعبية", ARABIC_FONT_BOLD, 12, "center")
+        # Header / الترويسة
+        draw_text(10.5, 28.7,
+                  _pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
+                         "République Algérienne Démocratique et Populaire"),
+                  ARABIC_FONT_BOLD, 11 if is_fr else 12, "center")
         
-        # جهة اليمين
         school_w = SchoolInfoDB.get()
         school_wilaya = school_w.get('wilaya', '').strip() or (school_w.get('address', '').split(' ')[-1] if school_w.get('address') else '........')
         y_head = 27.8
-        draw_text(20.0, y_head, f"ولاية {school_wilaya}", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_head-0.6, "المركز الوطني لرخصة السياقة", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_head-1.2, f"الفرع المحلي لولاية {school_wilaya}", ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_head,
+                  _pdf_t(f"ولاية {school_wilaya}", f"Wilaya de {school_wilaya}"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_head-0.6,
+                  _pdf_t("المركز الوطني لرخصة السياقة",
+                         "Centre National du Permis de Conduire"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_head-1.2,
+                  _pdf_t(f"الفرع المحلي لولاية {school_wilaya}",
+                         f"Antenne locale - Wilaya de {school_wilaya}"),
+                  ARABIC_FONT_BOLD, 11)
         
-        # مربع الصورة/الختم يسار
+        # Photo/stamp box
         draw_rect(1.5, 25.5, 2.5, 3.5)
         
-        # العنوان الرئيسي
+        # Main title / العنوان الرئيسي
         c.setLineWidth(1.5)
         c.rect(6.5*cm, 24.5*cm, 8.5*cm, 1.2*cm)
-        draw_text(10.75, 25.1, "بطاقة التكوين (التقييم) المترشحين لرخصة السياقة", ARABIC_FONT_BOLD, 14, "center")
-        draw_text(10.75, 24.0, "(مادة قانون المرور)", ARABIC_FONT_BOLD, 12, "center")
+        draw_text(10.75, 25.1,
+                  _pdf_t("بطاقة التكوين (التقييم) المترشحين لرخصة السياقة",
+                         "Fiche de formation (évaluation) des candidats au permis de conduire"),
+                  ARABIC_FONT_BOLD, 11 if is_fr else 14, "center")
+        draw_text(10.75, 24.0,
+                  _pdf_t("(مادة قانون المرور)", "(Matière : Code de la route)"),
+                  ARABIC_FONT_BOLD, 12, "center")
         
-        # حقول عامة
+        # General fields / حقول عامة
         y_f = 22.5
-        draw_text(20.0, y_f, f"مدرسة تعليم السياقة: {school.get('name','.................................')}", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_f-1.0, f"رقم التسجيل: {cand['id']} ..................... التاريخ: {date.today().strftime('%Y/%m/%d')}", ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_f,
+                  _pdf_t(f"مدرسة تعليم السياقة: {school.get('name','.................................')}",
+                         f"Auto-école : {school.get('name','.................................')}"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_f-1.0,
+                  _pdf_t(f"رقم التسجيل: {cand['id']} ..................... التاريخ: {date.today().strftime('%Y/%m/%d')}",
+                         f"N° d'inscription : {cand['id']} ..................... Date : {date.today().strftime('%Y/%m/%d')}"),
+                  ARABIC_FONT_BOLD, 11)
         
-        # جدول الأصناف المستهدفة
+        # Target category table / جدول الأصناف المستهدفة
         y_tab = 20.0
-        cols = ["أ1","أ2","ب","ب(هـ)","ج1","ج1(هـ)","ج2","ج2(هـ)","د","د(هـ)","ج","و"]
+        cols_ar = ["أ1","أ2","ب","ب(هـ)","ج1","ج1(هـ)","ج2","ج2(هـ)","د","د(هـ)","ج","و"]
+        cols_fr = ["A1","A2","B","BE","C1","C1E","C2","C2E","D","DE","CE","F"]
+        cols = cols_fr if is_fr else cols_ar
         w_cell = 1.3
         h_cell = 0.8
         
-        # تسمية العمود
         draw_rect(17.3, y_tab, 2.7, h_cell)
-        draw_text(18.65, y_tab+0.25, "الصنف المستهدف", ARABIC_FONT_BOLD, 10, "center")
+        draw_text(18.65, y_tab+0.25,
+                  _pdf_t("الصنف المستهدف", "Catégorie visée"),
+                  ARABIC_FONT_BOLD, 10, "center")
         
         for i, cat in enumerate(cols):
             x = 17.3 - (i+1)*w_cell
             draw_rect(x, y_tab, w_cell, h_cell)
             draw_text(x + w_cell/2, y_tab+0.25, cat, ARABIC_FONT_BOLD, 10, "center")
             
-            # تحديد الصنف المطلوب (بناءً على license_type)
             mapping = ["A1","A2","B","BE","C1","C1E","C2","C2E","D","DE","CE","F"]
             if cand.get('license_type') == mapping[i]:
                 draw_line(x, y_tab, x+w_cell, y_tab+h_cell, lw=1.5)
                 draw_line(x, y_tab+h_cell, x+w_cell, y_tab, lw=1.5)
 
-        # معلومات المترشح
+        # Candidate info / معلومات المترشح
         y_info = 18.0
-        draw_text(20.0, y_info, f"الإسم و اللقب : {cand['last_name']} {cand['first_name']}", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_info-0.8, f"تاريخ الميلاد : {cand['birth_date']}", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_info-1.6, f"العنوان : {cand.get('current_address','')}", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_info-2.4, f"تاريخ التسجيل بمدرسة سياقة السيارة : {cand['registration_date']}", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_info-3.2, "تاريخ إيداع الملف بالمديرية : .........................", ARABIC_FONT_BOLD, 11)
-        draw_text(20.0, y_info-4.0, "رقم التسجيل : .........................", ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_info,
+                  _pdf_t(f"الإسم و اللقب : {cand['last_name']} {cand['first_name']}",
+                         f"Nom et Prénom : {cand['last_name']} {cand['first_name']}"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_info-0.8,
+                  _pdf_t(f"تاريخ الميلاد : {cand['birth_date']}",
+                         f"Date de naissance : {cand['birth_date']}"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_info-1.6,
+                  _pdf_t(f"العنوان : {cand.get('current_address','')}",
+                         f"Adresse : {cand.get('current_address','')}"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_info-2.4,
+                  _pdf_t(f"تاريخ التسجيل بمدرسة سياقة السيارة : {cand['registration_date']}",
+                         f"Date d'inscription à l'auto-école : {cand['registration_date']}"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_info-3.2,
+                  _pdf_t("تاريخ إيداع الملف بالمديرية : .........................",
+                         "Date de dépôt du dossier à la direction : ........................."),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(20.0, y_info-4.0,
+                  _pdf_t("رقم التسجيل : .........................",
+                         "N° d'enregistrement : ........................."),
+                  ARABIC_FONT_BOLD, 11)
         
-        # الجدول الرئيسي للحصص (01-13 و 14-25)
+        # Session grid / الجدول الرئيسي للحصص
         y_grid = 12.5
         def draw_grid_block(x_start, num_start, num_end):
-            cw = [0.8, 2.5, 2.0, 2.5] # الرقم، التاريخ، الساعات، الإمضاء
-            tw = sum(cw)
+            cw = [0.8, 2.5, 2.0, 2.5]
             th = 0.55
-            # Header
             curr_y = y_grid
-            headers = ["الرقم", "تاريخ الدروس", "ساعات الدروس", "إمضاء المترشح"]
+            headers_ar = ["الرقم", "تاريخ الدروس", "ساعات الدروس", "إمضاء المترشح"]
+            headers_fr = ["N°", "Date des cours", "Heures de cours", "Signature"]
+            headers = headers_fr if is_fr else headers_ar
             cx = x_start
             for j, h in enumerate(headers):
                 draw_rect(cx, curr_y, cw[j], th)
                 draw_text(cx + cw[j]/2, curr_y+0.15, h, ARABIC_FONT_BOLD, 8, "center")
                 cx += cw[j]
             
-            # Rows
             for r in range(num_start, num_end + 1):
                 curr_y -= th
                 cx = x_start
@@ -6487,21 +6626,22 @@ class DocumentsFrame(tk.Frame):
                         draw_text(cx + cw[j]/2, curr_y+0.15, str(r), "Helvetica", 9, "center")
                     cx += cw[j]
 
-        # بلوك اليمين (01-13)
         draw_grid_block(11.5, 1, 13)
-        # بلوك اليسار (14-25)
         draw_grid_block(2.0, 14, 25)
         
-        # التذييل
-        draw_text(20.0, 3.5, "ختم وتوقيع مدرسة تعليم السياقة", ARABIC_FONT_BOLD, 11)
-        draw_text(5.0, 3.5, "إمضاء المترشح", ARABIC_FONT_BOLD, 11)
+        # Footer / التذييل
+        draw_text(20.0, 3.5,
+                  _pdf_t("ختم وتوقيع مدرسة تعليم السياقة",
+                         "Cachet et signature de l'auto-école"),
+                  ARABIC_FONT_BOLD, 11)
+        draw_text(5.0, 3.5,
+                  _pdf_t("إمضاء المترشح", "Signature du candidat"),
+                  ARABIC_FONT_BOLD, 11)
         
         c.save()
         try:
-            # محاولة الطباعة المباشرة
             os.startfile(path, 'print')
         except Exception:
-            # في حال فشل الطباعة المباشرة، نكتفي بفتح الملف
             try: os.startfile(path)
             except Exception as e: show_error(f"خطأ: {e}")
         self._trigger_print(path, T("doc_training_card"))
@@ -6510,41 +6650,70 @@ class DocumentsFrame(tk.Frame):
         if not self._check(): return
         cand = self._get_candidate()
         if not cand: return
-        path = self._ask_save(f"عقد_تكوين_{cand['last_name']}.pdf")
+        default_name = (f"contrat_formation_{cand['last_name']}.pdf" if LANG == "fr"
+                        else f"عقد_تكوين_{cand['last_name']}.pdf")
+        path = self._ask_save(default_name)
         if not path: return
         school = SchoolInfoDB.get()
         doc = self._make_doc(path); s = _pdf_styles(); story = []
-        _pdf_header(story, school, "عقد تكوين بين مدرسة تعليم السياقة والمترشح")
-        
-        txt = f"""
-        بموجب هذا العقد، تلتزم مدرسة تعليم السياقة: <b>{school.get('name','....................')}</b>
-        والكائن مقرها بـ: <b>{school.get('address','....................')}</b>
-        
-        بتكوين المترشح(ة): <b>{cand.get('last_name','')} {cand.get('first_name','')}</b>
-        المولود(ة) بتاريخ: <b>{cand.get('birth_date','')}</b> بـ: <b>{cand.get('birth_place_commune','')}</b>
-        للحصول على رخصة السياقة من الصنف: <b>{cand.get('license_type','B')}</b>
-        
-        <b>البند 1: التزامات المدرسة</b>
-        تلتزم المدرسة بتقديم تكوين نظري (30 ساعة) وتكوين تطبيقي (30 ساعة) وفقاً للبرنامج الوطني المعمول به.
-        
-        <b>البند 2: التزامات المترشح</b>
-        يلتزم المترشح بدفع مبلغ إجمالي قدره: <b>{cand.get('total_amount',0):,.0f} دج</b>، وباحترام مواعيد الدروس وقوانين المدرسة.
-        
-        <b>البند 3: مدة العقد</b>
-        هذا العقد صالح لمدة ستة (06) أشهر من تاريخ التوقيع، قابلة للتجديد باتفاق الطرفين.
-        
-        حرر بـ: ............................ بتاريخ: <b>{date.today().strftime('%Y-%m-%d')}</b>
-        """
-        for line in txt.split('\n'):
-            if line.strip():
-                story.append(Paragraph(ar(line.strip()), s["right"]))
-                story.append(Spacer(1, 0.2*cm))
-        
-        story.append(Spacer(1, 2*cm))
-        # التوقيعات
-        t_data = [[ar("توقيع المترشح (أو وليه)"), ar("ختم وتوقيع المدرسة")]]
-        story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
-        
+
+        if LANG == "fr":
+            _pdf_header(story, school, "Contrat de Formation entre l'Auto-École et le Candidat")
+            txt = f"""
+            Par le présent contrat, l'auto-école : <b>{school.get('name','....................')}</b>
+            dont le siège est à : <b>{school.get('address','....................')}</b>
+
+            s'engage à former le/la candidat(e) : <b>{cand.get('last_name','')} {cand.get('first_name','')}</b>
+            né(e) le : <b>{cand.get('birth_date','')}</b> à : <b>{cand.get('birth_place_commune','')}</b>
+            pour l'obtention du permis de conduire de catégorie : <b>{cand.get('license_type','B')}</b>
+
+            <b>Article 1 : Obligations de l'auto-école</b>
+            L'auto-école s'engage à fournir une formation théorique (30 heures) et une formation pratique (30 heures) conformément au programme national en vigueur.
+
+            <b>Article 2 : Obligations du candidat</b>
+            Le candidat s'engage à payer un montant total de : <b>{cand.get('total_amount',0):,.0f} DA</b>, et à respecter les horaires des cours et le règlement intérieur de l'auto-école.
+
+            <b>Article 3 : Durée du contrat</b>
+            Le présent contrat est valable pour une durée de six (06) mois à compter de la date de signature, renouvelable d'un commun accord.
+
+            Fait à : ............................ le : <b>{date.today().strftime('%Y-%m-%d')}</b>
+            """
+            for line in txt.split('\n'):
+                if line.strip():
+                    story.append(Paragraph(line.strip(), s["right"]))
+                    story.append(Spacer(1, 0.2*cm))
+            story.append(Spacer(1, 2*cm))
+            t_data = [["Signature du candidat (ou tuteur)", "Cachet et signature de l'auto-école"]]
+            story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
+        else:
+            _pdf_header(story, school, "عقد تكوين بين مدرسة تعليم السياقة والمترشح")
+            txt = f"""
+            بموجب هذا العقد، تلتزم مدرسة تعليم السياقة: <b>{school.get('name','....................')}</b>
+            والكائن مقرها بـ: <b>{school.get('address','....................')}</b>
+
+            بتكوين المترشح(ة): <b>{cand.get('last_name','')} {cand.get('first_name','')}</b>
+            المولود(ة) بتاريخ: <b>{cand.get('birth_date','')}</b> بـ: <b>{cand.get('birth_place_commune','')}</b>
+            للحصول على رخصة السياقة من الصنف: <b>{cand.get('license_type','B')}</b>
+
+            <b>البند 1: التزامات المدرسة</b>
+            تلتزم المدرسة بتقديم تكوين نظري (30 ساعة) وتكوين تطبيقي (30 ساعة) وفقاً للبرنامج الوطني المعمول به.
+
+            <b>البند 2: التزامات المترشح</b>
+            يلتزم المترشح بدفع مبلغ إجمالي قدره: <b>{cand.get('total_amount',0):,.0f} دج</b>، وباحترام مواعيد الدروس وقوانين المدرسة.
+
+            <b>البند 3: مدة العقد</b>
+            هذا العقد صالح لمدة ستة (06) أشهر من تاريخ التوقيع، قابلة للتجديد باتفاق الطرفين.
+
+            حرر بـ: ............................ بتاريخ: <b>{date.today().strftime('%Y-%m-%d')}</b>
+            """
+            for line in txt.split('\n'):
+                if line.strip():
+                    story.append(Paragraph(ar(line.strip()), s["right"]))
+                    story.append(Spacer(1, 0.2*cm))
+            story.append(Spacer(1, 2*cm))
+            t_data = [[ar("توقيع المترشح (أو وليه)"), ar("ختم وتوقيع المدرسة")]]
+            story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
+
         doc.build(story)
         self._trigger_print(path, T("doc_contract"))
 
@@ -6554,7 +6723,9 @@ class DocumentsFrame(tk.Frame):
         if not self._check(): return
         cand = self._get_candidate()
         if not cand: return
-        path = self._ask_save(f"شهادة_إدارية_{cand['last_name']}.pdf")
+        default_name = (f"attestation_administrative_{cand['last_name']}.pdf" if LANG == "fr"
+                        else f"شهادة_إدارية_{cand['last_name']}.pdf")
+        path = self._ask_save(default_name)
         if not path: return
 
         school = SchoolInfoDB.get()
@@ -6563,7 +6734,7 @@ class DocumentsFrame(tk.Frame):
         from reportlab.lib.units import cm
         import tempfile, datetime
 
-        # نبحث عن تاريخ نجاح امتحان الطريق
+        is_fr = LANG == "fr"
         stages = TrainingDB.get_by_candidate(cand['id'])
         circuit_stage = next((s for s in stages if s['stage_type'] == 'circuit'), None)
         exam_date = ""
@@ -6577,85 +6748,85 @@ class DocumentsFrame(tk.Frame):
 
         def txt_right(text, y_cm, font=ARABIC_FONT, size=12):
             c.setFont(font, size)
-            c.drawRightString((page_w - 2*cm), y_cm * cm, ar(str(text)))
+            txt = str(text) if is_fr else ar(str(text))
+            if is_fr:
+                c.drawString(2*cm, y_cm * cm, txt)
+            else:
+                c.drawRightString((page_w - 2*cm), y_cm * cm, txt)
 
         def txt_center(text, y_cm, font=ARABIC_FONT, size=12):
             c.setFont(font, size)
-            c.drawCentredString(page_w / 2, y_cm * cm, ar(str(text)))
+            txt = str(text) if is_fr else ar(str(text))
+            c.drawCentredString(page_w / 2, y_cm * cm, txt)
 
-        # --- الرأس ---
-        txt_center("الجمهورية الجزائرية الديمقراطية الشعبية",
-                   27.5, font=ARABIC_FONT_BOLD, size=13)
-        txt_center("المندوبية الوطنية للأمن في الطرق",
+        # Header
+        txt_center(_pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
+                          "République Algérienne Démocratique et Populaire"),
+                   27.5, font=ARABIC_FONT_BOLD, size=12 if is_fr else 13)
+        txt_center(_pdf_t("المندوبية الوطنية للأمن في الطرق",
+                          "Délégation Nationale à la Sécurité Routière"),
                    26.7, size=11)
         wilaya_school = school.get('wilaya', '').strip() or school.get('address', '')
-        txt_center(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_school}",
-                   25.9, size=11)
-        txt_center(f"مدرسة تعليم السياقة  {school.get('name', '')}",
+        txt_center(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_school}",
+                          f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {wilaya_school}"),
+                   25.9, size=10 if is_fr else 11)
+        txt_center(_pdf_t(f"مدرسة تعليم السياقة  {school.get('name', '')}",
+                          f"Auto-école : {school.get('name', '')}"),
                    25.1, size=11)
 
-        # --- خط فاصل ---
         c.setLineWidth(1)
         c.line(2*cm, 24.7*cm, page_w - 2*cm, 24.7*cm)
 
-        # --- عنوان الشهادة في إطار ---
-        title_w = 7*cm
+        title_w = 9*cm if is_fr else 7*cm
         title_x = (page_w - title_w) / 2
         title_y = 23.3*cm
         c.setLineWidth(1.2)
         c.rect(title_x, title_y, title_w, 1*cm)
-        txt_center("شهادة ادارية", 23.6, font=ARABIC_FONT_BOLD, size=14)
+        txt_center(_pdf_t("شهادة ادارية", "Attestation Administrative"),
+                   23.6, font=ARABIC_FONT_BOLD, size=14)
 
-        # --- نص الشهادة ---
         school_name = school.get('name', '........')
         school_city = school.get('address', '........')
-
-        # السطر الأول
-        line1 = f"يشهد السيد مدير مدرسة تعليم السياقة  {school_name}  التي مقرها ببلدية  {school_city}"
-        txt_right(line1, 22.2, size=11)
-
-        # السطر الثاني: اسم المترشح + تاريخ الميلاد
         full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
         birth_date = cand.get('birth_date', '............')
-        line2_right = f"أن السيد  {full_name}"
-        line2_left  = f"المولود بتاريخ  {birth_date}  ..."
-        txt_right(line2_right + "   " + line2_left, 21.2, size=11)
-
-        # السطر الثالث: البلدية والولاية
         commune = cand.get('birth_place_commune', '............')
         wilaya  = cand.get('birth_place_wilaya',  '............')
-        txt_right(f"بلدية  {commune}    ولاية  {wilaya}  ...", 20.2, size=11)
-
-        # العنوان
         address = cand.get('current_address', '') or cand.get('birth_place_commune', '............')
-        txt_right(f"العنوان  {address}  ...", 19.2, size=11)
-
-        # رقم الملف والامتحان
         file_no = str(cand.get('id', '......'))
-        lic_type = cand.get('license_type', 'ب')
+        lic_type = cand.get('license_type', 'B')
         exam_day = exam_date if exam_date else "........"
-        line_exam = (f"رقم الملف  {file_no}  المسجل لدى مدرستنا قد اجتاز بنجاح"
-                     f"  امتحان نيل رخصة السياقة صنف  {lic_type}  يوم  {exam_day}  ...")
-        txt_right(line_exam, 18.0, size=11)
 
-        # فقرة التسليم (سطرين)
-        txt_right("سلمة هذه الشهادة للمعني بالأمر من أجل تقديمها لمصلحة", 16.8, size=11)
-        txt_right("رخصة السياقة البيمترية ببلدية الإقامة لسحب رخصة السياقة البيومترية", 15.9, size=11)
+        if is_fr:
+            txt_right(f"Le directeur de l'auto-école  {school_name}  sise à  {school_city}", 22.2, size=11)
+            txt_right(f"atteste que M./Mme  {full_name}  né(e) le  {birth_date}", 21.2, size=11)
+            txt_right(f"Commune de  {commune}    Wilaya de  {wilaya}", 20.2, size=11)
+            txt_right(f"Adresse :  {address}", 19.2, size=11)
+            txt_right((f"N° de dossier  {file_no}  inscrit(e) dans notre auto-école"
+                       f" a réussi l'examen du permis de conduire catégorie  {lic_type}  le  {exam_day}"),
+                      18.0, size=11)
+            txt_right("La présente attestation est délivrée à l'intéressé(e) pour être présentée", 16.8, size=11)
+            txt_right("au service du permis de conduire biométrique de la commune de résidence.", 15.9, size=11)
+            txt_center("Cette attestation ne permet pas de conduire des véhicules.",
+                       14.6, font=ARABIC_FONT_BOLD, size=12)
+        else:
+            line1 = f"يشهد السيد مدير مدرسة تعليم السياقة  {school_name}  التي مقرها ببلدية  {school_city}"
+            txt_right(line1, 22.2, size=11)
+            txt_right(f"أن السيد  {full_name}   المولود بتاريخ  {birth_date}  ...", 21.2, size=11)
+            txt_right(f"بلدية  {commune}    ولاية  {wilaya}  ...", 20.2, size=11)
+            txt_right(f"العنوان  {address}  ...", 19.2, size=11)
+            line_exam = (f"رقم الملف  {file_no}  المسجل لدى مدرستنا قد اجتاز بنجاح"
+                         f"  امتحان نيل رخصة السياقة صنف  {lic_type}  يوم  {exam_day}  ...")
+            txt_right(line_exam, 18.0, size=11)
+            txt_right("سلمة هذه الشهادة للمعني بالأمر من أجل تقديمها لمصلحة", 16.8, size=11)
+            txt_right("رخصة السياقة البيمترية ببلدية الإقامة لسحب رخصة السياقة البيومترية", 15.9, size=11)
+            txt_center("هذه الشهادة غير صالحة لقيادة المركبات",
+                       14.6, font=ARABIC_FONT_BOLD, size=12)
 
-        # تنبيه عدم الصلاحية
-        txt_center("هذه الشهادة غير صالحة لقيادة المركبات",
-                   14.6, font=ARABIC_FONT_BOLD, size=12)
-
-        # خط فاصل
         c.setLineWidth(0.5)
         c.line(2*cm, 14.0*cm, page_w - 2*cm, 14.0*cm)
-
-        # التوقيع والختم
-        txt_center("توقيع وختم", 13.2, font=ARABIC_FONT_BOLD, size=12)
-
-        # تاريخ التحرير
+        txt_center(_pdf_t("توقيع وختم", "Signature et cachet"), 13.2, font=ARABIC_FONT_BOLD, size=12)
         today_str = date.today().strftime('%Y-%m-%d')
-        txt_right(f"حُرّر بتاريخ:  {today_str}", 7.5, size=10)
+        txt_right(_pdf_t(f"حُرّر بتاريخ:  {today_str}", f"Fait le :  {today_str}"), 7.5, size=10)
 
         c.save()
         self._trigger_print(path, T("doc_admin_cert"))
@@ -6664,7 +6835,9 @@ class DocumentsFrame(tk.Frame):
         if not self._check(): return
         cand = self._get_candidate()
         if not cand: return
-        path = self._ask_save(f"وصل_دفع_{cand['last_name']}.pdf")
+        default_name = (f"recu_paiement_{cand['last_name']}.pdf" if LANG == "fr"
+                        else f"وصل_دفع_{cand['last_name']}.pdf")
+        path = self._ask_save(default_name)
         if not path: return
         school = SchoolInfoDB.get()
         payments = PaymentDB.get_by_candidate(cand['id'])
@@ -6672,28 +6845,51 @@ class DocumentsFrame(tk.Frame):
         rem = cand['total_amount'] - total_paid
 
         doc = self._make_doc(path); s = _pdf_styles(); story = []
-        _pdf_header(story, school, "وصل دفع")
-        story.append(Paragraph(ar(f"المترشح: {cand.get('last_name','')} {cand.get('first_name','')}"), s["h2"]))
-        story.append(Paragraph(ar(f"رقم الهاتف: {cand.get('phone','')}"), s["right"]))
-        story.append(Spacer(1, 0.4*cm))
-        rows = [["ملاحظة","طريقة الدفع","المبلغ (دج)","التاريخ","رقم"]]
-        for i, p in enumerate(payments, 1):
-            rows.append([p.get('notes','') or '-', p.get('payment_method',''),
-                         f"{p['amount']:,.0f}", p.get('date',''), str(i)])
-        story.append(_styled_table(rows, [4*cm, 3*cm, 3*cm, 3*cm, 1.5*cm]))
-        story.append(Spacer(1, 0.6*cm))
-
-        summary = [
-            ["البند", "المبلغ"],
-            ["المبلغ الإجمالي للتكوين", f"{cand['total_amount']:,.0f} دج"],
-            ["مجموع المدفوعات",         f"{total_paid:,.0f} دج"],
-            ["المبلغ المتبقي",          f"{rem:,.0f} دج"],
-        ]
-        story.append(_styled_table(summary, [9*cm, 8*cm]))
-        story.append(Spacer(1, 1*cm))
-        story.append(Paragraph(ar(f"حُرّر بتاريخ: {date.today().strftime('%Y-%m-%d')}"), s["right"]))
-        story.append(Spacer(1, 0.5*cm))
-        story.append(Paragraph(ar("ختم وتوقيع المسؤول: ___________________"), s["right"]))
+        if LANG == "fr":
+            _pdf_header(story, school, "Reçu de Paiement")
+            story.append(Paragraph(
+                f"Candidat(e) : {cand.get('last_name','')} {cand.get('first_name','')}", s["h2"]))
+            story.append(Paragraph(f"Téléphone : {cand.get('phone','')}", s["right"]))
+            story.append(Spacer(1, 0.4*cm))
+            rows = [["Observations", "Mode de paiement", "Montant (DA)", "Date", "N°"]]
+            for i, p in enumerate(payments, 1):
+                rows.append([p.get('notes','') or '-', _fr_val(p.get('payment_method','')),
+                             f"{p['amount']:,.0f}", p.get('date',''), str(i)])
+            story.append(_styled_table(rows, [4*cm, 3*cm, 3*cm, 3*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.6*cm))
+            summary = [
+                ["Désignation", "Montant"],
+                ["Montant total de la formation",   f"{cand['total_amount']:,.0f} DA"],
+                ["Total versé",                      f"{total_paid:,.0f} DA"],
+                ["Reste à payer",                    f"{rem:,.0f} DA"],
+            ]
+            story.append(_styled_table(summary, [9*cm, 8*cm]))
+            story.append(Spacer(1, 1*cm))
+            story.append(Paragraph(f"Fait le : {date.today().strftime('%Y-%m-%d')}", s["right"]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph("Cachet et signature du responsable : ___________________", s["right"]))
+        else:
+            _pdf_header(story, school, "وصل دفع")
+            story.append(Paragraph(ar(f"المترشح: {cand.get('last_name','')} {cand.get('first_name','')}"), s["h2"]))
+            story.append(Paragraph(ar(f"رقم الهاتف: {cand.get('phone','')}"), s["right"]))
+            story.append(Spacer(1, 0.4*cm))
+            rows = [["ملاحظة","طريقة الدفع","المبلغ (دج)","التاريخ","رقم"]]
+            for i, p in enumerate(payments, 1):
+                rows.append([p.get('notes','') or '-', p.get('payment_method',''),
+                             f"{p['amount']:,.0f}", p.get('date',''), str(i)])
+            story.append(_styled_table(rows, [4*cm, 3*cm, 3*cm, 3*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.6*cm))
+            summary = [
+                ["البند", "المبلغ"],
+                ["المبلغ الإجمالي للتكوين", f"{cand['total_amount']:,.0f} دج"],
+                ["مجموع المدفوعات",         f"{total_paid:,.0f} دج"],
+                ["المبلغ المتبقي",          f"{rem:,.0f} دج"],
+            ]
+            story.append(_styled_table(summary, [9*cm, 8*cm]))
+            story.append(Spacer(1, 1*cm))
+            story.append(Paragraph(ar(f"حُرّر بتاريخ: {date.today().strftime('%Y-%m-%d')}"), s["right"]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(ar("ختم وتوقيع المسؤول: ___________________"), s["right"]))
         doc.build(story)
         self._trigger_print(path, T("doc_payment_receipt"))
 
@@ -6957,10 +7153,13 @@ class DocumentsFrame(tk.Frame):
                 self._generate_dispatch_table_pdf(path, selected_cands, settings,
                                                   direct_print=True)
             else:
+                date_slug = settings['dispatch_date'].replace('/','_')
+                default_dispatch = (f"tableau_envoi_{date_slug}.pdf" if LANG == "fr"
+                                    else f"جدول_الإرسال_{date_slug}.pdf")
                 path = filedialog.asksaveasfilename(
                     defaultextension=".pdf",
                     filetypes=[("PDF Files", "*.pdf")],
-                    initialfile=f"جدول_الإرسال_{settings['dispatch_date'].replace('/','_')}.pdf",
+                    initialfile=default_dispatch,
                     parent=dlg)
                 if not path:
                     return
@@ -6976,36 +7175,52 @@ class DocumentsFrame(tk.Frame):
         wilaya = settings.get("wilaya", ".........")
         dispatch_date = settings.get("dispatch_date", date.today().strftime("%d/%m/%Y"))
         record_number = settings.get("record_number", "")
+        is_fr = LANG == "fr"
 
         doc = self._make_doc(path)
         s = _pdf_styles()
         story = []
 
-        # ترويسة الجمهورية
-        story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["center"]))
-        story.append(Spacer(1, 0.3*cm))
-        story.append(Paragraph(ar("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية"), s["center"]))
-        story.append(Paragraph(ar("المندوبية الوطنية للأمن في الطرق"), s["center"]))
-        story.append(Paragraph(ar(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya}"), s["center"]))
+        if is_fr:
+            story.append(Paragraph("République Algérienne Démocratique et Populaire", s["center"]))
+            story.append(Spacer(1, 0.3*cm))
+            story.append(Paragraph("Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire", s["center"]))
+            story.append(Paragraph("Délégation Nationale à la Sécurité Routière", s["center"]))
+            story.append(Paragraph(f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {wilaya}", s["center"]))
+            if record_number:
+                story.append(Spacer(1, 0.4*cm))
+                story.append(Paragraph(f"N° du procès-verbal : {record_number}", s["right"]))
+            story.append(Spacer(1, 1.0*cm))
+            story.append(Paragraph(f"<u><b>Tableau d'envoi</b></u>", s["title"]))
+            story.append(Spacer(1, 0.8*cm))
+            rows = [["N°", "Nom et Prénom", "Date de naissance"]]
+            for i, c in enumerate(cands, 1):
+                rows.append([str(i),
+                             f"{c.get('last_name','')} {c.get('first_name','')}",
+                             c.get('birth_date', '')])
+            footer_txt = f"Fait à {wilaya}, le : {dispatch_date}"
+            stamp_txt = "Cachet et signature de l'auto-école"
+        else:
+            story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["center"]))
+            story.append(Spacer(1, 0.3*cm))
+            story.append(Paragraph(ar("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية"), s["center"]))
+            story.append(Paragraph(ar("المندوبية الوطنية للأمن في الطرق"), s["center"]))
+            story.append(Paragraph(ar(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya}"), s["center"]))
+            if record_number:
+                story.append(Spacer(1, 0.4*cm))
+                story.append(Paragraph(ar(f"رقم المحضر: {record_number}"), s["right"]))
+            story.append(Spacer(1, 1.0*cm))
+            story.append(Paragraph(f"<u><b>{ar('جدول ارسال')}</b></u>", s["title"]))
+            story.append(Spacer(1, 0.8*cm))
+            rows = [["الرقم", "الاسم واللقب", "تاريخ الميلاد"]]
+            for i, c in enumerate(cands, 1):
+                rows.append([str(i),
+                             f"{c.get('last_name','')} {c.get('first_name','')}",
+                             c.get('birth_date', '')])
+            footer_txt = f"حُرِّرَ بـ {wilaya}، يوم: {dispatch_date}"
+            stamp_txt = "ختم وتوقيع مدرسة تعليم السياقة"
 
-        if record_number:
-            story.append(Spacer(1, 0.4*cm))
-            story.append(Paragraph(ar(f"رقم المحضر: {record_number}"), s["right"]))
-
-        story.append(Spacer(1, 1.0*cm))
-        story.append(Paragraph(f"<u><b>{ar('جدول ارسال')}</b></u>", s["title"]))
-        story.append(Spacer(1, 0.8*cm))
-
-        # جدول المترشحين — رقم / اسم / تاريخ الميلاد
-        rows = [["الرقم", "الاسم واللقب", "تاريخ الميلاد"]]
-        for i, c in enumerate(cands, 1):
-            rows.append([
-                str(i),
-                f"{c.get('last_name','')} {c.get('first_name','')}",
-                c.get('birth_date', ''),
-            ])
-
-        processed = [[ar(cell) for cell in row] for row in rows]
+        processed = [[_ptxt(cell) for cell in row] for row in rows]
         tbl = Table(processed, colWidths=[2*cm, 10*cm, 5*cm])
         tbl.setStyle(TableStyle([
             ('FONTNAME',    (0, 0), (-1, -1), ARABIC_FONT),
@@ -7019,14 +7234,12 @@ class DocumentsFrame(tk.Frame):
             ('BACKGROUND',  (0, 0), (-1,  0), colors.HexColor("#DBEAFE")),
         ]))
         story.append(tbl)
-
         story.append(Spacer(1, 0.8*cm))
-        story.append(Paragraph(
-            ar(f"حُرِّرَ بـ {wilaya}، يوم: {dispatch_date}"), s["right"]))
+        story.append(Paragraph(_ptxt(footer_txt), s["right"]))
         story.append(Spacer(1, 1.2*cm))
-        story.append(Paragraph(ar("ختم وتوقيع مدرسة تعليم السياقة"), s["center"]))
+        story.append(Paragraph(_ptxt(stamp_txt), s["center"]))
         story.append(Spacer(1, 2*cm))
-        story.append(Paragraph(ar("___________________________"), s["center"]))
+        story.append(Paragraph("___________________________", s["center"]))
 
         doc.build(story)
         if direct_print:
@@ -7049,45 +7262,74 @@ class DocumentsFrame(tk.Frame):
         dr = self._ask_date_range_for_doc()
         if dr is None: return
         d_from, d_to = dr
-        path = self._ask_save("قائمة_المترشحين.pdf")
+        default_name = "liste_candidats.pdf" if LANG == "fr" else "قائمة_المترشحين.pdf"
+        path = self._ask_save(default_name)
         if not path: return
         school = SchoolInfoDB.get()
         cands = CandidateDB.get_by_date_range(d_from, d_to)
-        period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
+        if LANG == "fr":
+            period_txt = (f"Période : {d_from or '—'}  →  {d_to or '—'}"
+                          if (d_from or d_to) else "Toutes les périodes")
+        else:
+            period_txt = (f"الفترة: {d_from or '—'}  →  {d_to or '—'}"
+                          if (d_from or d_to) else "كل الفترات")
         doc = self._make_doc(path, rightMargin=1.5*cm, leftMargin=1.5*cm,
                              pagesize=A4); s = _pdf_styles(); story = []
-        _pdf_header(story, school, "قائمة المترشحين")
-        story.append(Paragraph(ar(period_txt), s["right"]))
-        story.append(Spacer(1, 0.3*cm))
-        rows = [["رقم الهاتف","نوع الرخصة","الجنس","تاريخ التسجيل","الاسم الكامل","رقم"]]
-        for i, c in enumerate(cands, 1):
-            rows.append([c.get('phone',''), c.get('license_type',''),
-                         c.get('gender',''), c.get('registration_date',''),
-                         f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
-        story.append(_styled_table(rows,
-            [3.5*cm, 2.5*cm, 1.8*cm, 3*cm, 5.5*cm, 1.2*cm]))
-        story.append(Spacer(1, 0.5*cm))
-        story.append(Paragraph(ar(f"المجموع: {len(cands)} مترشح"), s["h2"]))
+        if LANG == "fr":
+            _pdf_header(story, school, "Liste des Candidats")
+            story.append(Paragraph(period_txt, s["right"]))
+            story.append(Spacer(1, 0.3*cm))
+            rows = [["Téléphone", "Type de permis", "Sexe", "Date d'inscription", "Nom complet", "N°"]]
+            for i, c in enumerate(cands, 1):
+                rows.append([c.get('phone',''), c.get('license_type',''),
+                             _fr_val(c.get('gender','')), c.get('registration_date',''),
+                             f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
+            story.append(_styled_table(rows, [3.5*cm, 2.5*cm, 1.8*cm, 3*cm, 5.5*cm, 1.2*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(f"Total : {len(cands)} candidat(s)", s["h2"]))
+        else:
+            _pdf_header(story, school, "قائمة المترشحين")
+            story.append(Paragraph(ar(period_txt), s["right"]))
+            story.append(Spacer(1, 0.3*cm))
+            rows = [["رقم الهاتف","نوع الرخصة","الجنس","تاريخ التسجيل","الاسم الكامل","رقم"]]
+            for i, c in enumerate(cands, 1):
+                rows.append([c.get('phone',''), c.get('license_type',''),
+                             c.get('gender',''), c.get('registration_date',''),
+                             f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
+            story.append(_styled_table(rows, [3.5*cm, 2.5*cm, 1.8*cm, 3*cm, 5.5*cm, 1.2*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(ar(f"المجموع: {len(cands)} مترشح"), s["h2"]))
         doc.build(story)
         self._trigger_print(path, T("doc_cand_list"))
 
     def _doc_instructors_list(self):
         if not self._check(): return
-        path = self._ask_save("قائمة_الممرنين.pdf")
+        default_name = "liste_moniteurs.pdf" if LANG == "fr" else "قائمة_الممرنين.pdf"
+        path = self._ask_save(default_name)
         if not path: return
         school = SchoolInfoDB.get()
         instructors = InstructorDB.get_all()
         doc = self._make_doc(path); s = _pdf_styles(); story = []
-        _pdf_header(story, school, "قائمة الممرنين")
-        rows = [["سنوات الخبرة","الأصناف","الهاتف","الجنس","الاسم الكامل","رقم"]]
-        for i, ins in enumerate(instructors, 1):
-            rows.append([str(ins.get('experience_years','')), ins.get('categories',''),
-                         ins.get('phone',''), ins.get('gender',''),
-                         f"{ins.get('last_name','')} {ins.get('first_name','')}", str(i)])
-        story.append(_styled_table(rows,
-            [2.5*cm, 2.5*cm, 3*cm, 2*cm, 5.5*cm, 1.5*cm]))
-        story.append(Spacer(1, 0.5*cm))
-        story.append(Paragraph(ar(f"المجموع: {len(instructors)} ممرن"), s["h2"]))
+        if LANG == "fr":
+            _pdf_header(story, school, "Liste des Moniteurs")
+            rows = [["Années d'exp.", "Catégories", "Téléphone", "Sexe", "Nom complet", "N°"]]
+            for i, ins in enumerate(instructors, 1):
+                rows.append([str(ins.get('experience_years','')), ins.get('categories',''),
+                             ins.get('phone',''), _fr_val(ins.get('gender','')),
+                             f"{ins.get('last_name','')} {ins.get('first_name','')}", str(i)])
+            story.append(_styled_table(rows, [2.5*cm, 2.5*cm, 3*cm, 2*cm, 5.5*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(f"Total : {len(instructors)} moniteur(s)", s["h2"]))
+        else:
+            _pdf_header(story, school, "قائمة الممرنين")
+            rows = [["سنوات الخبرة","الأصناف","الهاتف","الجنس","الاسم الكامل","رقم"]]
+            for i, ins in enumerate(instructors, 1):
+                rows.append([str(ins.get('experience_years','')), ins.get('categories',''),
+                             ins.get('phone',''), ins.get('gender',''),
+                             f"{ins.get('last_name','')} {ins.get('first_name','')}", str(i)])
+            story.append(_styled_table(rows, [2.5*cm, 2.5*cm, 3*cm, 2*cm, 5.5*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(ar(f"المجموع: {len(instructors)} ممرن"), s["h2"]))
         doc.build(story)
         self._trigger_print(path, T("doc_inst_list"))
 
@@ -7096,24 +7338,43 @@ class DocumentsFrame(tk.Frame):
         dr = self._ask_date_range_for_doc()
         if dr is None: return
         d_from, d_to = dr
-        path = self._ask_save("تقرير_المصاريف.pdf")
+        default_name = "rapport_depenses.pdf" if LANG == "fr" else "تقرير_المصاريف.pdf"
+        path = self._ask_save(default_name)
         if not path: return
         school = SchoolInfoDB.get()
         expenses = ExpenseDB.get_all_in_range(d_from, d_to)
-        period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
+        if LANG == "fr":
+            period_txt = (f"Période : {d_from or '—'}  →  {d_to or '—'}"
+                          if (d_from or d_to) else "Toutes les périodes")
+        else:
+            period_txt = (f"الفترة: {d_from or '—'}  →  {d_to or '—'}"
+                          if (d_from or d_to) else "كل الفترات")
         doc = self._make_doc(path); s = _pdf_styles(); story = []
-        _pdf_header(story, school, "تقرير المصاريف")
-        story.append(Paragraph(ar(period_txt), s["right"]))
-        story.append(Spacer(1, 0.3*cm))
-        rows = [["ملاحظة","المبلغ (دج)","التاريخ","نوع المصروف","رقم"]]
         total = 0
-        for i, e in enumerate(expenses, 1):
-            total += e['amount']
-            rows.append([e.get('notes','') or '-', f"{e['amount']:,.0f}",
-                         e.get('date',''), e.get('expense_type',''), str(i)])
-        story.append(_styled_table(rows, [4.5*cm, 3*cm, 3*cm, 4*cm, 1.5*cm]))
-        story.append(Spacer(1, 0.5*cm))
-        story.append(Paragraph(ar(f"المجموع الكلي للمصاريف: {total:,.0f} دج"), s["h2"]))
+        if LANG == "fr":
+            _pdf_header(story, school, "Rapport des Dépenses")
+            story.append(Paragraph(period_txt, s["right"]))
+            story.append(Spacer(1, 0.3*cm))
+            rows = [["Observations", "Montant (DA)", "Date", "Type de dépense", "N°"]]
+            for i, e in enumerate(expenses, 1):
+                total += e['amount']
+                rows.append([e.get('notes','') or '-', f"{e['amount']:,.0f}",
+                             e.get('date',''), e.get('expense_type',''), str(i)])
+            story.append(_styled_table(rows, [4.5*cm, 3*cm, 3*cm, 4*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(f"Total des dépenses : {total:,.0f} DA", s["h2"]))
+        else:
+            _pdf_header(story, school, "تقرير المصاريف")
+            story.append(Paragraph(ar(period_txt), s["right"]))
+            story.append(Spacer(1, 0.3*cm))
+            rows = [["ملاحظة","المبلغ (دج)","التاريخ","نوع المصروف","رقم"]]
+            for i, e in enumerate(expenses, 1):
+                total += e['amount']
+                rows.append([e.get('notes','') or '-', f"{e['amount']:,.0f}",
+                             e.get('date',''), e.get('expense_type',''), str(i)])
+            story.append(_styled_table(rows, [4.5*cm, 3*cm, 3*cm, 4*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            story.append(Paragraph(ar(f"المجموع الكلي للمصاريف: {total:,.0f} دج"), s["h2"]))
         doc.build(story)
         self._trigger_print(path, T("doc_expenses"))
 
@@ -7122,33 +7383,57 @@ class DocumentsFrame(tk.Frame):
         dr = self._ask_date_range_for_doc()
         if dr is None: return
         d_from, d_to = dr
-        path = self._ask_save("تقرير_المدفوعات.pdf")
+        default_name = "rapport_paiements.pdf" if LANG == "fr" else "تقرير_المدفوعات.pdf"
+        path = self._ask_save(default_name)
         if not path: return
         school = SchoolInfoDB.get()
-        # مدفوعات الفترة مجمّعة حسب المترشح (فلترة بتاريخ الدفع)
         paid_map = PaymentDB.get_paid_per_candidate_in_range(d_from, d_to)
-        period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
+        if LANG == "fr":
+            period_txt = (f"Période : {d_from or '—'}  →  {d_to or '—'}"
+                          if (d_from or d_to) else "Toutes les périodes")
+        else:
+            period_txt = (f"الفترة: {d_from or '—'}  →  {d_to or '—'}"
+                          if (d_from or d_to) else "كل الفترات")
         doc = self._make_doc(path); s = _pdf_styles(); story = []
-        _pdf_header(story, school, "تقرير المدفوعات")
-        story.append(Paragraph(ar(period_txt), s["right"]))
-        story.append(Spacer(1, 0.3*cm))
-        rows = [["المدفوع في الفترة","الإجمالي المتفق عليه","الاسم الكامل","رقم"]]
         paid_global = 0; total_global = 0; i = 0
-        for cid, paid in paid_map.items():
-            c = CandidateDB.get(cid)
-            if not c:
-                continue
-            i += 1
-            paid_global += paid
-            total_global += c.get('total_amount', 0)
-            rows.append([f"{paid:,.0f}", f"{c.get('total_amount',0):,.0f}",
-                         f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
-        story.append(_styled_table(rows, [3.5*cm, 3.5*cm, 6.5*cm, 1.5*cm]))
-        story.append(Spacer(1, 0.5*cm))
-        summary = [["البند", "المبلغ"],
-                   ["إجمالي المدفوعات في الفترة", f"{paid_global:,.0f} دج"],
-                   ["المبلغ الإجمالي المتفق عليه", f"{total_global:,.0f} دج"]]
-        story.append(_styled_table(summary, [9*cm, 8*cm]))
+        if LANG == "fr":
+            _pdf_header(story, school, "Rapport des Paiements")
+            story.append(Paragraph(period_txt, s["right"]))
+            story.append(Spacer(1, 0.3*cm))
+            rows = [["Versé dans la période", "Total convenu", "Nom complet", "N°"]]
+            for cid, paid in paid_map.items():
+                c = CandidateDB.get(cid)
+                if not c: continue
+                i += 1
+                paid_global += paid
+                total_global += c.get('total_amount', 0)
+                rows.append([f"{paid:,.0f}", f"{c.get('total_amount',0):,.0f}",
+                             f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
+            story.append(_styled_table(rows, [3.5*cm, 3.5*cm, 6.5*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            summary = [["Désignation", "Montant"],
+                       ["Total des paiements dans la période", f"{paid_global:,.0f} DA"],
+                       ["Montant total convenu",               f"{total_global:,.0f} DA"]]
+            story.append(_styled_table(summary, [9*cm, 8*cm]))
+        else:
+            _pdf_header(story, school, "تقرير المدفوعات")
+            story.append(Paragraph(ar(period_txt), s["right"]))
+            story.append(Spacer(1, 0.3*cm))
+            rows = [["المدفوع في الفترة","الإجمالي المتفق عليه","الاسم الكامل","رقم"]]
+            for cid, paid in paid_map.items():
+                c = CandidateDB.get(cid)
+                if not c: continue
+                i += 1
+                paid_global += paid
+                total_global += c.get('total_amount', 0)
+                rows.append([f"{paid:,.0f}", f"{c.get('total_amount',0):,.0f}",
+                             f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
+            story.append(_styled_table(rows, [3.5*cm, 3.5*cm, 6.5*cm, 1.5*cm]))
+            story.append(Spacer(1, 0.5*cm))
+            summary = [["البند", "المبلغ"],
+                       ["إجمالي المدفوعات في الفترة", f"{paid_global:,.0f} دج"],
+                       ["المبلغ الإجمالي المتفق عليه", f"{total_global:,.0f} دج"]]
+            story.append(_styled_table(summary, [9*cm, 8*cm]))
         doc.build(story)
         self._trigger_print(path, T("doc_payments_report"))
 
@@ -7361,10 +7646,13 @@ class DocumentsFrame(tk.Frame):
             wilaya_val = opts_vars["wilaya"].get().strip()
             stage_type = stage_var.get()
 
+            default_exam_file = (f"liste_candidats_examen_{exam_date.replace('/','_')}.pdf"
+                                 if LANG == "fr" else
+                                 f"قائمة_المترشحين_{exam_date.replace('/','_')}.pdf")
             path = filedialog.asksaveasfilename(
                 defaultextension=".pdf",
                 filetypes=[("PDF Files", "*.pdf")],
-                initialfile=f"قائمة_المترشحين_{exam_date.replace('/','_')}.pdf",
+                initialfile=default_exam_file,
                 parent=dlg)
             if not path:
                 return
@@ -7385,68 +7673,82 @@ class DocumentsFrame(tk.Frame):
         from reportlab.lib.units import cm
         import tempfile, datetime
 
+        is_fr = LANG == "fr"
         page_w, page_h = A4
         c = rl_canvas.Canvas(path, pagesize=A4)
 
         def txt_right(text, y_cm, font=ARABIC_FONT, size=10, x_cm=None):
             c.setFont(font, size)
             x = (x_cm * cm) if x_cm else (page_w - 1.5*cm)
-            c.drawRightString(x, y_cm * cm, ar(str(text)))
+            txt = str(text) if is_fr else ar(str(text))
+            if is_fr:
+                c.drawString(1.5*cm, y_cm * cm, txt)
+            else:
+                c.drawRightString(x, y_cm * cm, txt)
 
         def txt_left(text, y_cm, font=ARABIC_FONT, size=10, x_cm=1.5):
             c.setFont(font, size)
-            c.drawString(x_cm * cm, y_cm * cm, ar(str(text)))
+            txt = str(text) if is_fr else ar(str(text))
+            if is_fr:
+                c.drawRightString(page_w - 1.5*cm, y_cm * cm, txt)
+            else:
+                c.drawString(x_cm * cm, y_cm * cm, txt)
 
         def txt_center(text, y_cm, font=ARABIC_FONT, size=10):
             c.setFont(font, size)
-            c.drawCentredString(page_w / 2, y_cm * cm, ar(str(text)))
+            txt = str(text) if is_fr else ar(str(text))
+            c.drawCentredString(page_w / 2, y_cm * cm, txt)
 
-        # ========== الترويسة الحكومية ==========
+        # ========== Government header ==========
         y = 28.5
-        txt_center("الجمهورية الجزائرية الديمقراطية الشعبية",
-                   y, ARABIC_FONT_BOLD, 13)
+        txt_center(_pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
+                          "République Algérienne Démocratique et Populaire"),
+                   y, ARABIC_FONT_BOLD, 12 if is_fr else 13)
         y -= 0.7
-        txt_center("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
+        txt_center(_pdf_t("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
+                          "Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire"),
+                   y, ARABIC_FONT, 8 if is_fr else 10)
+        y -= 0.55
+        txt_center(_pdf_t("المندوبيـة الوطنيـة للأمن في الطرق",
+                          "Délégation Nationale à la Sécurité Routière"),
                    y, ARABIC_FONT, 10)
         y -= 0.55
-        txt_center("المندوبيـة الوطنيـة للأمن في الطرق", y, ARABIC_FONT, 10)
-        y -= 0.55
-        txt_center(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_val}",
-                   y, ARABIC_FONT, 10)
+        txt_center(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_val}",
+                          f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {wilaya_val}"),
+                   y, ARABIC_FONT, 9 if is_fr else 10)
 
-        # خط فاصل
         y -= 0.4
         c.setLineWidth(1)
         c.line(1.5*cm, y*cm, (page_w - 1.5*cm), y*cm)
 
-        # ========== عنوان الوثيقة ==========
+        # ========== Document title ==========
         y -= 0.9
-        txt_center("قائمة المترشحين لنيل رخصة السياقة",
-                   y, ARABIC_FONT_BOLD, 15)
+        txt_center(_pdf_t("قائمة المترشحين لنيل رخصة السياقة",
+                          "Liste des candidats au permis de conduire"),
+                   y, ARABIC_FONT_BOLD, 13 if is_fr else 15)
 
-        # خط تحت العنوان
         title_w = 10*cm
         title_x = (page_w - title_w) / 2
         c.setLineWidth(1.2)
         c.line(title_x, (y - 0.15)*cm, title_x + title_w, (y - 0.15)*cm)
 
-        # ========== بيانات المدرسة والامتحان ==========
+        # ========== School / exam info ==========
         y -= 0.9
         school_name = school.get('name', '.....................')
         school_phone= school.get('phone', '')
         school_cr   = school.get('commercial_register', '')
 
-        # سطر: اسم المدرسة
-        txt_right(f"مدرسة تعليم السياقة:  {school_name}", y, ARABIC_FONT_BOLD, 10)
+        txt_right(_pdf_t(f"مدرسة تعليم السياقة:  {school_name}",
+                         f"Auto-école :  {school_name}"),
+                  y, ARABIC_FONT_BOLD, 10)
 
         y -= 0.55
-        # السطر الثاني: اسم المدير
-        txt_right(f"رقاش جمال الدين", y, ARABIC_FONT, 10)  # يمكن تخصيصه من school_info
+        txt_right(_pdf_t("رقاش جمال الدين", school.get('manager_name', school_name)),
+                  y, ARABIC_FONT, 10)
 
         y -= 0.55
-        # السطر الثالث: رقم السجل التجاري | رقم الوثيقة
-        left_info  = f"ب.ر.ت {school_cr}" if school_cr else ""
-        right_info = f"ر.ت {doc_ref}" if doc_ref else ""
+        left_info  = (f"R.C {school_cr}" if school_cr else "") if is_fr else (f"ب.ر.ت {school_cr}" if school_cr else "")
+        right_info = f"Réf. {doc_ref}" if (is_fr and doc_ref) else (f"ر.ت {doc_ref}" if doc_ref else "")
         mid_info   = school_phone
         if right_info:
             txt_right(right_info, y, "Helvetica", 9)
@@ -7456,21 +7758,24 @@ class DocumentsFrame(tk.Frame):
             txt_left(left_info, y, "Helvetica", 9)
 
         y -= 0.55
-        # مركز الامتحان + التاريخ
-        txt_right(f"مركز الامتحان: {exam_center}", y, ARABIC_FONT, 10)
-        txt_left(f"تاريخ الامتحان: {exam_date}", y, ARABIC_FONT, 10)
+        txt_right(_pdf_t(f"مركز الامتحان: {exam_center}", f"Centre d'examen : {exam_center}"),
+                  y, ARABIC_FONT, 10)
+        txt_left(_pdf_t(f"تاريخ الامتحان: {exam_date}", f"Date d'examen : {exam_date}"),
+                 y, ARABIC_FONT, 10)
 
-        # ========== رأس الجدول ==========
+        # ========== Table header ==========
         y -= 0.6
 
-        # عرض الأعمدة (بالـ cm) من اليمين إلى اليسار
-        col_widths = [1.2, 2.5, 5.0, 1.3, 1.2, 2.8, 3.5]  # إجمالي ~17.5
-        col_headers = ["رقم", "رقم التسجيل", "اللقب و الاسم", "السن", "الصنف",
-                        "طبيعة الامتحان", "ملاحظة"]
-        row_h = 0.7   # ارتفاع الصف
+        col_widths = [1.2, 2.5, 5.0, 1.3, 1.2, 2.8, 3.5]
+        if is_fr:
+            col_headers = ["N°", "N° inscription", "Nom et Prénom", "Âge",
+                           "Cat.", "Nature de l'examen", "Observation"]
+        else:
+            col_headers = ["رقم", "رقم التسجيل", "اللقب و الاسم", "السن", "الصنف",
+                           "طبيعة الامتحان", "ملاحظة"]
+        row_h = 0.7
         header_h = 0.9
 
-        # حساب مواضع الأعمدة (x من اليسار)
         total_w = sum(col_widths)
         margin_l = (page_w/cm - total_w) / 2
         col_x = [margin_l]
@@ -7483,13 +7788,14 @@ class DocumentsFrame(tk.Frame):
             c.setFillColorRGB(1, 1, 1)
             for i, (hdr, cw, cx) in enumerate(zip(col_headers, col_widths, col_x)):
                 c.setFont(ARABIC_FONT_BOLD, 9)
-                c.drawCentredString((cx + cw/2)*cm, (y_top - header_h*0.55)*cm, ar(hdr))
+                txt = str(hdr) if is_fr else ar(hdr)
+                c.drawCentredString((cx + cw/2)*cm, (y_top - header_h*0.55)*cm, txt)
             c.setFillColorRGB(0, 0, 0)
 
         draw_header_row(y)
         y -= header_h
 
-        # ========== صفوف البيانات ==========
+        # ========== Data rows ==========
         def calc_age(birth_str):
             try:
                 parts = birth_str.replace("/", "-").split("-")
@@ -7500,21 +7806,26 @@ class DocumentsFrame(tk.Frame):
                 pass
             return ""
 
-        stage_label_map = {
-            "code": "قانون المرور",
-            "creneau": "المناورات",
-            "circuit": "السياقة",
-            "all": "الكل",
-        }
+        if is_fr:
+            stage_label_map = {
+                "code": "Code de la route",
+                "creneau": "Manoeuvres",
+                "circuit": "Conduite",
+                "all": "Tous",
+            }
+        else:
+            stage_label_map = {
+                "code": "قانون المرور",
+                "creneau": "المناورات",
+                "circuit": "السياقة",
+                "all": "الكل",
+            }
 
-        # حساب الإحصائيات
         count_code = count_creneau = count_circuit = 0
 
         for idx, cand in enumerate(cands):
-            # تحديد طبيعة الامتحان
             stages = TrainingDB.get_by_candidate(cand['id'])
             if stage_type == "all":
-                # نعرض آخر مرحلة نشطة
                 active_stage = None
                 for st in reversed(STAGE_ORDER):
                     s = next((x for x in stages if x['stage_type'] == st), None)
@@ -7522,7 +7833,6 @@ class DocumentsFrame(tk.Frame):
                         active_stage = st
                         break
                 if not active_stage:
-                    # أخذ أول مرحلة لم يبدأ بها
                     for st in STAGE_ORDER:
                         s = next((x for x in stages if x['stage_type'] == st), None)
                         if s and s['status'] == "لم يبدأ":
@@ -7534,11 +7844,11 @@ class DocumentsFrame(tk.Frame):
             else:
                 exam_nature = stage_label_map.get(stage_type, "")
 
-            if "مرور" in exam_nature or "code" in exam_nature:
+            if "مرور" in exam_nature or "Code" in exam_nature or "code" in exam_nature:
                 count_code += 1
-            elif "مناور" in exam_nature:
+            elif "مناور" in exam_nature or "anoeuv" in exam_nature:
                 count_creneau += 1
-            elif "سياقة" in exam_nature:
+            elif "سياقة" in exam_nature or "Conduite" in exam_nature:
                 count_circuit += 1
 
             row_num = idx + 1
@@ -7547,7 +7857,6 @@ class DocumentsFrame(tk.Frame):
             full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
             lic_type = cand.get('license_type', 'B')
 
-            # تلوين الصفوف
             if idx % 2 == 0:
                 c.setFillColorRGB(1, 1, 1)
             else:
@@ -7555,11 +7864,9 @@ class DocumentsFrame(tk.Frame):
             c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=1, stroke=0)
             c.setFillColorRGB(0, 0, 0)
 
-            # خطوط الشبكة
             c.setStrokeColorRGB(0.78, 0.82, 0.9)
             c.setLineWidth(0.4)
             c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=0, stroke=1)
-            # خطوط عمودية
             for cx in col_x[1:]:
                 c.line(cx*cm, (y - row_h)*cm, cx*cm, y*cm)
             c.setStrokeColorRGB(0, 0, 0)
@@ -7567,48 +7874,52 @@ class DocumentsFrame(tk.Frame):
             row_data = [str(row_num), reg_num, full_name, age_str, lic_type, exam_nature, ""]
             for i, (val, cw, cx) in enumerate(zip(row_data, col_widths, col_x)):
                 c.setFont(ARABIC_FONT if i != 0 else "Helvetica", 9)
-                c.drawCentredString((cx + cw/2)*cm, (y - row_h*0.58)*cm, ar(str(val)))
+                txt = str(val) if is_fr else ar(str(val))
+                c.drawCentredString((cx + cw/2)*cm, (y - row_h*0.58)*cm, txt)
 
             y -= row_h
 
-            # صفحة جديدة إذا اقتربنا من النهاية
             if y < 5.5:
                 c.showPage()
                 y = 27.0
                 draw_header_row(y)
                 y -= header_h
 
-        # ========== ملخص الإحصائيات ==========
+        # ========== Summary ==========
         y -= 0.6
         c.setLineWidth(0.8)
         c.line(margin_l*cm, y*cm, (margin_l + total_w)*cm, y*cm)
 
         y -= 0.55
         total_count = len(cands)
-        txt_right(f"المترشحين المدعوين {total_count}", y, ARABIC_FONT_BOLD, 11)
+        txt_right(_pdf_t(f"المترشحين المدعوين {total_count}",
+                         f"Candidats convoqués : {total_count}"),
+                  y, ARABIC_FONT_BOLD, 11)
 
         y -= 0.6
-        # اليمين: قانون المرور
-        txt_right(f"قانون المرور: {count_code:02d}", y, ARABIC_FONT, 10)
-        # الوسط: المناورات
-        txt_center(f"المناورات: {count_creneau:02d}", y, ARABIC_FONT, 10)
-        # اليسار: السياقة
-        txt_left(f"السياقة {count_circuit}", y, ARABIC_FONT, 10)
+        txt_right(_pdf_t(f"قانون المرور: {count_code:02d}", f"Code de la route : {count_code:02d}"),
+                  y, ARABIC_FONT, 10)
+        txt_center(_pdf_t(f"المناورات: {count_creneau:02d}", f"Manoeuvres : {count_creneau:02d}"),
+                   y, ARABIC_FONT, 10)
+        txt_left(_pdf_t(f"السياقة {count_circuit}", f"Conduite : {count_circuit}"),
+                 y, ARABIC_FONT, 10)
 
         y -= 0.9
-        # خانات التوقيع
-        txt_right("قانون المرور:", y, ARABIC_FONT, 10)
+        txt_right(_pdf_t("قانون المرور:", "Code de la route :"), y, ARABIC_FONT, 10)
         y -= 0.4
-        txt_right("د. المناورات:", y, ARABIC_FONT, 10)
+        txt_right(_pdf_t("د. المناورات:", "Manoeuvres :"), y, ARABIC_FONT, 10)
         y -= 0.4
-        txt_right("السياقة:", y, ARABIC_FONT, 10)
+        txt_right(_pdf_t("السياقة:", "Conduite :"), y, ARABIC_FONT, 10)
 
-        # التوقيع والختم (يسار)
-        txt_left(f"{wilaya_val} يوم: {exam_date}", y + 0.8, ARABIC_FONT, 10)
-        txt_left("ختم وتوقيع مدرسة تعليم السياقة", y + 0.1, ARABIC_FONT_BOLD, 10)
+        txt_left(_pdf_t(f"{wilaya_val} يوم: {exam_date}", f"{wilaya_val} le : {exam_date}"),
+                 y + 0.8, ARABIC_FONT, 10)
+        txt_left(_pdf_t("ختم وتوقيع مدرسة تعليم السياقة",
+                        "Cachet et signature de l'auto-école"),
+                 y + 0.1, ARABIC_FONT_BOLD, 10)
 
         c.save()
-        self._trigger_print(path, "قائمة المترشحين للامتحان")
+        self._trigger_print(path, _pdf_t("قائمة المترشحين للامتحان",
+                                         "Liste des candidats à l'examen"))
 
 
 # ============================================================================
