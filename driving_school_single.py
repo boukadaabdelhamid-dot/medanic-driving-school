@@ -6951,6 +6951,11 @@ class _UserFormDialog(tk.Toplevel):
         tk.Label(hdr, text=self.title(), font=FONT_TITLE,
                  bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
 
+        # ── زر الحفظ ثابت في الأسفل ──
+        footer = tk.Frame(self, bg=COLOR_BG, padx=20, pady=10)
+        footer.pack(fill="x", side="bottom")
+        ModernButton(footer, "حفظ", self._save, color=COLOR_SUCCESS).pack(fill="x")
+
         # ── جسم قابل للتمرير ──
         wrapper = tk.Frame(self, bg=COLOR_BG)
         wrapper.pack(fill="both", expand=True)
@@ -7011,8 +7016,6 @@ class _UserFormDialog(tk.Toplevel):
                            anchor="e", justify="right",
                            selectcolor=COLOR_PRIMARY_LIGHT).pack(fill="x", pady=2)
 
-        ModernButton(body, "حفظ", self._save, color=COLOR_SUCCESS).pack(
-            fill="x", pady=(8, 4))
 
     def _populate(self, u):
         self._v_full_name.set(u.get("full_name") or "")
