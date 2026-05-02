@@ -8634,9 +8634,29 @@ class DrivingSchoolApp:
         tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=6,
                                                    side="bottom")
 
-        # ── عناصر التنقل — تملأ المساحة المتبقية بعد حجز التذييل ──
-        nav_container = tk.Frame(sb, bg=COLOR_SIDEBAR)
-        nav_container.pack(fill="both", expand=True, side="top")
+        # ── عناصر التنقل — منطقة قابلة للتمرير تملأ المساحة المتبقية ──
+        nav_outer = tk.Frame(sb, bg=COLOR_SIDEBAR)
+        nav_outer.pack(fill="both", expand=True, side="top")
+
+        nav_canvas = tk.Canvas(nav_outer, bg=COLOR_SIDEBAR,
+                               highlightthickness=0, bd=0)
+        nav_canvas.pack(side="left", fill="both", expand=True)
+        self._nav_canvas = nav_canvas
+
+        nav_container = tk.Frame(nav_canvas, bg=COLOR_SIDEBAR)
+        nav_win = nav_canvas.create_window((0, 0), window=nav_container, anchor="nw")
+
+        def _nav_configure(e):
+            nav_canvas.configure(scrollregion=nav_canvas.bbox("all"))
+        def _nav_canvas_resize(e):
+            nav_canvas.itemconfig(nav_win, width=e.width)
+        nav_container.bind("<Configure>", _nav_configure)
+        nav_canvas.bind("<Configure>", _nav_canvas_resize)
+
+        def _nav_mousewheel(e):
+            nav_canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")
+        nav_canvas.bind("<MouseWheel>", _nav_mousewheel)
+        nav_container.bind("<MouseWheel>", _nav_mousewheel)
 
         nav_defs = [
             ("🏠", T("nav_dashboard")),
@@ -8672,10 +8692,10 @@ class DrivingSchoolApp:
         accent = tk.Frame(outer, bg=COLOR_SIDEBAR, width=4)
         accent.pack(side=S(), fill="y")
 
-        inner = tk.Frame(outer, bg=COLOR_SIDEBAR, padx=12, pady=10)
+        inner = tk.Frame(outer, bg=COLOR_SIDEBAR, padx=12, pady=7)
         inner.pack(side=So(), fill="both", expand=True)
 
-        icon_lbl = tk.Label(inner, text=icon, font=(FONT_FAMILY, 13),
+        icon_lbl = tk.Label(inner, text=icon, font=(FONT_FAMILY, 12),
                             bg=COLOR_SIDEBAR, fg="#64748b")
         icon_lbl.pack(side=S(), padx=(0, 8))
 
@@ -8688,9 +8708,10 @@ class DrivingSchoolApp:
         self._nav_refs.append(ref)
 
         for w in [outer, inner, icon_lbl, text_lbl]:
-            w.bind("<Enter>",    lambda e, i=index: self._nav_hover(i))
-            w.bind("<Leave>",    lambda e, i=index: self._nav_leave(i))
-            w.bind("<Button-1>", lambda e, i=index: self._navigate(i))
+            w.bind("<Enter>",       lambda e, i=index: self._nav_hover(i))
+            w.bind("<Leave>",       lambda e, i=index: self._nav_leave(i))
+            w.bind("<Button-1>",    lambda e, i=index: self._navigate(i))
+            w.bind("<MouseWheel>",  lambda e: self._nav_scroll(e))
 
     def _nav_hover(self, index):
         if index == self._current_idx:
@@ -8700,6 +8721,13 @@ class DrivingSchoolApp:
             w.configure(bg=COLOR_SIDEBAR_HOVER)
         r["icon"].configure(bg=COLOR_SIDEBAR_HOVER, fg="#cbd5e1")
         r["text"].configure(bg=COLOR_SIDEBAR_HOVER, fg="#e2e8f0")
+
+    def _nav_scroll(self, event):
+        """تمرير قائمة التنقل بعجلة الماوس."""
+        try:
+            self._nav_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        except Exception:
+            pass
 
     def _nav_leave(self, index):
         if index == self._current_idx:
