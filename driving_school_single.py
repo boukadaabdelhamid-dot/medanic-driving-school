@@ -4055,7 +4055,8 @@ class ReportsFrame(tk.Frame):
                   COLOR_DANGER,  command=go_exp)
         stat_card(self.stats_row, "صافي الأرباح",     f"{prof:,.0f}", "💎",
                   COLOR_PRIMARY if prof >= 0 else COLOR_DANGER, command=go_rep)
-        stat_card(self.stats_row, "المترشحون", str(nc), "👥", COLOR_INFO)
+        stat_card(self.stats_row, "مترشحو الفترة",
+                  str(CandidateDB.count_in_range(d_from, d_to)), "👥", COLOR_INFO)
         stat_card(self.stats_row, "الممرنون",  str(ni), "🚗", COLOR_PURPLE)
 
         # ── التفصيل الشهري للفترة المحددة ────────────────────────────────
@@ -6088,12 +6089,18 @@ class DocumentsFrame(tk.Frame):
 
     def _doc_expenses_report(self):
         if not self._check(): return
+        dr = self._ask_date_range_for_doc()
+        if dr is None: return
+        d_from, d_to = dr
         path = self._ask_save("تقرير_المصاريف.pdf")
         if not path: return
         school = SchoolInfoDB.get()
-        expenses = ExpenseDB.get_all()
+        expenses = ExpenseDB.get_all_in_range(d_from, d_to)
+        period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
         doc = self._make_doc(path); s = _pdf_styles(); story = []
         _pdf_header(story, school, "تقرير المصاريف")
+        story.append(Paragraph(ar(period_txt), s["right"]))
+        story.append(Spacer(1, 0.3*cm))
         rows = [["ملاحظة","المبلغ (دج)","التاريخ","نوع المصروف","رقم"]]
         total = 0
         for i, e in enumerate(expenses, 1):
@@ -6108,26 +6115,33 @@ class DocumentsFrame(tk.Frame):
 
     def _doc_payments_report(self):
         if not self._check(): return
+        dr = self._ask_date_range_for_doc()
+        if dr is None: return
+        d_from, d_to = dr
         path = self._ask_save("تقرير_المدفوعات.pdf")
         if not path: return
         school = SchoolInfoDB.get()
-        cands = CandidateDB.get_all()
+        # جلب المترشحين الذين سجّلوا في الفترة
+        cands = CandidateDB.get_by_date_range(d_from, d_to)
+        # مدفوعات الفترة لكل مترشح
+        paid_map = PaymentDB.get_paid_per_candidate_in_range(d_from, d_to)
+        period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
         doc = self._make_doc(path); s = _pdf_styles(); story = []
         _pdf_header(story, school, "تقرير المدفوعات")
-        rows = [["المتبقي","المدفوع","الإجمالي","الاسم الكامل","رقم"]]
+        story.append(Paragraph(ar(period_txt), s["right"]))
+        story.append(Spacer(1, 0.3*cm))
+        rows = [["المدفوع في الفترة","الإجمالي المتفق عليه","الاسم الكامل","رقم"]]
         total_global = 0; paid_global = 0
         for i, c in enumerate(cands, 1):
-            paid = PaymentDB.get_total_by_candidate(c['id'])
-            rem = c['total_amount'] - paid
+            paid = paid_map.get(c['id'], 0)
             total_global += c['total_amount']; paid_global += paid
-            rows.append([f"{rem:,.0f}", f"{paid:,.0f}", f"{c['total_amount']:,.0f}",
+            rows.append([f"{paid:,.0f}", f"{c['total_amount']:,.0f}",
                          f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
-        story.append(_styled_table(rows, [3*cm, 3*cm, 3*cm, 5.5*cm, 1.5*cm]))
+        story.append(_styled_table(rows, [3.5*cm, 3.5*cm, 6.5*cm, 1.5*cm]))
         story.append(Spacer(1, 0.5*cm))
         summary = [["البند", "المبلغ"],
-                   ["المبلغ الإجمالي المتفق عليه", f"{total_global:,.0f} دج"],
-                   ["إجمالي المدفوعات",            f"{paid_global:,.0f} دج"],
-                   ["إجمالي المتبقي",              f"{total_global - paid_global:,.0f} دج"]]
+                   ["إجمالي المدفوعات في الفترة", f"{paid_global:,.0f} دج"],
+                   ["المبلغ الإجمالي المتفق عليه", f"{total_global:,.0f} دج"]]
         story.append(_styled_table(summary, [9*cm, 8*cm]))
         doc.build(story)
         self._trigger_print(path, "تقرير المدفوعات")
