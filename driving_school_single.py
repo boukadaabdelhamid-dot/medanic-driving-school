@@ -7796,16 +7796,18 @@ class DocumentsFrame(tk.Frame):
                 (merged_left + merged_w / 2) * cm,
                 (y1_bot + hdr_h1 * 0.45) * cm,
                 _t(merged_label))
-            # فواصل عمودية — نتجنب الرسم داخل المنطقة المدمجة
-            # LTR: نتجاوز i ∈ {7,8} (داخل) ونرسم i=6 (حد أيسر) وi=9 (حد أيمن)
-            # RTL: col_x[6]>col_x[7]>col_x[8] → i=6 داخل المدمج، نتجاوز i∈{6,7,8}
+            # فواصل عمودية — نتجنب الرسم داخل المنطقة المدمجة فقط
+            # LTR: الفواصل الداخلية عند col_x[7] وcol_x[8] → skip i ∈ {7,8}
+            #       نرسم i=6 (الحد الأيسر للمجموعة) وi=9 (الحد الأيمن)
+            # RTL: col_x تتناقص، الفواصل الداخلية عند col_x[6] وcol_x[7] → skip i ∈ {6,7}
+            #       نرسم i=5 (الحد الأيمن) وi=8 (حد ملاحظة/المجموعة) وi=9 (حد الجدول)
             c.setStrokeColorRGB(0.6, 0.7, 0.9)
             c.setLineWidth(0.3)
             for i, cx in enumerate(col_x[1:], 1):
                 if is_fr:
-                    skip = RESULT_START < i < RESULT_END
+                    skip = RESULT_START < i < RESULT_END    # skip {7,8}
                 else:
-                    skip = RESULT_START <= i < RESULT_END
+                    skip = RESULT_START <= i < RESULT_END - 1  # skip {6,7}
                 if not skip:
                     c.line(cx*cm, y1_bot*cm, cx*cm, y_top*cm)
             c.setStrokeColorRGB(0, 0, 0)
@@ -7853,28 +7855,32 @@ class DocumentsFrame(tk.Frame):
             c.setLineWidth(1)
             c.line(1.5*cm, y*cm, page_w - 1.5*cm, y*cm)
 
-            # عنوان الوثيقة
+            # عنوان الوثيقة + الصنف مدمج في السطر
             y -= 0.85
             txt_center(_pdf_t("قائمة المترشحين لنيل رخصة السياقة",
                                "Liste des candidats au permis de conduire"),
                        y, ARABIC_FONT_BOLD, 14 if not is_fr else 12)
-            title_w = 9 * cm
+            y -= 0.55
+            cat_title = _pdf_t(f"— الصنف:  {cat_name} —",
+                                f"— Catégorie :  {cat_name} —")
+            txt_center(cat_title, y, ARABIC_FONT_BOLD, 11 if not is_fr else 10)
+            title_w = 10 * cm
             title_x = (page_w - title_w) / 2
             c.setLineWidth(1)
             c.line(title_x, (y - 0.12)*cm, title_x + title_w, (y - 0.12)*cm)
 
             # بيانات المدرسة
-            y -= 0.8
+            y -= 0.7
             txt_right(_pdf_t(f"مدرسة تعليم السياقة:  {school_name}",
                               f"Auto-école :  {school_name}"),
                       y, ARABIC_FONT_BOLD, 10)
 
-            y -= 0.5
+            y -= 0.48
             txt_right(_pdf_t(f"اسم و لقب المنتحي:  {manager_name}",
                               f"Responsable :  {manager_name}"),
                       y, ARABIC_FONT, 9)
 
-            y -= 0.48
+            y -= 0.45
             bt_val  = school.get('registration_number', '') or school_cr
             ref_val = doc_ref
             if is_fr:
@@ -7890,18 +7896,13 @@ class DocumentsFrame(tk.Frame):
             if left_txt:
                 txt_left(left_txt, y, "Helvetica", 9)
 
-            y -= 0.48
+            y -= 0.45
             txt_right(_pdf_t(f"مركز الامتحان:  {exam_center}",
                               f"Centre :  {exam_center}"),
                       y, ARABIC_FONT, 9)
             txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
                              f"Date :  {exam_date}"),
                      y, ARABIC_FONT, 9)
-
-            # اسم الصنف مميّز
-            y -= 0.45
-            cat_lbl = _pdf_t(f"الصنف:  {cat_name}", f"Catégorie :  {cat_name}")
-            txt_right(cat_lbl, y, ARABIC_FONT_BOLD, 10)
             y -= 0.3
             return y
 
