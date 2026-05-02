@@ -2487,8 +2487,6 @@ class InstructorsFrame(tk.Frame):
                      icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
         ModernButton(lh, "تعديل", self._edit_dialog,
                      icon="✏️", color=COLOR_PURPLE).pack(side="right", padx=4)
-        ModernButton(lh, "بطاقة التكوين", self._print_training_card,
-                     icon="📋", color=COLOR_SUCCESS).pack(side="right", padx=4)
         ModernButton(lh, "عقد العمل", self._print_contract,
                      icon="📜", color=COLOR_PRIMARY).pack(side="right", padx=4)
         ModernButton(lh, "حذف", self._delete,
@@ -4643,7 +4641,6 @@ class DocumentsFrame(tk.Frame):
         docs_individual = [
             ("جدول إرسال", "📋", self._doc_dispatch_table),
             ("استمارة الترشح الرسمية", "📄", self._doc_exam_form),
-            ("بطاقة التكوين", "📋", self._doc_training_card),
             ("عقد التكوين", "📜", self._doc_contract),
             ("شهادة إدارية", "🏛️", self._doc_certificate),
             ("وصل دفع", "🧾", self._doc_payment_receipt),
