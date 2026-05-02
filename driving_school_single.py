@@ -6739,30 +6739,38 @@ class DocumentsFrame(tk.Frame):
             t_data = [["Signature du candidat (ou tuteur)", "Cachet et signature de l'auto-école"]]
             story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
         else:
-            _pdf_header(story, school, "عقد تكوين بين مدرسة تعليم السياقة والمترشح")
-            txt = f"""
-            بموجب هذا العقد، تلتزم مدرسة تعليم السياقة: <b>{school.get('name','....................')}</b>
-            والكائن مقرها بـ: <b>{school.get('address','....................')}</b>
+            _pdf_header(story, school, ar("عقد تكوين بين مدرسة تعليم السياقة والمترشح"))
 
-            بتكوين المترشح(ة): <b>{cand.get('last_name','')} {cand.get('first_name','')}</b>
-            المولود(ة) بتاريخ: <b>{cand.get('birth_date','')}</b> بـ: <b>{cand.get('birth_place_commune','')}</b>
-            للحصول على رخصة السياقة من الصنف: <b>{cand.get('license_type','B')}</b>
+            def _p(text):
+                story.append(Paragraph(ar(str(text)), s["right"]))
+                story.append(Spacer(1, 0.25*cm))
 
-            <b>البند 1: التزامات المدرسة</b>
-            تلتزم المدرسة بتقديم تكوين نظري (30 ساعة) وتكوين تطبيقي (30 ساعة) وفقاً للبرنامج الوطني المعمول به.
+            def _ph(text):
+                story.append(Paragraph(ar(str(text)), s["h2"]))
+                story.append(Spacer(1, 0.2*cm))
 
-            <b>البند 2: التزامات المترشح</b>
-            يلتزم المترشح بدفع مبلغ إجمالي قدره: <b>{cand.get('total_amount',0):,.0f} دج</b>، وباحترام مواعيد الدروس وقوانين المدرسة.
+            story.append(Spacer(1, 0.4*cm))
+            _p(f"بموجب هذا العقد، تلتزم مدرسة تعليم السياقة: {school.get('name', '....................')}")
+            _p(f"والكائن مقرها بـ: {school.get('address', '....................')}")
+            story.append(Spacer(1, 0.3*cm))
+            _p(f"بتكوين المترشح(ة): {cand.get('last_name','')} {cand.get('first_name','')}")
+            _p(f"المولود(ة) بتاريخ: {cand.get('birth_date','')}  بـ: {cand.get('birth_place_commune','')}")
+            _p(f"للحصول على رخصة السياقة من الصنف: {cand.get('license_type','B')}")
+            story.append(Spacer(1, 0.5*cm))
 
-            <b>البند 3: مدة العقد</b>
-            هذا العقد صالح لمدة ستة (06) أشهر من تاريخ التوقيع، قابلة للتجديد باتفاق الطرفين.
+            _ph("البند 1: التزامات المدرسة")
+            _p("تلتزم المدرسة بتقديم تكوين نظري (30 ساعة) وتكوين تطبيقي (30 ساعة) وفقاً للبرنامج الوطني المعمول به.")
+            story.append(Spacer(1, 0.4*cm))
 
-            حرر بـ: ............................ بتاريخ: <b>{date.today().strftime('%Y-%m-%d')}</b>
-            """
-            for line in txt.split('\n'):
-                if line.strip():
-                    story.append(Paragraph(ar(line.strip()), s["right"]))
-                    story.append(Spacer(1, 0.2*cm))
+            _ph("البند 2: التزامات المترشح")
+            _p(f"يلتزم المترشح بدفع مبلغ إجمالي قدره: {cand.get('total_amount', 0):,.0f} دج، وباحترام مواعيد الدروس وقوانين المدرسة.")
+            story.append(Spacer(1, 0.4*cm))
+
+            _ph("البند 3: مدة العقد")
+            _p("هذا العقد صالح لمدة ستة (06) أشهر من تاريخ التوقيع، قابلة للتجديد باتفاق الطرفين.")
+            story.append(Spacer(1, 0.6*cm))
+
+            _p(f"حرر بـ: ............................  بتاريخ: {date.today().strftime('%Y-%m-%d')}")
             story.append(Spacer(1, 2*cm))
             t_data = [[ar("توقيع المترشح (أو وليه)"), ar("ختم وتوقيع المدرسة")]]
             story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
