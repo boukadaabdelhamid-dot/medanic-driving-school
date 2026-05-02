@@ -4983,7 +4983,12 @@ class ExpensesFrame(tk.Frame):
     def _update(self):
         if not self.selected_id:
             show_error(T("exp_sel_first")); return
-        ExpenseDB.update(self.selected_id, self._data())
+        d = self._data()
+        if not d["expense_type"]:
+            show_error(T("exp_err_type")); return
+        if d["amount"] <= 0:
+            show_error(T("exp_err_amount")); return
+        ExpenseDB.update(self.selected_id, d)
         self._load_list()
         show_info(T("exp_updated"))
 
