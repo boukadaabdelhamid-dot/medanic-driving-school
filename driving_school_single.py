@@ -266,6 +266,45 @@ STRINGS: dict = {
     # ── المدفوعات (رسائل إضافية 2) ───────────────────────────────────────────
     "pay_added_print_q":{"ar": "تم تسجيل الدفعة بنجاح!\nهل ترغب في طباعة وصل دفع الآن؟",
                          "fr": "Paiement enregistré!\nVoulez-vous imprimer le reçu maintenant?"},
+    "pay_err_amount_num":{"ar": "المبلغ يجب أن يكون رقماً", "fr": "Le montant doit être un nombre"},
+    # ── نتائج الامتحانات (مترشح) ──────────────────────────────────────────────
+    "cand_exam_added":      {"ar": "تمت إضافة النتيجة بنجاح",       "fr": "Résultat ajouté avec succès"},
+    "cand_warn_born_abroad":{"ar": "حدّدت أن المترشح مولود بالخارج لكن لم تُدخل السفارة/القنصلية.\nهل تريد المتابعة؟",
+                             "fr": "Le candidat est né à l'étranger mais l'ambassade/consulat n'est pas renseigné.\nContinuer quand même?"},
+    # ── التكوين (رسائل إضافية) ───────────────────────────────────────────────
+    "train_err_score":   {"ar": "العلامة يجب أن تكون رقماً",        "fr": "La note doit être un nombre"},
+    "train_result_saved":{"ar": "تم تسجيل نتيجة الامتحان بنجاح!",  "fr": "Résultat enregistré avec succès!"},
+    "train_pass_recorded":{"ar": "تم تسجيل النجاح والمرور للمرحلة التالية بنجاح!",
+                           "fr": "Réussite enregistrée et passage à l'étape suivante!"},
+    "train_fail_recorded":{"ar": "تم تسجيل الرسوب. تمت إضافة محاولة جديدة للمترشح.",
+                           "fr": "Échec enregistré. Une nouvelle tentative a été ajoutée."},
+    "train_locked_pass": {"ar": "لا يمكن تسجيل النجاح — يجب النجاح في",
+                          "fr": "Impossible de valider — réussir d'abord:"},
+    "train_locked_fail": {"ar": "لا يمكن تسجيل الرسوب — يجب النجاح في",
+                          "fr": "Impossible d'enregistrer l'échec — réussir d'abord:"},
+    # ── نتائج الامتحانات في حوار المترشح ─────────────────────────────────────
+    "exam_err_type_result":{"ar": "نوع الامتحان والنتيجة إلزاميان", "fr": "Le type d'examen et le résultat sont obligatoires"},
+    # ── الجدول الزمني (رسائل إضافية) ─────────────────────────────────────────
+    "sched_err_required":{"ar": "يرجى ملء جميع الحقول الإلزامية (*)", "fr": "Veuillez remplir tous les champs obligatoires (*)"},
+    "sched_err_cand":    {"ar": "يرجى اختيار مترشح صحيح من القائمة", "fr": "Sélectionnez un candidat valide"},
+    "sched_err_inst":    {"ar": "يرجى اختيار ممرّن صحيح من القائمة", "fr": "Sélectionnez un moniteur valide"},
+    "sched_err_time":    {"ar": "صيغة الوقت غير صحيحة، اختر من القائمة (HH:MM)", "fr": "Format d'heure invalide (HH:MM)"},
+    "sched_err_duration":{"ar": "المدة يجب أن تكون رقماً موجباً (دقائق) لا تتجاوز 480",
+                          "fr": "La durée doit être un entier positif (minutes, max 480)"},
+    "sched_conflict":    {"ar": "تعارض في الجدول",                  "fr": "Conflit d'horaire"},
+    "sched_conflict_date":{"ar": "بتاريخ",                          "fr": "à la date"},
+    "sched_conflict_q":  {"ar": "هل تريد الحفظ رغم التعارض؟",      "fr": "Enregistrer malgré le conflit?"},
+    # ── عام ──────────────────────────────────────────────────────────────────
+    "err_date_format":   {"ar": "صيغة التاريخ غير صحيحة. استخدم: YYYY-MM-DD",
+                          "fr": "Format de date invalide. Utilisez: YYYY-MM-DD"},
+    # ── الوثائق (رسائل إضافية) ───────────────────────────────────────────────
+    "doc_err_reportlab": {"ar": "مكتبة reportlab غير مثبتة.\nشغّل: pip install reportlab",
+                          "fr": "La bibliothèque reportlab n'est pas installée.\nLancez: pip install reportlab"},
+    "doc_err_no_cands":  {"ar": "لا يوجد مترشحون في القاعدة",       "fr": "Aucun candidat dans la base"},
+    "doc_err_sel_one":   {"ar": "يرجى تحديد مترشح واحد على الأقل", "fr": "Sélectionnez au moins un candidat"},
+    # ── إدارة المستخدمين (رسائل إضافية) ──────────────────────────────────────
+    "users_err_del_admin":{"ar": "لا يمكن حذف حساب admin.",         "fr": "Impossible de supprimer le compte admin."},
+    "users_err_del_self": {"ar": "لا يمكنك حذف حسابك الخاص.",       "fr": "Vous ne pouvez pas supprimer votre propre compte."},
     # ── الوثائق ──────────────────────────────────────────────────────────────
     "doc_title":         {"ar": "🖨️  طباعة الوثائق بالعربية",                     "fr": "🖨️  Impression des documents"},
     "doc_subtitle":      {"ar": "إنتاج كل الوثائق الرسمية بصيغة PDF بنص عربي مُنسّق","fr": "Produire tous les documents officiels en PDF"},
@@ -345,6 +384,7 @@ STRINGS: dict = {
     "user_edit_title":  {"ar": "تعديل الصلاحيات",    "fr": "Modifier permissions"},
     # ── رسائل عامة ──────────────────────────────────────────────────────────
     "msg_confirm_del":   {"ar": "تأكيد الحذف",           "fr": "Confirmer la suppression"},
+    "msg_confirm_del_q": {"ar": "هل أنت متأكد من حذف", "fr": "Êtes-vous sûr de supprimer"},
     "msg_sure_del":      {"ar": "هل أنت متأكد من حذف",   "fr": "Voulez-vous vraiment supprimer"},
     "msg_success":       {"ar": "نجاح ✓",                "fr": "Succès ✓"},
     "msg_error":         {"ar": "خطأ ✗",                 "fr": "Erreur ✗"},
@@ -400,6 +440,16 @@ def T(key: str) -> str:
     if entry is None:
         return key
     return entry.get(LANG, entry.get("ar", key))
+
+
+def A() -> str:
+    """محدد الارتكاز بحسب اتجاه اللغة: e (يمين) للعربية، w (يسار) للفرنسية."""
+    return "e" if LANG == "ar" else "w"
+
+
+def J() -> str:
+    """محاذاة النص بحسب اتجاه اللغة: right للعربية، left للفرنسية."""
+    return "right" if LANG == "ar" else "left"
 
 
 # ============================================================================
@@ -695,8 +745,27 @@ def upgrade_db():
         school_existing = {row[1] for row in cur3.fetchall()}
         if "wilaya" not in school_existing:
             conn.execute("ALTER TABLE school_info ADD COLUMN wilaya TEXT DEFAULT ''")
-        if "language" not in school_existing:
-            conn.execute("ALTER TABLE school_info ADD COLUMN language TEXT DEFAULT 'ar'")
+
+        # جدول الإعدادات العامة (مفتاح/قيمة) — مخزن اللغة وغيرها
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key   TEXT PRIMARY KEY,
+                value TEXT DEFAULT ''
+            )
+        """)
+        # ترحيل اللغة من school_info إلى settings إن وُجدت
+        if "language" in school_existing:
+            migrated = conn.execute(
+                "SELECT language FROM school_info WHERE id=1"
+            ).fetchone()
+            if migrated and migrated[0] in ("ar", "fr"):
+                conn.execute(
+                    "INSERT OR IGNORE INTO settings (key, value) VALUES ('language', ?)",
+                    (migrated[0],)
+                )
+        conn.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES ('language', 'ar')"
+        )
 
         # جدول محاولات الامتحانات (جديد)
         conn.execute("""
@@ -744,10 +813,12 @@ def upgrade_db():
 
 
 def get_language() -> str:
-    """يقرأ اللغة المحفوظة في قاعدة البيانات (ar أو fr)."""
+    """يقرأ اللغة المحفوظة في جدول settings (ar أو fr)."""
     try:
         conn = get_connection()
-        row = conn.execute("SELECT language FROM school_info WHERE id=1").fetchone()
+        row = conn.execute(
+            "SELECT value FROM settings WHERE key='language'"
+        ).fetchone()
         conn.close()
         if row and row[0] in ("ar", "fr"):
             return row[0]
@@ -757,11 +828,14 @@ def get_language() -> str:
 
 
 def set_language(lang: str):
-    """يحفظ اللغة في قاعدة البيانات ثم يُعيد تشغيل البرنامج."""
+    """يحفظ اللغة في جدول settings ثم يُعيد تشغيل البرنامج."""
     global LANG
     try:
         conn = get_connection()
-        conn.execute("UPDATE school_info SET language=? WHERE id=1", (lang,))
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('language', ?)",
+            (lang,)
+        )
         conn.commit()
         conn.close()
     except Exception:
@@ -1869,10 +1943,13 @@ class ModernButton(tk.Button):
 
 
 def confirm_delete(name="هذا العنصر"):
-    return messagebox.askyesno("تأكيد الحذف", f"هل أنت متأكد من حذف {name}؟")
+    return messagebox.askyesno(
+        T("msg_confirm_del"),
+        f"{T('msg_confirm_del_q')} {name}؟"
+    )
 
-def show_info(msg):  messagebox.showinfo("نجاح ✓", msg)
-def show_error(msg): messagebox.showerror("خطأ ✗", msg)
+def show_info(msg):  messagebox.showinfo(T("msg_success"), msg)
+def show_error(msg): messagebox.showerror(T("msg_error"), msg)
 
 
 def make_card(parent, padding=20):
@@ -1891,7 +1968,7 @@ def section_title(parent, text, icon=""):
     f.pack(fill="x", pady=(0, 12))
     lbl = tk.Label(f, text=f"{icon}  {text}" if icon else text,
                    font=(FONT_FAMILY, 13, "bold"), bg=COLOR_CARD,
-                   fg=COLOR_PRIMARY, anchor="e")
+                   fg=COLOR_PRIMARY, anchor=A())
     lbl.pack(side="right")
     line = tk.Frame(f, bg=COLOR_PRIMARY_LIGHT, height=2)
     line.pack(side="right", fill="x", expand=True, padx=(10, 0), pady=(8, 0))
@@ -1900,7 +1977,7 @@ def section_title(parent, text, icon=""):
 
 def make_label(parent, text, bg=COLOR_CARD, fg=COLOR_TEXT, font=None):
     return tk.Label(parent, text=text, bg=bg, fg=fg,
-                    font=font or FONT_MAIN, anchor="e")
+                    font=font or FONT_MAIN, anchor=A())
 
 
 def make_entry(parent, textvariable, width=24):
@@ -1909,14 +1986,14 @@ def make_entry(parent, textvariable, width=24):
                  insertbackground=COLOR_PRIMARY, highlightthickness=1,
                  highlightbackground=COLOR_BORDER,
                  highlightcolor=COLOR_PRIMARY, width=width)
-    e.configure(justify="right")
+    e.configure(justify=J())
     return e
 
 
 def make_combo(parent, textvariable, values, width=22, state="readonly"):
     c = ttk.Combobox(parent, textvariable=textvariable, values=values,
                      font=FONT_MAIN, width=width, state=state,
-                     style="Modern.TCombobox", justify="right")
+                     style="Modern.TCombobox", justify=J())
     return c
 
 
@@ -1962,10 +2039,10 @@ def stat_card(parent, title, value, icon, color, command=None):
     icon_lbl = tk.Label(top, text=icon, font=(FONT_FAMILY, 26),
                         bg=color, fg="white"); icon_lbl.pack(side="right")
     title_lbl = tk.Label(top, text=title, font=(FONT_FAMILY, 10, "bold"),
-                         bg=color, fg="white", anchor="e")
+                         bg=color, fg="white", anchor=A())
     title_lbl.pack(side="right", padx=8)
     val_lbl = tk.Label(card, text=value, font=(FONT_FAMILY, 20, "bold"),
-                       bg=color, fg="white", anchor="e")
+                       bg=color, fg="white", anchor=A())
     val_lbl.pack(fill="x", pady=(6, 0))
     if command:
         arr_lbl = tk.Label(card, text="← عرض التفاصيل",
@@ -1998,10 +2075,10 @@ class DashboardFrame(tk.Frame):
 
         title = tk.Label(wrap, text=T("dash_title"),
                          font=(FONT_FAMILY, 20, "bold"),
-                         bg=COLOR_BG, fg=COLOR_HEADER, anchor="e")
+                         bg=COLOR_BG, fg=COLOR_HEADER, anchor=A())
         title.pack(fill="x", pady=(0, 5))
         sub = tk.Label(wrap, text=T("dash_subtitle"),
-                       font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT, anchor="e")
+                       font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT, anchor=A())
         sub.pack(fill="x", pady=(0, 20))
 
         cands = CandidateDB.get_all()
@@ -2037,7 +2114,7 @@ class DashboardFrame(tk.Frame):
         pf.pack(fill="x", pady=(0, 20))
         tk.Label(pf, text=f"{T('dash_profit')} {y}",
                  font=(FONT_FAMILY, 14, "bold"),
-                 bg=profit_color, fg="white", anchor="e").pack(side="right")
+                 bg=profit_color, fg="white", anchor=A()).pack(side="right")
         tk.Label(pf, text= f"{profit:,.0f} دج",
                  font=(FONT_FAMILY, 22, "bold"),
                  bg=profit_color, fg="white", anchor="w").pack(side="left")
@@ -2063,17 +2140,17 @@ class DashboardFrame(tk.Frame):
             sc.pack(side="right", fill="both", expand=True, padx=5)
 
             lbl_title  = tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT)
-            lbl_title.pack(anchor="e")
+            lbl_title.pack(anchor=A())
             lbl_rate   = tk.Label(sc, text=f"{rate:.1f}%  نجاح", font=(FONT_FAMILY, 16, "bold"),
                      bg=COLOR_CARD, fg=color)
-            lbl_rate.pack(anchor="e")
+            lbl_rate.pack(anchor=A())
             lbl_detail = tk.Label(sc,
                      text=f"المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
                      font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
-            lbl_detail.pack(anchor="e")
+            lbl_detail.pack(anchor=A())
             lbl_link   = tk.Label(sc, text="← عرض التفاصيل", font=FONT_TINY,
                      bg=COLOR_CARD, fg=COLOR_PRIMARY, cursor=card_cursor)
-            lbl_link.pack(anchor="e")
+            lbl_link.pack(anchor=A())
 
             if go_stages:
                 for w in (sc, lbl_title, lbl_rate, lbl_detail, lbl_link):
@@ -2090,11 +2167,11 @@ class DashboardFrame(tk.Frame):
             
             for v in v_alerts:
                 msg = f"مركبة {v['model']} ({v['plate_number']}): قرب انتهاء التأمين/المراقبة"
-                tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_DANGER, anchor="e").pack(fill="x")
+                tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_DANGER, anchor=A()).pack(fill="x")
             
             if unpaid:
                 msg = f"هناك {len(unpaid)} مترشحين لم يسددوا كامل المستحقات."
-                tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_WARNING, anchor="e").pack(fill="x")
+                tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_WARNING, anchor=A()).pack(fill="x")
 
 
         # ── حصص اليوم والأسبوع ──
@@ -2125,7 +2202,7 @@ class DashboardFrame(tk.Frame):
         else:
             tk.Label(sched_body, text="لا توجد حصص مجدولة لهذا اليوم",
                      font=FONT_MAIN, bg=COLOR_CARD,
-                     fg=COLOR_TEXT_LIGHT, anchor="e").pack(fill="x", pady=6)
+                     fg=COLOR_TEXT_LIGHT, anchor=A()).pack(fill="x", pady=6)
 
         # أول حصة قادمة (غداً+)
         future = [s for s in week_sessions
@@ -2138,7 +2215,7 @@ class DashboardFrame(tk.Frame):
             tk.Label(nxt_bar,
                      text=f"⏭  أقرب حصة قادمة:  {nxt['session_date']}  {nxt['session_time']}  —  {nxt['candidate_name']}  /  {nxt['instructor_name']}",
                      font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
-                     fg=COLOR_PRIMARY, anchor="e").pack(fill="x")
+                     fg=COLOR_PRIMARY, anchor=A()).pack(fill="x")
 
         # المترشحون الأخيرون
         outer, body = make_card(wrap)
@@ -2177,10 +2254,10 @@ class SchoolInfoFrame(tk.Frame):
 
         tk.Label(wrap, text=T("school_title"),
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 5))
         tk.Label(wrap, text=T("school_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(fill="x", pady=(0, 20))
+                 anchor=A()).pack(fill="x", pady=(0, 20))
 
         outer, card = make_card(wrap, padding=30)
         outer.pack(fill="both", expand=True, padx=80)
@@ -2213,7 +2290,7 @@ class SchoolInfoFrame(tk.Frame):
         f_name = tk.Frame(grid, bg=COLOR_CARD)
         f_name.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
         grid.columnconfigure(0, weight=1)
-        make_label(f_name, T("school_name"), font=FONT_BOLD).pack(anchor="e")
+        make_label(f_name, T("school_name"), font=FONT_BOLD).pack(anchor=A())
         v_name = tk.StringVar()
         self.vars["name"] = v_name
         make_entry(f_name, v_name, width=32).pack(fill="x", ipady=4, pady=(2, 0))
@@ -2221,7 +2298,7 @@ class SchoolInfoFrame(tk.Frame):
         f_phone = tk.Frame(grid, bg=COLOR_CARD)
         f_phone.grid(row=0, column=1, sticky="ew", padx=10, pady=5)
         grid.columnconfigure(1, weight=1)
-        make_label(f_phone, T("school_phone"), font=FONT_BOLD).pack(anchor="e")
+        make_label(f_phone, T("school_phone"), font=FONT_BOLD).pack(anchor=A())
         v_phone = tk.StringVar()
         self.vars["phone"] = v_phone
         make_entry(f_phone, v_phone, width=32).pack(fill="x", ipady=4, pady=(2, 0))
@@ -2229,14 +2306,14 @@ class SchoolInfoFrame(tk.Frame):
         # 2. الصف الثاني: العنوان + الولاية
         f_addr = tk.Frame(grid, bg=COLOR_CARD)
         f_addr.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
-        make_label(f_addr, T("school_address"), font=FONT_BOLD).pack(anchor="e")
+        make_label(f_addr, T("school_address"), font=FONT_BOLD).pack(anchor=A())
         v_addr = tk.StringVar()
         self.vars["address"] = v_addr
         make_entry(f_addr, v_addr, width=32).pack(fill="x", ipady=4, pady=(2, 0))
 
         f_wilaya = tk.Frame(grid, bg=COLOR_CARD)
         f_wilaya.grid(row=1, column=1, sticky="ew", padx=10, pady=5)
-        make_label(f_wilaya, T("school_wilaya"), font=FONT_BOLD).pack(anchor="e")
+        make_label(f_wilaya, T("school_wilaya"), font=FONT_BOLD).pack(anchor=A())
         v_wilaya = tk.StringVar()
         self.vars["wilaya"] = v_wilaya
         cb_wilaya = ttk.Combobox(f_wilaya, textvariable=v_wilaya,
@@ -2256,7 +2333,7 @@ class SchoolInfoFrame(tk.Frame):
             
             cell = tk.Frame(grid, bg=COLOR_CARD)
             cell.grid(row=row, column=col, sticky="ew", padx=10, pady=5)
-            make_label(cell, label, font=FONT_BOLD).pack(anchor="e")
+            make_label(cell, label, font=FONT_BOLD).pack(anchor=A())
             v = tk.StringVar()
             self.vars[key] = v
             make_entry(cell, v, width=32).pack(fill="x", ipady=4, pady=(2, 0))
@@ -2309,7 +2386,7 @@ class CandidateDialog(tk.Toplevel):
         cell = tk.Frame(parent, bg=COLOR_CARD)
         cell.grid(row=row, column=col, columnspan=colspan,
                   sticky="ew", padx=10, pady=5)
-        make_label(cell, label, font=FONT_BOLD).pack(anchor="e")
+        make_label(cell, label, font=FONT_BOLD).pack(anchor=A())
         v = tk.StringVar()
         self.vars[key] = v
         if kind == "combo":
@@ -2325,7 +2402,7 @@ class CandidateDialog(tk.Toplevel):
         head.pack(fill="x", side="top")
         title_text = "✏️  تعديل بيانات المترشح" if self.candidate else "➕  تسجيل مترشح جديد"
         tk.Label(head, text=title_text, font=(FONT_FAMILY, 15, "bold"),
-                 bg=COLOR_PRIMARY, fg="white", anchor="e").pack(side="right")
+                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side="right")
         tk.Label(head, text="استمارة الترشح لاجتياز امتحانات رخصة السياقة",
                  font=(FONT_FAMILY, 10), bg=COLOR_PRIMARY, fg="#c7d2fe",
                  anchor="w").pack(side="left")
@@ -2401,7 +2478,7 @@ class CandidateDialog(tk.Toplevel):
                        command=self._toggle_abroad_fields,
                        font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
                        fg=COLOR_PRIMARY_DARK, activebackground=COLOR_PRIMARY_LIGHT,
-                       selectcolor=COLOR_WHITE, anchor="e").pack(anchor="e")
+                       selectcolor=COLOR_WHITE, anchor=A()).pack(anchor=A())
 
         g2 = tk.Frame(tab2, bg=COLOR_CARD)
         g2.pack(fill="x")
@@ -2445,7 +2522,7 @@ class CandidateDialog(tk.Toplevel):
 
         addr_cell = tk.Frame(tab2, bg=COLOR_CARD)
         addr_cell.pack(fill="x", padx=10, pady=4)
-        make_label(addr_cell, "العنوان الكامل (الشارع، الحي...)", font=FONT_BOLD).pack(anchor="e")
+        make_label(addr_cell, "العنوان الكامل (الشارع، الحي...)", font=FONT_BOLD).pack(anchor=A())
         v_addr = tk.StringVar(); self.vars["current_address"] = v_addr
         make_entry(addr_cell, v_addr, width=80).pack(fill="x", ipady=5, pady=(2, 0))
 
@@ -2461,12 +2538,12 @@ class CandidateDialog(tk.Toplevel):
         lic_card.pack(fill="x", pady=(0, 10))
         tk.Label(lic_card, text="🎯  نوع الرخصة المطلوبة *",
                  font=(FONT_FAMILY, 12, "bold"),
-                 bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor="e").pack(anchor="e")
+                 bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor=A()).pack(anchor=A())
         v_lic = tk.StringVar(); self.vars["license_type"] = v_lic
         make_combo(lic_card, v_lic, LICENSE_OPTIONS, width=20).pack(
-            anchor="e", pady=(4, 2), ipady=4)
+            anchor=A(), pady=(4, 2), ipady=4)
         tk.Label(lic_card, text="A: دراجة نارية  |  B: سيارة  |  C: شاحنة  |  D: حافلة  |  E: مقطورة",
-                 font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor="e").pack(anchor="e")
+                 font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor=A()).pack(anchor=A())
 
         # -- الممرن والمبالغ --
         section_title(tab3, "الممرن والمبالغ المالية", icon="💰")
@@ -2489,10 +2566,10 @@ class CandidateDialog(tk.Toplevel):
         prev_note.pack(fill="x", pady=(0, 6))
         tk.Label(prev_note,
                  text="أدخل رموز الأصناف القديمة مفصولة بفاصلة — مثال:  B, A1, C1",
-                 font=FONT_SMALL, bg="#fffbeb", fg="#92400e", anchor="e").pack(anchor="e")
+                 font=FONT_SMALL, bg="#fffbeb", fg="#92400e", anchor=A()).pack(anchor=A())
         prev_cell = tk.Frame(tab3, bg=COLOR_CARD)
         prev_cell.pack(fill="x", padx=10, pady=2)
-        make_label(prev_cell, "الأصناف السابقة (مثال: A, B, C1)", font=FONT_BOLD).pack(anchor="e")
+        make_label(prev_cell, "الأصناف السابقة (مثال: A, B, C1)", font=FONT_BOLD).pack(anchor=A())
         v_prev = tk.StringVar(); self.vars["previous_licenses"] = v_prev
         make_entry(prev_cell, v_prev, width=60).pack(fill="x", ipady=4, pady=(2, 0))
 
@@ -2533,7 +2610,7 @@ class CandidateDialog(tk.Toplevel):
             tk.Label(tab4,
                      text="احفظ بيانات المترشح أولاً، ثم ارجع لهذا التبويب لإضافة نتائج الامتحانات.",
                      font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT,
-                     wraplength=500, justify="right", anchor="center").pack(
+                     wraplength=500, justify=J(), anchor="center").pack(
                          expand=True, anchor="center")
 
         # ══════════════════════════════════════════════
@@ -2632,7 +2709,7 @@ class CandidateDialog(tk.Toplevel):
         def on_save(data):
             ExamResultDB.add(data)
             self._load_exam_results()
-            show_info("تمت إضافة النتيجة بنجاح")
+            show_info(T("cand_exam_added"))
         ExamResultDialog(self, self.candidate['id'], on_save=on_save)
 
     def _delete_exam_result(self):
@@ -2683,8 +2760,8 @@ class CandidateDialog(tk.Toplevel):
         if not d["license_type"]:
             show_error(T("cand_err_license")); return
         if d["is_born_abroad"] and not (d["embassy"] or d["consulate"]):
-            if not messagebox.askyesno("تأكيد",
-                "حدّدت أن المترشح مولود بالخارج لكن لم تُدخل السفارة/القنصلية.\nهل تريد المتابعة؟"):
+            if not messagebox.askyesno(T("msg_confirm_del"),
+                T("cand_warn_born_abroad")):
                 return
 
         self.on_save(d)
@@ -2715,7 +2792,7 @@ class ExamResultDialog(tk.Toplevel):
         head.pack(fill="x")
         tk.Label(head, text="📝  إضافة نتيجة امتحان",
                  font=(FONT_FAMILY, 14, "bold"),
-                 bg=COLOR_PRIMARY, fg="white", anchor="e").pack(side="right")
+                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side="right")
 
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
         wrap.pack(fill="both", expand=True)
@@ -2726,7 +2803,7 @@ class ExamResultDialog(tk.Toplevel):
             f.grid(row=row, column=col, columnspan=colspan,
                    sticky="ew", padx=8, pady=6)
             tk.Label(f, text=text, font=FONT_BOLD, bg=COLOR_BG,
-                     fg=COLOR_TEXT, anchor="e").pack(anchor="e")
+                     fg=COLOR_TEXT, anchor=A()).pack(anchor=A())
             if kind == "combo":
                 w = make_combo(f, var, values or [], width=22)
             else:
@@ -2758,11 +2835,11 @@ class ExamResultDialog(tk.Toplevel):
         exam_type = self.v_type.get()
         result    = self.v_result.get()
         if not exam_type or not result:
-            show_error("نوع الامتحان والنتيجة إلزاميان"); return
+            show_error(T("exam_err_type_result")); return
         try:
             datetime.strptime(exam_date, "%Y-%m-%d")
         except ValueError:
-            show_error("صيغة التاريخ غير صحيحة. استخدم: YYYY-MM-DD"); return
+            show_error(T("err_date_format")); return
         try:
             score = float(self.v_score.get().replace(",", ".") or 0)
         except ValueError:
@@ -2799,10 +2876,10 @@ class CandidatesFrame(tk.Frame):
         right_head = tk.Frame(head, bg=COLOR_BG); right_head.pack(side="right")
         tk.Label(right_head, text=T("cand_title"),
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(anchor="e")
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(anchor=A())
         tk.Label(right_head, text=T("cand_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(anchor="e")
+                 anchor=A()).pack(anchor=A())
 
         left_head = tk.Frame(head, bg=COLOR_BG); left_head.pack(side="left")
         _can_edit = UserDB.has_perm(CURRENT_USER, "edit_candidates")
@@ -2827,8 +2904,8 @@ class CandidatesFrame(tk.Frame):
         tk.Label(hint,
                  text=T("cand_hint"),
                  font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
-                 fg=COLOR_PRIMARY_DARK, anchor="e",
-                 wraplength=1200, justify="right").pack(anchor="e")
+                 fg=COLOR_PRIMARY_DARK, anchor=A(),
+                 wraplength=1200, justify=J()).pack(anchor=A())
 
         # شريط البحث
         search_card_outer, search_card = make_card(wrap, padding=15)
@@ -2841,7 +2918,7 @@ class CandidatesFrame(tk.Frame):
         e.pack(side="right", fill="x", expand=True, ipady=6)
         tk.Label(search_card, text=T("cand_search"),
                  font=FONT_BOLD, bg=COLOR_CARD,
-                 fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
+                 fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
 
         # جدول المترشحين
         table_outer, table_card = make_card(wrap, padding=10)
@@ -2966,7 +3043,7 @@ class InstructorDialog(tk.Toplevel):
         head.pack(fill="x")
         title_text = "✏️  تعديل بيانات الممرن" if self.instructor else "➕  إضافة ممرن جديد"
         tk.Label(head, text=title_text, font=(FONT_FAMILY, 15, "bold"),
-                 bg=COLOR_PURPLE, fg="white", anchor="e").pack(side="right")
+                 bg=COLOR_PURPLE, fg="white", anchor=A()).pack(side="right")
 
         wrap = tk.Frame(self, bg=COLOR_BG, padx=15, pady=10)
         wrap.pack(fill="both", expand=True)
@@ -3002,7 +3079,7 @@ class InstructorDialog(tk.Toplevel):
             row, col = i // 2, i % 2
             cell = tk.Frame(grid1, bg=COLOR_CARD)
             cell.grid(row=row, column=col, sticky="ew", padx=10, pady=5)
-            make_label(cell, fi[0], font=FONT_BOLD).pack(anchor="e")
+            make_label(cell, fi[0], font=FONT_BOLD).pack(anchor=A())
             v = tk.StringVar(); self.vars[fi[1]] = v
             if fi[2] == "combo":
                 w = make_combo(cell, v, fi[3], width=28)
@@ -3031,7 +3108,7 @@ class InstructorDialog(tk.Toplevel):
             row, col = i // 2, i % 2
             cell = tk.Frame(grid2, bg=COLOR_CARD)
             cell.grid(row=row, column=col, sticky="ew", padx=10, pady=5)
-            make_label(cell, fi[0], font=FONT_BOLD).pack(anchor="e")
+            make_label(cell, fi[0], font=FONT_BOLD).pack(anchor=A())
             v = tk.StringVar(); self.vars[fi[1]] = v
             w = make_entry(cell, v, width=30)
             w.pack(fill="x", ipady=3, pady=(2, 0))
@@ -3055,7 +3132,7 @@ class InstructorDialog(tk.Toplevel):
         d["gender"] = self.vars["gender"].get()
         d["experience_years"] = self.vars["experience_years"].get().strip() or "0"
         if not d["first_name"] or not d["last_name"]:
-            show_error("الاسم واللقب إلزاميان"); return
+            show_error(T("cand_err_name")); return
         self.on_save(d); self.destroy()
 
 
@@ -3078,10 +3155,10 @@ class InstructorsFrame(tk.Frame):
         rh = tk.Frame(head, bg=COLOR_BG); rh.pack(side="right")
         tk.Label(rh, text=T("inst_title"),
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(anchor="e")
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(anchor=A())
         tk.Label(rh, text=T("inst_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(anchor="e")
+                 anchor=A()).pack(anchor=A())
         lh = tk.Frame(head, bg=COLOR_BG); lh.pack(side="left")
         ModernButton(lh, T("inst_add"), self._add_dialog,
                      icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
@@ -3100,7 +3177,7 @@ class InstructorsFrame(tk.Frame):
         make_entry(sc, self.search_var, width=40).pack(side="right", fill="x",
                                                        expand=True, ipady=6)
         tk.Label(sc, text=T("inst_search"), font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
 
         to, tc = make_card(wrap, padding=10); to.pack(fill="both", expand=True)
         self.tree = create_treeview(tc,
@@ -3317,11 +3394,11 @@ class InstructorsFrame(tk.Frame):
 
         tk.Label(dlg, text=f"🖨️  طباعة: {title}",
                  font=FONT_BOLD, bg=COLOR_BG, fg=COLOR_HEADER,
-                 anchor="e").pack(fill="x", padx=20, pady=(18, 4))
+                 anchor=A()).pack(fill="x", padx=20, pady=(18, 4))
 
         tk.Label(dlg, text="اختر الطابعة:",
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
-                 anchor="e").pack(fill="x", padx=20)
+                 anchor=A()).pack(fill="x", padx=20)
 
         printer_var = tk.StringVar()
         if printers:
@@ -3528,10 +3605,10 @@ class TrainingFrame(tk.Frame):
 
         tk.Label(wrap, text="📚  مراحل التكوين",
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=0)
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=0)
         tk.Label(wrap, text="إدارة مراحل التكوين الثلاث: الكود، الكرينو، السياقة",
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(fill="x", pady=(0, 10))
+                 anchor=A()).pack(fill="x", pady=(0, 10))
 
         main_container = tk.Frame(wrap, bg=COLOR_BG)
         main_container.pack(fill="both", expand=True)
@@ -3585,7 +3662,7 @@ class TrainingFrame(tk.Frame):
         self.search_var.trace("w", lambda *a: self._load_candidates())
         make_entry(sc, self.search_var, width=30).pack(side="right", fill="x", expand=True, ipady=4)
         tk.Label(sc, text="ابحث عن مترشح:", font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
 
         # قائمة المترشحين
         co, cc = make_card(left_frame, padding=5); co.pack(fill="both", expand=True, pady=(0, 5))
@@ -3790,11 +3867,11 @@ class TrainingFrame(tk.Frame):
             sc = tk.Frame(stats_frame, bg=COLOR_CARD, padx=14, pady=10,
                           highlightthickness=1, highlightbackground=COLOR_BORDER)
             sc.pack(side="right", fill="both", expand=True, padx=6)
-            tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(anchor="e")
+            tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(anchor=A())
             tk.Label(sc, text=f"{rate:.0f}%  نجاح", font=(FONT_FAMILY, 18, "bold"),
-                     bg=COLOR_CARD, fg=color).pack(anchor="e")
+                     bg=COLOR_CARD, fg=color).pack(anchor=A())
             tk.Label(sc, text=f"إجمالي المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
-                     font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor="e")
+                     font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor=A())
 
     def _add_exam_attempt_dialog(self, parent_win, cid, stage_type, on_save):
         dlg = tk.Toplevel(parent_win)
@@ -3815,7 +3892,7 @@ class TrainingFrame(tk.Frame):
         def field_row(label, key, widget_type="entry", options=None, default=""):
             row = tk.Frame(body, bg=COLOR_CARD); row.pack(fill="x", pady=5)
             tk.Label(row, text=label, font=FONT_BOLD, bg=COLOR_CARD,
-                     fg=COLOR_TEXT, width=14, anchor="e").pack(side="right")
+                     fg=COLOR_TEXT, width=14, anchor=A()).pack(side="right")
             v = tk.StringVar(value=default)
             vars_[key] = v
             if widget_type == "combo":
@@ -3830,7 +3907,7 @@ class TrainingFrame(tk.Frame):
         stage_label = STAGE_LABELS.get(stage_type, stage_type)
         tk.Label(body, text=f"المرحلة: {stage_label}",
                  font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
-                 fg=COLOR_PRIMARY, anchor="e").pack(fill="x", pady=(0, 8))
+                 fg=COLOR_PRIMARY, anchor=A()).pack(fill="x", pady=(0, 8))
 
         field_row("تاريخ الامتحان:", "exam_date", default=str(date.today()))
         field_row("العلامة (/ 40):", "score", default="0")
@@ -3841,7 +3918,7 @@ class TrainingFrame(tk.Frame):
             try:
                 score_val = float(vars_['score'].get() or 0)
             except ValueError:
-                show_error("العلامة يجب أن تكون رقماً")
+                show_error(T("train_err_score"))
                 return
             ExamAttemptsDB.add({
                 'candidate_id': cid,
@@ -3853,7 +3930,7 @@ class TrainingFrame(tk.Frame):
             })
             dlg.destroy()
             on_save()
-            show_info("تم تسجيل نتيجة الامتحان بنجاح!")
+            show_info(T("train_result_saved"))
 
         btn_frame = tk.Frame(dlg, bg=COLOR_BG); btn_frame.pack(fill="x", padx=15, pady=(0, 12))
         ModernButton(btn_frame, "حفظ", _save, icon="💾", color=COLOR_SUCCESS).pack(side="right", ipady=2)
@@ -3879,7 +3956,7 @@ class TrainingFrame(tk.Frame):
         if not self._is_unlocked(self.current_stages, active['stage_type']):
             idx = STAGE_ORDER.index(active['stage_type'])
             prev_name = STAGE_LABELS.get(STAGE_ORDER[idx - 1], STAGE_ORDER[idx - 1])
-            show_error(f"لا يمكن تسجيل النجاح — يجب النجاح في {prev_name} أولاً")
+            show_error(f"{T('train_locked_pass')} {prev_name}")
             return
 
         # 1. تحديث المرحلة الحالية إلى ناجح
@@ -3900,7 +3977,7 @@ class TrainingFrame(tk.Frame):
 
         self._load_stages()
         self._update_action_panel()
-        show_info("تم تسجيل النجاح والمرور للمرحلة التالية بنجاح!")
+        show_info(T("train_pass_recorded"))
 
     def _quick_fail(self):
         active = self._get_active_stage()
@@ -3910,7 +3987,7 @@ class TrainingFrame(tk.Frame):
         if not self._is_unlocked(self.current_stages, active['stage_type']):
             idx = STAGE_ORDER.index(active['stage_type'])
             prev_name = STAGE_LABELS.get(STAGE_ORDER[idx - 1], STAGE_ORDER[idx - 1])
-            show_error(f"لا يمكن تسجيل الرسوب — يجب النجاح في {prev_name} أولاً")
+            show_error(f"{T('train_locked_fail')} {prev_name}")
             return
 
         # 1. تحديث المرحلة الحالية إلى راسب
@@ -3923,7 +4000,7 @@ class TrainingFrame(tk.Frame):
 
         self._load_stages()
         self._update_action_panel()
-        show_info("تم تسجيل الرسوب. تمت إضافة محاولة جديدة للمترشح.")
+        show_info(T("train_fail_recorded"))
 
 
 # ============================================================================
@@ -3942,9 +4019,9 @@ class PaymentsFrame(tk.Frame):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=10, pady=5)
         wrap.pack(fill="both", expand=True)
         tk.Label(wrap, text=T("pay_title"), font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 5))
         tk.Label(wrap, text=T("pay_subtitle"), font=FONT_MAIN,
-                 bg=COLOR_BG, fg=COLOR_TEXT_LIGHT, anchor="e").pack(fill="x", pady=(0, 10))
+                 bg=COLOR_BG, fg=COLOR_TEXT_LIGHT, anchor=A()).pack(fill="x", pady=(0, 10))
 
         # حاوية رئيسية تنقسم ليمين ويسار
         main_container = tk.Frame(wrap, bg=COLOR_BG)
@@ -4003,7 +4080,7 @@ class PaymentsFrame(tk.Frame):
         else:
             tk.Label(row1, text=T("pay_readonly"),
                      font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT,
-                     anchor="e").pack(fill="x", pady=4)
+                     anchor=A()).pack(fill="x", pady=4)
         
         ModernButton(bf, T("pay_print"), self._print_receipt, icon="🖨️", color=COLOR_PURPLE).pack(fill="x", pady=(4, 0), ipady=2)
 
@@ -4283,10 +4360,10 @@ class ExpensesFrame(tk.Frame):
         wrap.pack(fill="both", expand=True)
         tk.Label(wrap, text=T("exp_title"),
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 5))
         tk.Label(wrap, text=T("exp_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(fill="x", pady=(0, 15))
+                 anchor=A()).pack(fill="x", pady=(0, 15))
 
         bottom = tk.Frame(wrap, bg=COLOR_BG); bottom.pack(fill="both", expand=True)
 
@@ -4302,7 +4379,7 @@ class ExpensesFrame(tk.Frame):
                   (T("exp_note"), "notes", "entry")]
         for fi in fields:
             row = tk.Frame(fc, bg=COLOR_CARD); row.pack(fill="x", pady=8)
-            make_label(row, fi[0], font=FONT_BOLD).pack(anchor="e")
+            make_label(row, fi[0], font=FONT_BOLD).pack(anchor=A())
             v = tk.StringVar(); self.vars[fi[1]] = v
             if fi[2] == "combo":
                 w = make_combo(row, v, fi[3], width=22, state="normal")
@@ -4332,7 +4409,7 @@ class ExpensesFrame(tk.Frame):
         make_entry(sb, self.search_var, width=30).pack(side="right", fill="x",
                                                        expand=True, ipady=5)
         tk.Label(sb, text=T("exp_search"), font=FONT_BOLD, bg=COLOR_CARD,
-                 fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
+                 fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
 
         self.tree = create_treeview(lc,
             ("id","expense_type","amount","date","notes"),
@@ -4412,10 +4489,10 @@ class ReportsFrame(tk.Frame):
         wrap.pack(fill="both", expand=True)
         tk.Label(wrap, text=T("rep_title"),
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 5))
         tk.Label(wrap, text=T("rep_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(fill="x", pady=(0, 15))
+                 anchor=A()).pack(fill="x", pady=(0, 15))
 
         # شريط الفلتر الزمني
         fo, fc = make_card(wrap, padding=15); fo.pack(fill="x", pady=(0, 15))
@@ -4428,18 +4505,18 @@ class ReportsFrame(tk.Frame):
                      color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
 
         tk.Label(fc, text=T("rep_to"), font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=(15, 3))
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=(15, 3))
         self.date_to_var = tk.StringVar(value=today_str)
         make_entry(fc, self.date_to_var, width=13).pack(side="right", padx=3, ipady=4)
 
         tk.Label(fc, text=T("rep_from"), font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=(15, 3))
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=(15, 3))
         self.date_from_var = tk.StringVar(value=year_start)
         make_entry(fc, self.date_from_var, width=13).pack(side="right", padx=3, ipady=4)
 
         tk.Label(fc, text=T("rep_filter_lbl"),
                  font=FONT_SMALL, bg=COLOR_CARD,
-                 fg=COLOR_TEXT_LIGHT, anchor="e").pack(side="right", padx=10)
+                 fg=COLOR_TEXT_LIGHT, anchor=A()).pack(side="right", padx=10)
 
         # بطاقات إحصائية
         self.stats_row = tk.Frame(wrap, bg=COLOR_BG); self.stats_row.pack(fill="x", pady=(0, 15))
@@ -4461,8 +4538,8 @@ class ReportsFrame(tk.Frame):
         # -- مخطط شريطي شهري --
         chart_lbl = tk.Label(ec,
             text=T("rep_chart_lbl"),
-            font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT, anchor="e")
-        chart_lbl.pack(anchor="e", pady=(0, 4))
+            font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT, anchor=A())
+        chart_lbl.pack(anchor=A(), pady=(0, 4))
         self._exam_chart = tk.Canvas(ec, bg=COLOR_CARD, height=160,
                                      highlightthickness=0)
         self._exam_chart.pack(fill="x", padx=4, pady=(0, 8))
@@ -4647,7 +4724,7 @@ class ReportsFrame(tk.Frame):
             canvas.create_line(pad_l, gy, W - pad_r, gy,
                                fill="#e2e8f0", dash=(4, 4))
             canvas.create_text(pad_l - 4, gy, text=str(int(max_val * fraction)),
-                               font=(FONT_FAMILY, 7), fill=COLOR_TEXT_LIGHT, anchor="e")
+                               font=(FONT_FAMILY, 7), fill=COLOR_TEXT_LIGHT, anchor=A())
 
         BLUE  = COLOR_PRIMARY
         GREEN = COLOR_SUCCESS
@@ -4774,7 +4851,7 @@ class SessionDialog(tk.Toplevel):
         icon = "✏️" if self.session_id else "➕"
         tk.Label(hdr,
                  text=f"{icon}  {'تعديل حصة تدريبية' if self.session_id else 'إضافة حصة جديدة'}",
-                 font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
+                 font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white").pack(anchor=A())
 
         wrap = tk.Frame(self, bg=COLOR_BG, padx=24, pady=14)
         wrap.pack(fill="both", expand=True)
@@ -4793,7 +4870,7 @@ class SessionDialog(tk.Toplevel):
 
         def lbl(text):
             tk.Label(wrap, text=text, font=FONT_BOLD,
-                     bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                     bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
 
         # المترشح
         lbl("المترشح *")
@@ -4801,7 +4878,7 @@ class SessionDialog(tk.Toplevel):
         ttk.Combobox(wrap, textvariable=self._vars['candidate'],
                      values=list(self._cand_map.keys()),
                      state="readonly", font=FONT_MAIN,
-                     justify="right").pack(fill="x", ipady=4, pady=(4, 10))
+                     justify=J()).pack(fill="x", ipady=4, pady=(4, 10))
 
         # صف: الممرّن + المركبة
         im_row = tk.Frame(wrap, bg=COLOR_BG)
@@ -4810,22 +4887,22 @@ class SessionDialog(tk.Toplevel):
         inst_col = tk.Frame(im_row, bg=COLOR_BG)
         inst_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
         tk.Label(inst_col, text="الممرّن *", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['instructor'] = tk.StringVar()
         ttk.Combobox(inst_col, textvariable=self._vars['instructor'],
                      values=list(self._inst_map.keys()),
                      state="readonly", font=FONT_MAIN,
-                     justify="right").pack(fill="x", ipady=4)
+                     justify=J()).pack(fill="x", ipady=4)
 
         veh_col = tk.Frame(im_row, bg=COLOR_BG)
         veh_col.pack(side="left", fill="both", expand=True)
         tk.Label(veh_col, text="المركبة", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['vehicle'] = tk.StringVar(value="بلا مركبة")
         ttk.Combobox(veh_col, textvariable=self._vars['vehicle'],
                      values=list(self._veh_map.keys()),
                      state="readonly", font=FONT_MAIN,
-                     justify="right").pack(fill="x", ipady=4)
+                     justify=J()).pack(fill="x", ipady=4)
 
         # صف: التاريخ + الوقت
         dt_row = tk.Frame(wrap, bg=COLOR_BG)
@@ -4834,20 +4911,20 @@ class SessionDialog(tk.Toplevel):
         date_col = tk.Frame(dt_row, bg=COLOR_BG)
         date_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
         tk.Label(date_col, text="التاريخ * (YYYY-MM-DD)", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['session_date'] = tk.StringVar(value=date.today().strftime('%Y-%m-%d'))
         tk.Entry(date_col, textvariable=self._vars['session_date'],
-                 font=FONT_MAIN, justify="right",
+                 font=FONT_MAIN, justify=J(),
                  relief="solid", bd=1).pack(fill="x", ipady=5)
 
         time_col = tk.Frame(dt_row, bg=COLOR_BG)
         time_col.pack(side="left", fill="both", expand=True)
         tk.Label(time_col, text="الوقت *", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['session_time'] = tk.StringVar(value="08:00")
         ttk.Combobox(time_col, textvariable=self._vars['session_time'],
                      values=TIME_OPTIONS, font=FONT_MAIN,
-                     justify="right").pack(fill="x", ipady=4)
+                     justify=J()).pack(fill="x", ipady=4)
 
         # صف: المدة + نوع الحصة
         dd_row = tk.Frame(wrap, bg=COLOR_BG)
@@ -4856,20 +4933,20 @@ class SessionDialog(tk.Toplevel):
         dur_col = tk.Frame(dd_row, bg=COLOR_BG)
         dur_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
         tk.Label(dur_col, text="المدة (دقيقة) *", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['duration'] = tk.StringVar(value="60")
         ttk.Combobox(dur_col, textvariable=self._vars['duration'],
                      values=DURATION_OPTIONS, font=FONT_MAIN,
-                     justify="right").pack(fill="x", ipady=4)
+                     justify=J()).pack(fill="x", ipady=4)
 
         type_col = tk.Frame(dd_row, bg=COLOR_BG)
         type_col.pack(side="left", fill="both", expand=True)
         tk.Label(type_col, text="نوع الحصة", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['session_type'] = tk.StringVar(value=SESSION_TYPE_OPTIONS[0])
         ttk.Combobox(type_col, textvariable=self._vars['session_type'],
                      values=SESSION_TYPE_OPTIONS, state="readonly",
-                     font=FONT_MAIN, justify="right").pack(fill="x", ipady=4)
+                     font=FONT_MAIN, justify=J()).pack(fill="x", ipady=4)
 
         # ملاحظات
         lbl("ملاحظات")
@@ -4881,7 +4958,7 @@ class SessionDialog(tk.Toplevel):
         self._conflict_var = tk.StringVar()
         tk.Label(wrap, textvariable=self._conflict_var,
                  font=FONT_SMALL, bg=COLOR_BG, fg=COLOR_DANGER,
-                 anchor="e", wraplength=540).pack(fill="x", pady=(6, 0))
+                 anchor=A(), wraplength=540).pack(fill="x", pady=(6, 0))
 
         # أزرار
         bf = tk.Frame(self, bg=COLOR_BG, padx=24, pady=12)
@@ -4928,23 +5005,23 @@ class SessionDialog(tk.Toplevel):
 
         # ── التحقق من الحقول الإلزامية ──
         if not all([cand_name, inst_name, s_date, s_time, duration]):
-            show_error("يرجى ملء جميع الحقول الإلزامية (*)"); return
+            show_error(T("sched_err_required")); return
         if cand_name not in self._cand_map:
-            show_error("يرجى اختيار مترشح صحيح من القائمة"); return
+            show_error(T("sched_err_cand")); return
         if inst_name not in self._inst_map:
-            show_error("يرجى اختيار ممرّن صحيح من القائمة"); return
+            show_error(T("sched_err_inst")); return
 
         # ── التحقق من صيغة التاريخ ──
         try:
             datetime.strptime(s_date, '%Y-%m-%d')
         except ValueError:
-            show_error("صيغة التاريخ غير صحيحة، استخدم: YYYY-MM-DD"); return
+            show_error(T("err_date_format")); return
 
         # ── التحقق من صيغة الوقت ──
         try:
             datetime.strptime(s_time, '%H:%M')
         except ValueError:
-            show_error("صيغة الوقت غير صحيحة، اختر من القائمة (HH:MM)"); return
+            show_error(T("sched_err_time")); return
 
         # ── التحقق من المدة ──
         try:
@@ -4952,7 +5029,7 @@ class SessionDialog(tk.Toplevel):
             if dur_int <= 0 or dur_int > 480:
                 raise ValueError
         except ValueError:
-            show_error("المدة يجب أن تكون رقماً موجباً (دقائق) لا تتجاوز 480"); return
+            show_error(T("sched_err_duration")); return
 
         inst_id = self._inst_map[inst_name]
         veh_id  = self._veh_map.get(veh_name)  # None إذا "بلا مركبة"
@@ -4973,10 +5050,10 @@ class SessionDialog(tk.Toplevel):
                 f"المركبة مستخدمة في {c['session_time']} (مدة {c['duration']} د.)")
 
         if conflict_msgs:
-            msg = "⚠️  تعارض في الجدول:\n" + "\n".join(conflict_msgs)
+            msg = f"⚠️  {T('sched_conflict')}:\n" + "\n".join(conflict_msgs)
             self._conflict_var.set(msg)
-            if not messagebox.askyesno("تعارض في الجدول",
-                    msg + f"\nبتاريخ {s_date}.\nهل تريد الحفظ رغم التعارض؟"):
+            if not messagebox.askyesno(T("sched_conflict"),
+                    msg + f"\n{T('sched_conflict_date')} {s_date}.\n{T('sched_conflict_q')}"):
                 return
         else:
             self._conflict_var.set("")
@@ -5020,10 +5097,10 @@ class ScheduleFrame(tk.Frame):
         # ── العنوان ──
         tk.Label(wrap, text="📅  الجدول الزمني للحصص",
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 4))
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 4))
         tk.Label(wrap, text="إدارة وتنظيم حصص التدريب — عرض، إضافة، تعديل وحذف",
                  font=FONT_MAIN, bg=COLOR_BG,
-                 fg=COLOR_TEXT_LIGHT, anchor="e").pack(fill="x", pady=(0, 14))
+                 fg=COLOR_TEXT_LIGHT, anchor=A()).pack(fill="x", pady=(0, 14))
 
         # ── شريط الفلاتر والأزرار ──
         ctl = tk.Frame(wrap, bg=COLOR_BG)
@@ -5055,7 +5132,7 @@ class ScheduleFrame(tk.Frame):
         self._date_var = tk.StringVar()
         tk.Entry(filter_row, textvariable=self._date_var, width=12,
                  font=FONT_MAIN, relief="solid", bd=1,
-                 justify="right").pack(side="left", padx=4)
+                 justify=J()).pack(side="left", padx=4)
 
         # فلتر الممرّن
         tk.Label(filter_row, text="الممرّن:", font=FONT_SMALL,
@@ -5093,7 +5170,7 @@ class ScheduleFrame(tk.Frame):
         # ── ملخص سريع للأسبوع ──
         self._week_lbl = tk.Label(wrap, text="",
                                    font=FONT_SMALL, bg=COLOR_BG,
-                                   fg=COLOR_TEXT_LIGHT, anchor="e")
+                                   fg=COLOR_TEXT_LIGHT, anchor=A())
         self._week_lbl.pack(fill="x", pady=(0, 6))
 
         # ── الجدول ──
@@ -5212,10 +5289,10 @@ class DocumentsFrame(tk.Frame):
 
         tk.Label(wrap, text=T("doc_title"),
                  font=(FONT_FAMILY, 20, "bold"),
-                 bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 5))
         tk.Label(wrap, text=T("doc_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor="e").pack(fill="x", pady=(0, 15))
+                 anchor=A()).pack(fill="x", pady=(0, 15))
 
         # رسائل تحذيرية
         if not HAS_REPORTLAB:
@@ -5223,19 +5300,19 @@ class DocumentsFrame(tk.Frame):
             warn.pack(fill="x", pady=(0, 10))
             tk.Label(warn, text="⚠️  مكتبة reportlab غير مثبتة. شغّل: pip install reportlab",
                      font=FONT_BOLD, bg="#fef3c7", fg="#92400e",
-                     anchor="e").pack(anchor="e")
+                     anchor=A()).pack(anchor=A())
         elif not HAS_ARABIC_LIBS:
             warn = tk.Frame(wrap, bg="#fef3c7", padx=15, pady=10)
             warn.pack(fill="x", pady=(0, 10))
             tk.Label(warn, text="⚠️  مكتبتا arabic_reshaper و python-bidi غير مثبتتين.\nقد تظهر الحروف العربية متفرقة. شغّل:\n   pip install arabic_reshaper python-bidi",
                      font=FONT_BOLD, bg="#fef3c7", fg="#92400e",
-                     justify="right", anchor="e").pack(anchor="e")
+                     justify=J(), anchor=A()).pack(anchor=A())
         else:
             ok = tk.Frame(wrap, bg="#d1fae5", padx=15, pady=10)
             ok.pack(fill="x", pady=(0, 10))
             tk.Label(ok, text=f"✓  دعم العربية مفعّل (الخط: {os.path.basename(ARABIC_FONT) if ARABIC_FONT != 'Helvetica' else 'النظامي'})",
                      font=FONT_BOLD, bg="#d1fae5", fg="#065f46",
-                     anchor="e").pack(anchor="e")
+                     anchor=A()).pack(anchor=A())
 
         bottom = tk.Frame(wrap, bg=COLOR_BG); bottom.pack(fill="both", expand=True)
 
@@ -5309,8 +5386,8 @@ class DocumentsFrame(tk.Frame):
         tip.pack(fill="x", pady=(12, 0))
         tk.Label(tip, text="💡 اختر مترشحاً ثم اضغط\nعلى نوع الوثيقة → PDF",
                  font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT,
-                 fg=COLOR_PRIMARY_DARK, justify="right",
-                 anchor="e").pack(anchor="e")
+                 fg=COLOR_PRIMARY_DARK, justify=J(),
+                 anchor=A()).pack(anchor=A())
 
         # يسار: قائمة المترشحين
         left = tk.Frame(bottom, bg=COLOR_BG); left.pack(side="left", fill="both", expand=True)
@@ -5323,7 +5400,7 @@ class DocumentsFrame(tk.Frame):
         make_entry(sb, self.search_var, width=30).pack(side="right", fill="x",
                                                        expand=True, ipady=5)
         tk.Label(sb, text="ابحث عن مترشح:", font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
 
         lo, lc = make_card(left, padding=10); lo.pack(fill="both", expand=True)
         section_title(lc, "اختر المترشح المطلوب", icon="👤")
@@ -5346,7 +5423,7 @@ class DocumentsFrame(tk.Frame):
 
     def _check(self):
         if not HAS_REPORTLAB:
-            show_error("مكتبة reportlab غير مثبتة.\nشغّل: pip install reportlab")
+            show_error(T("doc_err_reportlab"))
             return False
         return True
 
@@ -5371,13 +5448,13 @@ class DocumentsFrame(tk.Frame):
         frm = tk.Frame(dlg, bg=COLOR_CARD, padx=20, pady=10)
         frm.pack()
         tk.Label(frm, text="من:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
-                 anchor="e", width=6).grid(row=0, column=1, padx=5, pady=4, sticky="e")
+                 anchor=A(), width=6).grid(row=0, column=1, padx=5, pady=4, sticky="e")
         from_var = tk.StringVar(value=year_start)
         tk.Entry(frm, textvariable=from_var, font=FONT_MAIN, width=14,
                  bg=COLOR_INPUT_BG, relief="flat", bd=4).grid(row=0, column=0, padx=5, pady=4)
 
         tk.Label(frm, text="إلى:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
-                 anchor="e", width=6).grid(row=1, column=1, padx=5, pady=4, sticky="e")
+                 anchor=A(), width=6).grid(row=1, column=1, padx=5, pady=4, sticky="e")
         to_var = tk.StringVar(value=today)
         tk.Entry(frm, textvariable=to_var, font=FONT_MAIN, width=14,
                  bg=COLOR_INPUT_BG, relief="flat", bd=4).grid(row=1, column=0, padx=5, pady=4)
@@ -5453,11 +5530,11 @@ class DocumentsFrame(tk.Frame):
 
         tk.Label(dlg, text=f"🖨️  طباعة: {title}",
                  font=FONT_BOLD, bg=COLOR_BG, fg=COLOR_HEADER,
-                 anchor="e").pack(fill="x", padx=20, pady=(18, 4))
+                 anchor=A()).pack(fill="x", padx=20, pady=(18, 4))
 
         tk.Label(dlg, text="اختر الطابعة:",
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
-                 anchor="e").pack(fill="x", padx=20)
+                 anchor=A()).pack(fill="x", padx=20)
 
         printer_var = tk.StringVar()
         if printers:
@@ -6166,7 +6243,7 @@ class DocumentsFrame(tk.Frame):
 
         all_cands = CandidateDB.get_all()
         if not all_cands:
-            show_error("لا يوجد مترشحون في القاعدة"); return
+            show_error(T("doc_err_no_cands")); return
 
         school = SchoolInfoDB.get()
         addr = school.get('address', '')
@@ -6186,7 +6263,7 @@ class DocumentsFrame(tk.Frame):
         head.pack(fill="x")
         tk.Label(head, text="📋  إعداد جدول الإرسال — اختر المترشحين",
                  font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white",
-                 anchor="e").pack(side="right")
+                 anchor=A()).pack(side="right")
 
         body = tk.Frame(dlg, bg=COLOR_BG)
         body.pack(fill="both", expand=True, padx=15, pady=10)
@@ -6207,14 +6284,14 @@ class DocumentsFrame(tk.Frame):
 
         def lbl_entry(parent, label, key, default=""):
             tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
-                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+                     fg=COLOR_TEXT, anchor=A()).pack(fill="x", pady=(6, 1))
             v = tk.StringVar(value=default)
             opts_vars[key] = v
             make_entry(parent, v, width=26).pack(fill="x", ipady=4)
 
         def lbl_combobox(parent, label, key, default="", values=None):
             tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
-                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+                     fg=COLOR_TEXT, anchor=A()).pack(fill="x", pady=(6, 1))
             v = tk.StringVar(value=default)
             opts_vars[key] = v
             ttk.Combobox(parent, textvariable=v, values=values or [],
@@ -6228,7 +6305,7 @@ class DocumentsFrame(tk.Frame):
 
         # --- ترتيب المترشحين ---
         tk.Label(rc_frame, text="ترتيب المترشحين", font=FONT_BOLD, bg=COLOR_CARD,
-                 fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(12, 4))
+                 fg=COLOR_TEXT, anchor=A()).pack(fill="x", pady=(12, 4))
         sort_var = tk.StringVar(value="default")
         sort_options = [
             ("الترتيب الافتراضي", "default"),
@@ -6240,7 +6317,7 @@ class DocumentsFrame(tk.Frame):
                 rc_frame, text=label, variable=sort_var, value=value,
                 font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT,
                 selectcolor=COLOR_PRIMARY, activebackground=COLOR_CARD,
-                anchor="e", justify="right"
+                anchor=A(), justify=J()
             ).pack(fill="x", pady=1)
 
         # =========================================================
@@ -6254,7 +6331,7 @@ class DocumentsFrame(tk.Frame):
         top_bar.pack(fill="x")
         tk.Label(top_bar, text="👥  اختر المترشحين",
                  font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
-                 fg=COLOR_PRIMARY, anchor="e").pack(fill="x")
+                 fg=COLOR_PRIMARY, anchor=A()).pack(fill="x")
 
         sv = tk.StringVar()
         sr = tk.Frame(top_bar, bg=COLOR_CARD); sr.pack(fill="x", pady=(4, 0))
@@ -6285,7 +6362,7 @@ class DocumentsFrame(tk.Frame):
                   cursor="hand2", command=deselect_all).pack(side="right", padx=3)
         tk.Label(sel_row, text="اضغط على أي صف لتحديده / إلغاء تحديده",
                  font=FONT_TINY, bg="#e0f2fe", fg="#0369a1",
-                 anchor="e").pack(side="right", padx=8)
+                 anchor=A()).pack(side="right", padx=8)
 
         # Treeview
         tree_frame = tk.Frame(left_col, bg=COLOR_CARD)
@@ -6371,7 +6448,7 @@ class DocumentsFrame(tk.Frame):
 
         def do_generate():
             if not selected_set:
-                show_error("يرجى تحديد مترشح واحد على الأقل"); return
+                show_error(T("doc_err_sel_one")); return
 
             selected_cands = [c for c in all_cands if c['id'] in selected_set]
 
@@ -6622,7 +6699,7 @@ class DocumentsFrame(tk.Frame):
 
         all_cands = CandidateDB.get_all()
         if not all_cands:
-            show_error("لا يوجد مترشحون في القاعدة"); return
+            show_error(T("doc_err_no_cands")); return
 
         school = SchoolInfoDB.get()
 
@@ -6638,7 +6715,7 @@ class DocumentsFrame(tk.Frame):
         head.pack(fill="x")
         tk.Label(head, text="📋  إعداد قائمة المترشحين لنيل رخصة السياقة",
                  font=(FONT_FAMILY, 14, "bold"), bg="#0369a1", fg="white",
-                 anchor="e").pack(side="right")
+                 anchor=A()).pack(side="right")
 
         body = tk.Frame(dlg, bg=COLOR_BG); body.pack(fill="both", expand=True, padx=15, pady=10)
 
@@ -6656,14 +6733,14 @@ class DocumentsFrame(tk.Frame):
 
         def lbl_entry(parent, label, key, default=""):
             tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
-                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+                     fg=COLOR_TEXT, anchor=A()).pack(fill="x", pady=(6, 1))
             v = tk.StringVar(value=default)
             opts_vars[key] = v
             make_entry(parent, v, width=26).pack(fill="x", ipady=4)
 
         def lbl_combobox(parent, label, key, default="", values=None):
             tk.Label(parent, text=label, font=FONT_BOLD, bg=COLOR_CARD,
-                     fg=COLOR_TEXT, anchor="e").pack(fill="x", pady=(6, 1))
+                     fg=COLOR_TEXT, anchor=A()).pack(fill="x", pady=(6, 1))
             v = tk.StringVar(value=default)
             opts_vars[key] = v
             ttk.Combobox(parent, textvariable=v, values=values or [],
@@ -6692,7 +6769,7 @@ class DocumentsFrame(tk.Frame):
                            font=FONT_MAIN, bg=COLOR_CARD, fg=COLOR_TEXT,
                            activebackground=COLOR_CARD,
                            selectcolor=COLOR_PRIMARY_LIGHT,
-                           anchor="e", justify="right").pack(fill="x", pady=2)
+                           anchor=A(), justify=J()).pack(fill="x", pady=2)
 
         # --- يسار: قائمة المترشحين ---
         left_col = tk.Frame(body, bg=COLOR_BG)
@@ -6705,7 +6782,7 @@ class DocumentsFrame(tk.Frame):
 
         tk.Label(top_bar, text="👥  اختر المترشحين",
                  font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
-                 fg=COLOR_PRIMARY, anchor="e").pack(fill="x")
+                 fg=COLOR_PRIMARY, anchor=A()).pack(fill="x")
 
         sv = tk.StringVar()
         sr = tk.Frame(top_bar, bg=COLOR_CARD); sr.pack(fill="x", pady=(4, 0))
@@ -6737,7 +6814,7 @@ class DocumentsFrame(tk.Frame):
         tk.Label(sel_row,
                  text="اضغط على أي صف لتحديده / إلغاء تحديده",
                  font=FONT_TINY, bg="#e0f2fe", fg="#0369a1",
-                 anchor="e").pack(side="right", padx=8)
+                 anchor=A()).pack(side="right", padx=8)
 
         # حاوية الجدول
         tree_frame = tk.Frame(left_col, bg=COLOR_CARD)
@@ -6814,7 +6891,7 @@ class DocumentsFrame(tk.Frame):
         def do_generate():
             selected_ids = list(selected_set)
             if not selected_ids:
-                show_error("يرجى تحديد مترشح واحد على الأقل"); return
+                show_error(T("doc_err_sel_one")); return
 
             selected_cands = [c for c in all_cands if c['id'] in selected_ids]
             exam_date  = opts_vars["exam_date"].get().strip()
@@ -7115,21 +7192,21 @@ class LoginWindow:
         card.pack(fill="x", padx=24, pady=12)
 
         tk.Label(card, text=T("login_heading"), font=(FONT_FAMILY, 14, "bold"),
-                 bg=COLOR_CARD, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 18))
+                 bg=COLOR_CARD, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 18))
 
         tk.Label(card, text=T("login_username"), font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._v_user = tk.StringVar()
         self._e_user = tk.Entry(card, textvariable=self._v_user,
                                 font=FONT_MAIN, bg=COLOR_INPUT_BG,
                                 relief="flat", bd=0, highlightthickness=2,
                                 highlightcolor=COLOR_PRIMARY,
                                 highlightbackground=COLOR_BORDER,
-                                justify="right")
+                                justify=J())
         self._e_user.pack(fill="x", ipady=10, pady=(4, 14))
 
         tk.Label(card, text=T("login_password"), font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._v_pass = tk.StringVar()
         self._e_pass = tk.Entry(card, textvariable=self._v_pass,
                                 font=FONT_MAIN, show="●",
@@ -7137,7 +7214,7 @@ class LoginWindow:
                                 highlightthickness=2,
                                 highlightcolor=COLOR_PRIMARY,
                                 highlightbackground=COLOR_BORDER,
-                                justify="right")
+                                justify=J())
         self._e_pass.pack(fill="x", ipady=10, pady=(4, 22))
 
         btn_frame = tk.Frame(card, bg=COLOR_PRIMARY, cursor="hand2")
@@ -7162,7 +7239,7 @@ class LoginWindow:
         hint.pack(fill="x")
         tk.Label(hint, text=T("login_hint"),
                  font=FONT_TINY, bg=COLOR_SIDEBAR, fg="#64748b",
-                 anchor="e").pack(fill="x")
+                 anchor=A()).pack(fill="x")
 
         self._e_user.bind("<Return>", lambda e: self._e_pass.focus())
         self._e_pass.bind("<Return>", lambda e: self._do_login())
@@ -7207,7 +7284,7 @@ class UserManagementDialog(tk.Toplevel):
         hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=20, pady=14)
         hdr.pack(fill="x")
         tk.Label(hdr, text=T("users_header"),
-                 font=FONT_TITLE, bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
+                 font=FONT_TITLE, bg=COLOR_PRIMARY, fg="white").pack(anchor=A())
 
         bar = tk.Frame(self, bg=COLOR_BG, padx=16, pady=10)
         bar.pack(fill="x")
@@ -7230,8 +7307,8 @@ class UserManagementDialog(tk.Toplevel):
                 "full_name": (T("users_col_fullname"), 160), "role": (T("users_col_role"), 90),
                 "perms": (T("users_col_perms"), 380)}
         for c, (h, w) in hdrs.items():
-            self._tree.heading(c, text=h, anchor="e")
-            self._tree.column(c, width=w, anchor="e", minwidth=40)
+            self._tree.heading(c, text=h, anchor=A())
+            self._tree.column(c, width=w, anchor=A(), minwidth=40)
         sb = ttk.Scrollbar(tree_f, orient="vertical", command=self._tree.yview,
                            style="Thin.Vertical.TScrollbar")
         self._tree.configure(yscrollcommand=sb.set)
@@ -7301,13 +7378,13 @@ class UserManagementDialog(tk.Toplevel):
         if not u:
             return
         if u["id"] == self._current_uid:
-            messagebox.showwarning("تحذير", "لا يمكنك حذف حسابك الخاص.", parent=self)
+            messagebox.showwarning(T("msg_warning"), T("users_err_del_self"), parent=self)
             return
         if u.get("username") == "admin":
-            messagebox.showwarning("تحذير", "لا يمكن حذف حساب admin.", parent=self)
+            messagebox.showwarning(T("msg_warning"), T("users_err_del_admin"), parent=self)
             return
-        if not messagebox.askyesno("تأكيد الحذف",
-                                   f"هل تريد حذف المستخدم «{u['username']}»؟",
+        if not messagebox.askyesno(T("msg_confirm_del"),
+                                   f"{T('msg_confirm_del_q')} «{u['username']}»؟",
                                    parent=self):
             return
         UserDB.delete(u["id"])
@@ -7336,7 +7413,7 @@ class _UserFormDialog(tk.Toplevel):
         hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=16, pady=12)
         hdr.pack(fill="x")
         tk.Label(hdr, text=self.title(), font=FONT_TITLE,
-                 bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
+                 bg=COLOR_PRIMARY, fg="white").pack(anchor=A())
 
         # ── زر الحفظ ثابت في الأسفل ──
         footer = tk.Frame(self, bg=COLOR_BG, padx=20, pady=10)
@@ -7367,7 +7444,7 @@ class _UserFormDialog(tk.Toplevel):
 
         def lbl(txt):
             tk.Label(body, text=txt, font=FONT_BOLD,
-                     bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                     bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
 
         def entry_field(show=None):
             v = tk.StringVar()
@@ -7375,7 +7452,7 @@ class _UserFormDialog(tk.Toplevel):
             e = tk.Entry(body, textvariable=v, font=FONT_MAIN,
                          bg=COLOR_INPUT_BG, relief="flat", bd=0,
                          highlightthickness=1, highlightbackground=COLOR_BORDER,
-                         highlightcolor=COLOR_PRIMARY, justify="right", **kw)
+                         highlightcolor=COLOR_PRIMARY, justify=J(), **kw)
             e.pack(fill="x", ipady=8, pady=(3, 12))
             return v
 
@@ -7400,7 +7477,7 @@ class _UserFormDialog(tk.Toplevel):
                            variable=v, font=FONT_SMALL,
                            bg=COLOR_BG, fg=COLOR_TEXT,
                            activebackground=COLOR_BG,
-                           anchor="e", justify="right",
+                           anchor=A(), justify=J(),
                            selectcolor=COLOR_PRIMARY_LIGHT).pack(fill="x", pady=2)
 
 
@@ -7445,21 +7522,21 @@ class _ChangePasswordDialog(tk.Toplevel):
         hdr = tk.Frame(self, bg=COLOR_WARNING, padx=16, pady=12)
         hdr.pack(fill="x")
         tk.Label(hdr, text="🔑  تغيير كلمة المرور", font=FONT_TITLE,
-                 bg=COLOR_WARNING, fg="white").pack(anchor="e")
+                 bg=COLOR_WARNING, fg="white").pack(anchor=A())
 
         body = tk.Frame(self, bg=COLOR_BG, padx=24, pady=20)
         body.pack(fill="both", expand=True)
 
         def lbl(txt):
             tk.Label(body, text=txt, font=FONT_BOLD,
-                     bg=COLOR_BG, fg=COLOR_TEXT, anchor="e").pack(fill="x")
+                     bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
 
         def entry_pass():
             v = tk.StringVar()
             e = tk.Entry(body, textvariable=v, show="●", font=FONT_MAIN,
                          bg=COLOR_INPUT_BG, relief="flat", bd=0,
                          highlightthickness=1, highlightbackground=COLOR_BORDER,
-                         highlightcolor=COLOR_PRIMARY, justify="right")
+                         highlightcolor=COLOR_PRIMARY, justify=J())
             e.pack(fill="x", ipady=8, pady=(3, 14))
             return v
 
@@ -7876,7 +7953,7 @@ class DrivingSchoolApp:
         right_bar.pack(side="right")
         self._topbar_title = tk.Label(right_bar, text=T("topbar_home"),
                                        font=(FONT_FAMILY, 17, "bold"),
-                                       bg=COLOR_CARD, fg=COLOR_HEADER, anchor="e")
+                                       bg=COLOR_CARD, fg=COLOR_HEADER, anchor=A())
         self._topbar_title.pack(side="right")
 
         # يسار: التاريخ + التنبيهات
