@@ -549,6 +549,24 @@ STRINGS: dict = {
     "user_sys_admin":   {"ar": "مدير النظام",         "fr": "Admin système"},
     "user_new_title":   {"ar": "مستخدم جديد",         "fr": "Nouvel utilisateur"},
     "user_edit_title":  {"ar": "تعديل الصلاحيات",    "fr": "Modifier permissions"},
+    "user_save_btn":    {"ar": "حفظ",                 "fr": "Enregistrer"},
+    "user_save_pass":   {"ar": "حفظ كلمة المرور",    "fr": "Enregistrer le mot de passe"},
+    "user_new_pass_f":  {"ar": "كلمة المرور الجديدة:","fr": "Nouveau mot de passe:"},
+    "user_conf_pass_f": {"ar": "تأكيد كلمة المرور:", "fr": "Confirmer le mot de passe:"},
+    "user_chg_pwd_ttl": {"ar": "🔑  تغيير كلمة المرور","fr": "🔑  Changer mot de passe"},
+    "user_warn_no_usr": {"ar": "أدخل اسم المستخدم",  "fr": "Entrez le nom d'utilisateur"},
+    "user_warn_no_pwd": {"ar": "أدخل كلمة المرور",   "fr": "Entrez le mot de passe"},
+    "user_warn_no_newpwd":{"ar": "أدخل كلمة المرور الجديدة","fr": "Entrez le nouveau mot de passe"},
+    "user_warn_mismatch":{"ar": "كلمتا المرور غير متطابقتين","fr": "Les mots de passe ne correspondent pas"},
+    "user_warn_short":  {"ar": "كلمة المرور يجب أن تكون 4 أحرف على الأقل",
+                          "fr": "Le mot de passe doit contenir au moins 4 caractères"},
+    "user_pwd_done":    {"ar": "تم تغيير كلمة المرور بنجاح","fr": "Mot de passe modifié avec succès"},
+    "user_done_ttl":    {"ar": "تم",                  "fr": "Terminé"},
+    # ── أعمدة قائمة المترشحين (aliases) ───────────────────────────────────────
+    "cand_col_last":    {"ar": "اللقب",               "fr": "Nom"},
+    "cand_col_first":   {"ar": "الاسم",               "fr": "Prénom"},
+    "cand_col_lic":     {"ar": "نوع الرخصة",          "fr": "Type permis"},
+    "cand_col_notes":   {"ar": "ملاحظات",             "fr": "Observations"},
     # ── رسائل عامة ──────────────────────────────────────────────────────────
     "msg_confirm_del":   {"ar": "تأكيد الحذف",           "fr": "Confirmer la suppression"},
     "msg_confirm_del_q": {"ar": "هل أنت متأكد من حذف", "fr": "Êtes-vous sûr de supprimer"},
@@ -4927,7 +4945,7 @@ class ReportsFrame(tk.Frame):
 
             # ملصق YYYY-MM مختصر (MM فقط إذا كانت سنة واحدة، وإلا MM/YY)
             parts = ym.split('-')
-            lbl = MONTHS_AR.get(parts[1], parts[1])[:3]
+            lbl = (MONTHS_FR if LANG == "fr" else MONTHS_AR).get(parts[1], parts[1])[:3]
             if n > 12:
                 lbl = parts[1] + "/" + parts[0][2:]
             canvas.create_text(int(cx), base_y + 4, text=lbl,
@@ -7597,7 +7615,7 @@ class _UserFormDialog(tk.Toplevel):
         # ── زر الحفظ ثابت في الأسفل ──
         footer = tk.Frame(self, bg=COLOR_BG, padx=20, pady=10)
         footer.pack(fill="x", side="bottom")
-        ModernButton(footer, "حفظ", self._save, color=COLOR_SUCCESS).pack(fill="x")
+        ModernButton(footer, T("user_save_btn"), self._save, color=COLOR_SUCCESS).pack(fill="x")
 
         # ── جسم قابل للتمرير ──
         wrapper = tk.Frame(self, bg=COLOR_BG)
@@ -7635,17 +7653,17 @@ class _UserFormDialog(tk.Toplevel):
             e.pack(fill="x", ipady=8, pady=(3, 12))
             return v
 
-        lbl("الاسم الكامل:")
+        lbl(T("user_fullname_f"))
         self._v_full_name = entry_field()
 
         if is_new:
-            lbl("اسم المستخدم:")
+            lbl(T("user_username_f"))
             self._v_username = entry_field()
-            lbl("كلمة المرور:")
+            lbl(T("user_pass_f"))
             self._v_password = entry_field(show="●")
 
         # ── الصلاحيات ──
-        pf = tk.LabelFrame(body, text="  الصلاحيات  ", font=FONT_BOLD,
+        pf = tk.LabelFrame(body, text=T("user_perms_f"), font=FONT_BOLD,
                             bg=COLOR_BG, fg=COLOR_PRIMARY,
                             padx=10, pady=8, relief="groove")
         pf.pack(fill="x", pady=(4, 14))
@@ -7673,10 +7691,10 @@ class _UserFormDialog(tk.Toplevel):
             username = self._v_username.get().strip()
             password = self._v_password.get()
             if not username:
-                messagebox.showwarning("تنبيه", "أدخل اسم المستخدم", parent=self)
+                messagebox.showwarning(T("msg_warning"), T("user_warn_no_usr"), parent=self)
                 return
             if not password:
-                messagebox.showwarning("تنبيه", "أدخل كلمة المرور", parent=self)
+                messagebox.showwarning(T("msg_warning"), T("user_warn_no_pwd"), parent=self)
                 return
             d["username"] = username
             d["password"] = password
@@ -7689,7 +7707,7 @@ class _ChangePasswordDialog(tk.Toplevel):
 
     def __init__(self, parent, user):
         super().__init__(parent)
-        self.title(f"تغيير كلمة المرور — {user['username']}")
+        self.title(f"{T('user_change_pass')} — {user['username']}")
         self.geometry("400x280")
         self.resizable(False, False)
         self.configure(bg=COLOR_BG)
@@ -7700,7 +7718,7 @@ class _ChangePasswordDialog(tk.Toplevel):
     def _build(self):
         hdr = tk.Frame(self, bg=COLOR_WARNING, padx=16, pady=12)
         hdr.pack(fill="x")
-        tk.Label(hdr, text="🔑  تغيير كلمة المرور", font=FONT_TITLE,
+        tk.Label(hdr, text=T("user_chg_pwd_ttl"), font=FONT_TITLE,
                  bg=COLOR_WARNING, fg="white").pack(anchor=A())
 
         body = tk.Frame(self, bg=COLOR_BG, padx=24, pady=20)
@@ -7719,30 +7737,28 @@ class _ChangePasswordDialog(tk.Toplevel):
             e.pack(fill="x", ipady=8, pady=(3, 14))
             return v
 
-        lbl("كلمة المرور الجديدة:")
+        lbl(T("user_new_pass_f"))
         self._v_new  = entry_pass()
-        lbl("تأكيد كلمة المرور:")
+        lbl(T("user_conf_pass_f"))
         self._v_conf = entry_pass()
 
-        ModernButton(body, "حفظ كلمة المرور", self._save,
+        ModernButton(body, T("user_save_pass"), self._save,
                      color=COLOR_SUCCESS).pack(fill="x")
 
     def _save(self):
         new  = self._v_new.get()
         conf = self._v_conf.get()
         if not new:
-            messagebox.showwarning("تنبيه", "أدخل كلمة المرور الجديدة", parent=self)
+            messagebox.showwarning(T("msg_warning"), T("user_warn_no_newpwd"), parent=self)
             return
         if new != conf:
-            messagebox.showwarning("تنبيه", "كلمتا المرور غير متطابقتين", parent=self)
+            messagebox.showwarning(T("msg_warning"), T("user_warn_mismatch"), parent=self)
             return
         if len(new) < 4:
-            messagebox.showwarning("تنبيه",
-                                   "كلمة المرور يجب أن تكون 4 أحرف على الأقل",
-                                   parent=self)
+            messagebox.showwarning(T("msg_warning"), T("user_warn_short"), parent=self)
             return
         UserDB.change_password(self._uid, new)
-        messagebox.showinfo("تم", "تم تغيير كلمة المرور بنجاح", parent=self)
+        messagebox.showinfo(T("user_done_ttl"), T("user_pwd_done"), parent=self)
         self.destroy()
 
 
@@ -7836,15 +7852,15 @@ class DrivingSchoolApp:
         main = tk.Frame(self.root, bg="#f1f5f9")
         main.pack(fill="both", expand=True)
 
-        # ── الشريط الجانبي (يسار — 200px) ──
+        # ── الشريط الجانبي (يمين في AR — يسار في FR) ──
         self.sidebar = tk.Frame(main, bg=COLOR_SIDEBAR, width=200)
-        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack(side=S(), fill="y")
         self.sidebar.pack_propagate(False)
         self._build_sidebar()
 
-        # ── منطقة المحتوى (يمين — يملأ الباقي) ──
+        # ── منطقة المحتوى (تملأ الباقي) ──
         content_wrapper = tk.Frame(main, bg="#f1f5f9")
-        content_wrapper.pack(side="left", fill="both", expand=True)
+        content_wrapper.pack(side=So(), fill="both", expand=True)
 
         self._build_topbar(content_wrapper)
 
@@ -8155,7 +8171,8 @@ class DrivingSchoolApp:
                  bg=COLOR_CARD, fg=bell_clr, cursor="hand2").pack(side="left", padx=(0, 14))
 
         today  = date.today()
-        d_str  = f"{today.day} {MONTHS_AR.get(today.strftime('%m'), '')} {today.year}"
+        _months = MONTHS_FR if LANG == "fr" else MONTHS_AR
+        d_str  = f"{today.day} {_months.get(today.strftime('%m'), '')} {today.year}"
         tk.Label(left_bar, text=f"📅  {d_str}", font=(FONT_FAMILY, 11),
                  bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(side="left")
 
