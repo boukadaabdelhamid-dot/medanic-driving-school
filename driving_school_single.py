@@ -567,6 +567,67 @@ STRINGS: dict = {
     "cand_col_first":   {"ar": "الاسم",               "fr": "Prénom"},
     "cand_col_lic":     {"ar": "نوع الرخصة",          "fr": "Type permis"},
     "cand_col_notes":   {"ar": "ملاحظات",             "fr": "Observations"},
+    # ── عنوان التطبيق والعلامة التجارية ─────────────────────────────────────
+    "app_title":        {"ar": "برنامج ميدانيك — إدارة مدرسة تعليم السياقة",
+                          "fr": "Meidanic — Gestion auto-école"},
+    "brand_name":       {"ar": "ميدانيك",             "fr": "Meidanic"},
+    # ── نافذة الطباعة ────────────────────────────────────────────────────────
+    "print_dlg_title":  {"ar": "اختيار الطابعة",      "fr": "Sélectionner imprimante"},
+    "print_label":      {"ar": "🖨️  طباعة:",          "fr": "🖨️  Impression:"},
+    "print_choose":     {"ar": "اختر الطابعة:",       "fr": "Choisir l'imprimante:"},
+    "print_btn":        {"ar": "طباعة",               "fr": "Imprimer"},
+    "print_open":       {"ar": "فتح الملف فقط",       "fr": "Ouvrir seulement"},
+    "print_cancel":     {"ar": "إلغاء",               "fr": "Annuler"},
+    "print_default":    {"ar": "الطابعة الافتراضية",  "fr": "Imprimante par défaut"},
+    "print_sent":       {"ar": "تم إرسال",            "fr": "Envoyé:"},
+    "print_to":         {"ar": "للطابعة:",            "fr": "à l'imprimante:"},
+    "print_ok":         {"ar": "تم إرسال للطباعة.",  "fr": "Envoyé à l'impression."},
+    "print_open_err":   {"ar": "خطأ في فتح الملف:",  "fr": "Erreur ouverture fichier:"},
+    "print_fallback":   {"ar": "سيتم فتح الملف بدلاً من ذلك.",
+                          "fr": "Le fichier sera ouvert à la place."},
+    "print_err_title":  {"ar": "خطأ في الطباعة:",    "fr": "Erreur d'impression:"},
+    "print_doc_lbl":    {"ar": "الوثيقة",             "fr": "Document"},
+    # ── وثائق الامتحانات ─────────────────────────────────────────────────────
+    "doc_exams_sec":    {"ar": "وثائق الامتحانات",    "fr": "Documents examen"},
+    "doc_exam_cands":   {"ar": "قائمة المترشحين للامتحان","fr": "Liste des candidats examen"},
+    "doc_tip":          {"ar": "💡 اختر مترشحاً ثم اضغط\nعلى نوع الوثيقة → PDF",
+                          "fr": "💡 Choisissez un candidat\npuis le type de document → PDF"},
+    "doc_contract_lbl": {"ar": "عقد التكوين",         "fr": "Contrat de formation"},
+    "doc_cert_lbl":     {"ar": "شهادة إدارية",        "fr": "Attestation administrative"},
+    "doc_receipt_lbl":  {"ar": "وصل دفع",             "fr": "Reçu de paiement"},
+    "doc_search_cand":  {"ar": "ابحث عن مترشح:",      "fr": "Rechercher candidat:"},
+    "doc_choose_cand":  {"ar": "اختر المترشح المطلوب","fr": "Choisir le candidat"},
+    # ── عمود وثائق المترشحين ─────────────────────────────────────────────────
+    "doc_col_num":      {"ar": "رقم",                 "fr": "N°"},
+    "doc_col_last":     {"ar": "اللقب",               "fr": "Nom"},
+    "doc_col_first":    {"ar": "الاسم",               "fr": "Prénom"},
+    "doc_col_gender":   {"ar": "الجنس",               "fr": "Sexe"},
+    "doc_col_lic":      {"ar": "نوع الرخصة",          "fr": "Type permis"},
+    "doc_col_date":     {"ar": "تاريخ التسجيل",       "fr": "Date inscription"},
+    # ── تقرير تحديد الفترة الزمنية ───────────────────────────────────────────
+    "period_title":     {"ar": "تحديد الفترة الزمنية","fr": "Définir la période"},
+    "period_filter":    {"ar": "تصفية التقرير بفترة زمنية",
+                          "fr": "Filtrer le rapport par période"},
+    "period_hint":      {"ar": "(اتركهما فارغين لعرض كل البيانات)",
+                          "fr": "(Laisser vides pour tout afficher)"},
+    "period_from":      {"ar": "من:",                 "fr": "De:"},
+    "period_to":        {"ar": "إلى:",                "fr": "À:"},
+    "period_apply":     {"ar": "تطبيق",               "fr": "Appliquer"},
+    "period_all":       {"ar": "كل الفترات",          "fr": "Toutes les périodes"},
+    "period_cancel":    {"ar": "إلغاء",               "fr": "Annuler"},
+    "period_bad_from":  {"ar": "تنسيق تاريخ البداية غير صحيح\nالمطلوب: YYYY-MM-DD",
+                          "fr": "Format date de début incorrect\nReqis: YYYY-MM-DD"},
+    "period_bad_to":    {"ar": "تنسيق تاريخ النهاية غير صحيح\nالمطلوب: YYYY-MM-DD",
+                          "fr": "Format date de fin incorrect\nRequis: YYYY-MM-DD"},
+    # ── إدارة المستخدمين ─────────────────────────────────────────────────────
+    "user_mgmt_sel_first":{"ar": "اختر مستخدماً أولاً","fr": "Sélectionnez un utilisateur"},
+    "user_mgmt_add_fail": {"ar": "فشل الإضافة:",      "fr": "Échec de l'ajout:"},
+    "user_mgmt_admin_info":{"ar": "حساب المدير يملك دائماً جميع الصلاحيات.",
+                             "fr": "Le compte admin a toujours toutes les permissions."},
+    # ── عقد المعلم (InstructorsFrame print) ──────────────────────────────────
+    "inst_contract_ttl":{"ar": "عقد العمل",           "fr": "Contrat de travail"},
+    # ── نص عقد العمل (مضمون القانون) — يبقى عربياً دائماً ─────────────────
+    "inst_contract_ar": {"ar": True,                  "fr": False},
     # ── رسائل عامة ──────────────────────────────────────────────────────────
     "msg_confirm_del":   {"ar": "تأكيد الحذف",           "fr": "Confirmer la suppression"},
     "msg_confirm_del_q": {"ar": "هل أنت متأكد من حذف", "fr": "Êtes-vous sûr de supprimer"},
@@ -3571,14 +3632,16 @@ class InstructorsFrame(tk.Frame):
         draw_text(5.5, y-0.6, "المركبات ذات المحرك", ARABIC_FONT_BOLD, 12, "center")
 
         c.save()
-        self._trigger_print(path, "عقد العمل")
+        self._trigger_print(path, T("doc_contract"))
 
-    def _trigger_print(self, path, title="الوثيقة"):
+    def _trigger_print(self, path, title=None):
         """يعرض نافذة اختيار الطابعة ثم يرسل الملف للطباعة."""
+        if title is None:
+            title = T("print_doc_lbl")
         printers = self._get_printers()
 
         dlg = tk.Toplevel()
-        dlg.title("اختيار الطابعة")
+        dlg.title(T("print_dlg_title"))
         dlg.resizable(False, False)
         dlg.grab_set()
         dlg.configure(bg=COLOR_BG)
@@ -3589,11 +3652,11 @@ class InstructorsFrame(tk.Frame):
         y = (dlg.winfo_screenheight() - h) // 2
         dlg.geometry(f"{w}x{h}+{x}+{y}")
 
-        tk.Label(dlg, text=f"🖨️  طباعة: {title}",
+        tk.Label(dlg, text=f"{T('print_label')} {title}",
                  font=FONT_BOLD, bg=COLOR_BG, fg=COLOR_HEADER,
                  anchor=A()).pack(fill="x", padx=20, pady=(18, 4))
 
-        tk.Label(dlg, text="اختر الطابعة:",
+        tk.Label(dlg, text=T("print_choose"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
                  anchor=A()).pack(fill="x", padx=20)
 
@@ -3623,18 +3686,18 @@ class InstructorsFrame(tk.Frame):
             result["action"] = "cancel"
             dlg.destroy()
 
-        tk.Button(btn_frame, text="طباعة", font=FONT_BOLD,
+        tk.Button(btn_frame, text=T("print_btn"), font=FONT_BOLD,
                   bg=COLOR_PRIMARY, fg="white", relief="flat",
                   padx=18, pady=6, cursor="hand2",
-                  command=do_print).pack(side="right", padx=(6, 0))
-        tk.Button(btn_frame, text="فتح الملف فقط", font=FONT_MAIN,
+                  command=do_print).pack(side=S(), padx=(6, 0))
+        tk.Button(btn_frame, text=T("print_open"), font=FONT_MAIN,
                   bg=COLOR_INFO, fg="white", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=do_open).pack(side="right", padx=6)
-        tk.Button(btn_frame, text="إلغاء", font=FONT_MAIN,
+                  command=do_open).pack(side=S(), padx=6)
+        tk.Button(btn_frame, text=T("print_cancel"), font=FONT_MAIN,
                   bg=COLOR_BORDER, fg=COLOR_TEXT, relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=do_cancel).pack(side="left")
+                  command=do_cancel).pack(side=So())
 
         dlg.wait_window()
 
@@ -3652,7 +3715,7 @@ class InstructorsFrame(tk.Frame):
                     else:
                         subprocess.run(["xdg-open", path])
                 except Exception as e:
-                    show_error(f"خطأ في فتح الملف: {e}")
+                    show_error(f"{T('print_open_err')} {e}")
 
     def _get_printers(self):
         """يجلب قائمة الطابعات المثبتة على النظام."""
@@ -3692,33 +3755,34 @@ class InstructorsFrame(tk.Frame):
         except Exception:
             pass
         if not printers:
-            printers = ["الطابعة الافتراضية"]
+            printers = [T("print_default")]
         return printers
 
     def _send_to_printer(self, path, printer_name, title):
         """يرسل ملف PDF إلى الطابعة المحددة."""
         import sys, subprocess
+        _default = T("print_default")
         try:
             if sys.platform == "win32":
-                if printer_name and printer_name != "الطابعة الافتراضية":
+                if printer_name and printer_name != _default:
                     try:
                         subprocess.run(
                             ["SumatraPDF", "-print-to", printer_name, path],
                             capture_output=True)
-                        show_info(f"تم إرسال {title} للطابعة:\n{printer_name}")
+                        show_info(f"{T('print_sent')} {title} {T('print_to')}\n{printer_name}")
                         return
                     except Exception:
                         pass
                 os.startfile(path, 'print')
-                show_info(f"تم إرسال {title} للطباعة.")
+                show_info(T("print_ok"))
             else:
                 cmd = ["lp", path]
-                if printer_name and printer_name != "الطابعة الافتراضية":
+                if printer_name and printer_name != _default:
                     cmd = ["lp", "-d", printer_name, path]
                 subprocess.run(cmd)
-                show_info(f"تم إرسال {title} للطابعة:\n{printer_name}")
+                show_info(f"{T('print_sent')} {title} {T('print_to')}\n{printer_name}")
         except Exception as e:
-            show_error(f"خطأ في الطباعة:\n{e}\n\nسيتم فتح الملف بدلاً من ذلك.")
+            show_error(f"{T('print_err_title')}\n{e}\n\n{T('print_fallback')}")
             try:
                 os.startfile(path)
             except Exception:
@@ -5554,9 +5618,9 @@ class DocumentsFrame(tk.Frame):
         docs_individual = [
             (T("doc_dispatch"),      "📋", self._doc_dispatch_table),
             (T("doc_exam_form"),     "📄", self._doc_exam_form),
-            ("عقد التكوين",          "📜", self._doc_contract),
-            ("شهادة إدارية",         "🏛️", self._doc_certificate),
-            ("وصل دفع",              "🧾", self._doc_payment_receipt),
+            (T("doc_contract_lbl"), "📜", self._doc_contract),
+            (T("doc_cert_lbl"),     "🏛️", self._doc_certificate),
+            (T("doc_receipt_lbl"),  "🧾", self._doc_payment_receipt),
         ]
         for label, icon, cmd in docs_individual:
             ModernButton(rc, label, cmd, icon=icon, color=COLOR_PRIMARY).pack(fill="x", pady=2)
@@ -5575,35 +5639,35 @@ class DocumentsFrame(tk.Frame):
 
         tk.Frame(rc, bg=COLOR_BORDER, height=2).pack(fill="x", pady=8)
 
-        section_title(rc, "وثائق الامتحانات", icon="📝")
-        ModernButton(rc, "قائمة المترشحين للامتحان", self._doc_exam_candidates_list,
+        section_title(rc, T("doc_exams_sec"), icon="📝")
+        ModernButton(rc, T("doc_exam_cands"), self._doc_exam_candidates_list,
                      icon="📋", color="#0369a1").pack(fill="x", pady=3)
 
         tip = tk.Frame(rc, bg=COLOR_PRIMARY_LIGHT, padx=10, pady=8)
         tip.pack(fill="x", pady=(12, 0))
-        tk.Label(tip, text="💡 اختر مترشحاً ثم اضغط\nعلى نوع الوثيقة → PDF",
+        tk.Label(tip, text=T("doc_tip"),
                  font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT,
                  fg=COLOR_PRIMARY_DARK, justify=J(),
                  anchor=A()).pack(anchor=A())
 
         # يسار: قائمة المترشحين
-        left = tk.Frame(bottom, bg=COLOR_BG); left.pack(side="left", fill="both", expand=True)
+        left = tk.Frame(bottom, bg=COLOR_BG); left.pack(side=So(), fill="both", expand=True)
 
         sb_o, sb = make_card(left, padding=10); sb_o.pack(fill="x", pady=(0, 10))
         tk.Label(sb, text="🔍", font=(FONT_FAMILY, 14),
-                 bg=COLOR_CARD, fg=COLOR_PRIMARY).pack(side="right", padx=(0, 8))
+                 bg=COLOR_CARD, fg=COLOR_PRIMARY).pack(side=S(), padx=(0, 8))
         self.search_var = tk.StringVar()
         self.search_var.trace("w", lambda *a: self._load_candidates())
-        make_entry(sb, self.search_var, width=30).pack(side="right", fill="x",
+        make_entry(sb, self.search_var, width=30).pack(side=S(), fill="x",
                                                        expand=True, ipady=5)
-        tk.Label(sb, text="ابحث عن مترشح:", font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
+        tk.Label(sb, text=T("doc_search_cand"), font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side=S(), padx=10)
 
         lo, lc = make_card(left, padding=10); lo.pack(fill="both", expand=True)
-        section_title(lc, "اختر المترشح المطلوب", icon="👤")
+        section_title(lc, T("doc_choose_cand"), icon="👤")
         self.tree = create_treeview(lc,
             ("id","last_name","first_name","gender","license_type","registration_date"),
-            ("رقم","اللقب","الاسم","الجنس","نوع الرخصة","تاريخ التسجيل"),
+            (T("doc_col_num"),T("doc_col_last"),T("doc_col_first"),T("doc_col_gender"),T("doc_col_lic"),T("doc_col_date")),
             (50,140,140,80,110,140), height=18)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -5632,25 +5696,25 @@ class DocumentsFrame(tk.Frame):
         year_start = date.today().strftime('%Y') + '-01-01'
 
         dlg = tk.Toplevel(self)
-        dlg.title("تحديد الفترة الزمنية")
+        dlg.title(T("period_title"))
         dlg.resizable(False, False)
         dlg.grab_set()
         dlg.configure(bg=COLOR_CARD)
 
-        tk.Label(dlg, text="تصفية التقرير بفترة زمنية",
+        tk.Label(dlg, text=T("period_filter"),
                  font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(padx=20, pady=(15, 5))
-        tk.Label(dlg, text="(اتركهما فارغين لعرض كل البيانات)",
+        tk.Label(dlg, text=T("period_hint"),
                  font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack()
 
         frm = tk.Frame(dlg, bg=COLOR_CARD, padx=20, pady=10)
         frm.pack()
-        tk.Label(frm, text="من:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
+        tk.Label(frm, text=T("period_from"), font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
                  anchor=A(), width=6).grid(row=0, column=1, padx=5, pady=4, sticky="e")
         from_var = tk.StringVar(value=year_start)
         tk.Entry(frm, textvariable=from_var, font=FONT_MAIN, width=14,
                  bg=COLOR_INPUT_BG, relief="flat", bd=4).grid(row=0, column=0, padx=5, pady=4)
 
-        tk.Label(frm, text="إلى:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
+        tk.Label(frm, text=T("period_to"), font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
                  anchor=A(), width=6).grid(row=1, column=1, padx=5, pady=4, sticky="e")
         to_var = tk.StringVar(value=today)
         tk.Entry(frm, textvariable=to_var, font=FONT_MAIN, width=14,
@@ -5669,10 +5733,10 @@ class DocumentsFrame(tk.Frame):
                 try: datetime.strptime(s, '%Y-%m-%d'); return True
                 except: return False
             if not valid(d_f):
-                messagebox.showerror("خطأ", "تنسيق تاريخ البداية غير صحيح\nالمطلوب: YYYY-MM-DD", parent=dlg)
+                messagebox.showerror(T("msg_error"), T("period_bad_from"), parent=dlg)
                 return
             if not valid(d_t):
-                messagebox.showerror("خطأ", "تنسيق تاريخ النهاية غير صحيح\nالمطلوب: YYYY-MM-DD", parent=dlg)
+                messagebox.showerror(T("msg_error"), T("period_bad_to"), parent=dlg)
                 return
             result[0] = (d_f, d_t)
             dlg.destroy()
@@ -5683,12 +5747,12 @@ class DocumentsFrame(tk.Frame):
 
         btn_frm = tk.Frame(dlg, bg=COLOR_CARD, padx=20, pady=10)
         btn_frm.pack()
-        ModernButton(btn_frm, "تطبيق", _apply, icon="✔️",
-                     color=COLOR_PRIMARY).pack(side="right", padx=5)
-        ModernButton(btn_frm, "كل الفترات", _all, icon="🗓️",
-                     color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
-        ModernButton(btn_frm, "إلغاء", dlg.destroy, icon="✕",
-                     color=COLOR_DANGER).pack(side="right", padx=5)
+        ModernButton(btn_frm, T("period_apply"), _apply, icon="✔️",
+                     color=COLOR_PRIMARY).pack(side=S(), padx=5)
+        ModernButton(btn_frm, T("period_all"), _all, icon="🗓️",
+                     color=COLOR_TEXT_LIGHT).pack(side=S(), padx=5)
+        ModernButton(btn_frm, T("period_cancel"), dlg.destroy, icon="✕",
+                     color=COLOR_DANGER).pack(side=S(), padx=5)
 
         dlg.wait_window()
         return result[0]
@@ -5709,12 +5773,14 @@ class DocumentsFrame(tk.Frame):
         defaults.update(kwargs)
         return SimpleDocTemplate(path, **defaults)
 
-    def _trigger_print(self, path, title="الوثيقة"):
+    def _trigger_print(self, path, title=None):
         """يعرض نافذة اختيار الطابعة ثم يرسل الملف للطباعة."""
+        if title is None:
+            title = T("print_doc_lbl")
         printers = self._get_printers()
 
         dlg = tk.Toplevel()
-        dlg.title("اختيار الطابعة")
+        dlg.title(T("print_dlg_title"))
         dlg.resizable(False, False)
         dlg.grab_set()
         dlg.configure(bg=COLOR_BG)
@@ -5725,11 +5791,11 @@ class DocumentsFrame(tk.Frame):
         y = (dlg.winfo_screenheight() - h) // 2
         dlg.geometry(f"{w}x{h}+{x}+{y}")
 
-        tk.Label(dlg, text=f"🖨️  طباعة: {title}",
+        tk.Label(dlg, text=f"{T('print_label')} {title}",
                  font=FONT_BOLD, bg=COLOR_BG, fg=COLOR_HEADER,
                  anchor=A()).pack(fill="x", padx=20, pady=(18, 4))
 
-        tk.Label(dlg, text="اختر الطابعة:",
+        tk.Label(dlg, text=T("print_choose"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
                  anchor=A()).pack(fill="x", padx=20)
 
@@ -5759,18 +5825,18 @@ class DocumentsFrame(tk.Frame):
             result["action"] = "cancel"
             dlg.destroy()
 
-        tk.Button(btn_frame, text="طباعة", font=FONT_BOLD,
+        tk.Button(btn_frame, text=T("print_btn"), font=FONT_BOLD,
                   bg=COLOR_PRIMARY, fg="white", relief="flat",
                   padx=18, pady=6, cursor="hand2",
-                  command=do_print).pack(side="right", padx=(6, 0))
-        tk.Button(btn_frame, text="فتح الملف فقط", font=FONT_MAIN,
+                  command=do_print).pack(side=S(), padx=(6, 0))
+        tk.Button(btn_frame, text=T("print_open"), font=FONT_MAIN,
                   bg=COLOR_INFO, fg="white", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=do_open).pack(side="right", padx=6)
-        tk.Button(btn_frame, text="إلغاء", font=FONT_MAIN,
+                  command=do_open).pack(side=S(), padx=6)
+        tk.Button(btn_frame, text=T("print_cancel"), font=FONT_MAIN,
                   bg=COLOR_BORDER, fg=COLOR_TEXT, relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=do_cancel).pack(side="left")
+                  command=do_cancel).pack(side=So())
 
         dlg.wait_window()
 
@@ -5788,7 +5854,7 @@ class DocumentsFrame(tk.Frame):
                     else:
                         subprocess.run(["xdg-open", path])
                 except Exception as e:
-                    show_error(f"خطأ في فتح الملف: {e}")
+                    show_error(f"{T('print_open_err')} {e}")
 
     def _get_printers(self):
         """يجلب قائمة الطابعات المثبتة على النظام."""
@@ -5828,33 +5894,34 @@ class DocumentsFrame(tk.Frame):
         except Exception:
             pass
         if not printers:
-            printers = ["الطابعة الافتراضية"]
+            printers = [T("print_default")]
         return printers
 
     def _send_to_printer(self, path, printer_name, title):
         """يرسل ملف PDF إلى الطابعة المحددة."""
         import sys, subprocess
+        _default = T("print_default")
         try:
             if sys.platform == "win32":
-                if printer_name and printer_name != "الطابعة الافتراضية":
+                if printer_name and printer_name != _default:
                     try:
                         subprocess.run(
                             ["SumatraPDF", "-print-to", printer_name, path],
                             capture_output=True)
-                        show_info(f"تم إرسال {title} للطابعة:\n{printer_name}")
+                        show_info(f"{T('print_sent')} {title} {T('print_to')}\n{printer_name}")
                         return
                     except Exception:
                         pass
                 os.startfile(path, 'print')
-                show_info(f"تم إرسال {title} للطباعة.")
+                show_info(T("print_ok"))
             else:
                 cmd = ["lp", path]
-                if printer_name and printer_name != "الطابعة الافتراضية":
+                if printer_name and printer_name != _default:
                     cmd = ["lp", "-d", printer_name, path]
                 subprocess.run(cmd)
-                show_info(f"تم إرسال {title} للطابعة:\n{printer_name}")
+                show_info(f"{T('print_sent')} {title} {T('print_to')}\n{printer_name}")
         except Exception as e:
-            show_error(f"خطأ في الطباعة:\n{e}\n\nسيتم فتح الملف بدلاً من ذلك.")
+            show_error(f"{T('print_err_title')}\n{e}\n\n{T('print_fallback')}")
             try:
                 os.startfile(path)
             except Exception:
@@ -6766,7 +6833,7 @@ class DocumentsFrame(tk.Frame):
 
         doc.build(story)
         if direct_print:
-            self._send_to_printer(path, "الطابعة الافتراضية", "جدول الإرسال")
+            self._send_to_printer(path, T("print_default"), T("doc_dispatch"))
             import threading, time
             def _cleanup_temp():
                 time.sleep(30)
@@ -7380,7 +7447,7 @@ class LoginWindow:
         head.pack(fill="x")
         tk.Label(head, text="🚗", font=(FONT_FAMILY, 38),
                  bg=COLOR_SIDEBAR, fg=COLOR_ACCENT).pack()
-        tk.Label(head, text="ميدانيك", font=(FONT_FAMILY, 22, "bold"),
+        tk.Label(head, text=T("brand_name"), font=(FONT_FAMILY, 22, "bold"),
                  bg=COLOR_SIDEBAR, fg="white").pack(pady=(4, 0))
         tk.Label(head, text=T("login_app_sub"),
                  font=(FONT_FAMILY, 9), bg=COLOR_SIDEBAR, fg="#94a3b8").pack(pady=(2, 0))
@@ -7535,29 +7602,28 @@ class UserManagementDialog(tk.Toplevel):
 
     def _get_selected(self):
         if not self._selected_uid:
-            messagebox.showwarning("تنبيه", "اختر مستخدماً أولاً", parent=self)
+            messagebox.showwarning(T("msg_warning"), T("user_mgmt_sel_first"), parent=self)
             return None
         return UserDB.get(self._selected_uid)
 
     def _add_user(self):
-        dlg = _UserFormDialog(self, title="مستخدم جديد", user=None)
+        dlg = _UserFormDialog(self, title=T("user_new_title"), user=None)
         self.wait_window(dlg)
         if dlg.result:
             try:
                 UserDB.add(dlg.result)
                 self._refresh()
             except Exception as ex:
-                messagebox.showerror("خطأ", f"فشل الإضافة:\n{ex}", parent=self)
+                messagebox.showerror(T("msg_error"), f"{T('user_mgmt_add_fail')}\n{ex}", parent=self)
 
     def _edit_user(self):
         u = self._get_selected()
         if not u:
             return
         if u.get("role") == "admin":
-            messagebox.showinfo("معلومة",
-                                "حساب المدير يملك دائماً جميع الصلاحيات.", parent=self)
+            messagebox.showinfo(T("msg_info"), T("user_mgmt_admin_info"), parent=self)
             return
-        dlg = _UserFormDialog(self, title="تعديل الصلاحيات", user=u)
+        dlg = _UserFormDialog(self, title=T("user_edit_title"), user=u)
         self.wait_window(dlg)
         if dlg.result:
             UserDB.update(u["id"], dlg.result)
@@ -7779,7 +7845,7 @@ class DrivingSchoolApp:
         global CURRENT_USER
         CURRENT_USER = current_user
         self.root = tk.Tk()
-        self.root.title("برنامج ميدانيك — إدارة مدرسة تعليم السياقة")
+        self.root.title(T("app_title"))
         self.root.geometry("1280x800")
         self.root.minsize(1000, 650)
         self.root.configure(bg="#f1f5f9")
@@ -7908,7 +7974,7 @@ class DrivingSchoolApp:
             tk.Label(logo_area, text="🚗", font=(FONT_FAMILY, 34),
                      bg=COLOR_HEADER, fg=COLOR_ACCENT).pack(pady=(0, 4))
 
-        tk.Label(logo_area, text="ميدانيك",
+        tk.Label(logo_area, text=T("brand_name"),
                  font=(FONT_FAMILY, 17, "bold"),
                  bg=COLOR_HEADER, fg="white").pack()
         tk.Label(logo_area, text=T("sidebar_subtitle"),
