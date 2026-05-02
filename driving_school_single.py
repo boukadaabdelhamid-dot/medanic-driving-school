@@ -609,6 +609,33 @@ class CandidateDB:
         return [dict(r) for r in rows]
 
     @staticmethod
+    def get_by_date_range(d_from="", d_to=""):
+        """يجلب المترشحين المسجلين ضمن فترة زمنية (حسب registration_date)."""
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("c.registration_date >= ?"); params.append(d_from)
+        if d_to:   conds.append("c.registration_date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(
+            f"SELECT c.*, i.first_name||' '||i.last_name as instructor_name "
+            f"FROM candidates c LEFT JOIN instructors i ON c.instructor_id=i.id "
+            f"{where} ORDER BY c.last_name", params).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def count_in_range(d_from="", d_to=""):
+        """يحسب عدد المترشحين المسجلين في الفترة."""
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("registration_date >= ?"); params.append(d_from)
+        if d_to:   conds.append("registration_date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        row = conn.execute(f"SELECT COUNT(*) as c FROM candidates {where}", params).fetchone()
+        conn.close()
+        return row['c'] if row else 0
+
+    @staticmethod
     def get(i):
         conn = get_connection()
         row = conn.execute("SELECT * FROM candidates WHERE id=?", (i,)).fetchone()
@@ -850,6 +877,20 @@ class PaymentDB:
         conn.close()
         return [dict(r) for r in rows]
 
+    @staticmethod
+    def get_paid_per_candidate_in_range(d_from="", d_to=""):
+        """يُعيد قاموساً {candidate_id: مجموع_المدفوعات} ضمن الفترة."""
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("date >= ?"); params.append(d_from)
+        if d_to:   conds.append("date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(
+            f"SELECT candidate_id, COALESCE(SUM(amount),0) as total "
+            f"FROM payments {where} GROUP BY candidate_id", params).fetchall()
+        conn.close()
+        return {r['candidate_id']: r['total'] for r in rows}
+
 
 class ExpenseDB:
     @staticmethod
@@ -861,6 +902,18 @@ class ExpenseDB:
                 (f"%{search}%", f"%{search}%")).fetchall()
         else:
             rows = conn.execute("SELECT * FROM expenses ORDER BY date DESC").fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_all_in_range(d_from="", d_to=""):
+        """يجلب المصاريف ضمن فترة زمنية محددة."""
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("date >= ?"); params.append(d_from)
+        if d_to:   conds.append("date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(f"SELECT * FROM expenses {where} ORDER BY date DESC", params).fetchall()
         conn.close()
         return [dict(r) for r in rows]
 
@@ -4830,6 +4883,75 @@ class DocumentsFrame(tk.Frame):
             return False
         return True
 
+    def _ask_date_range_for_doc(self):
+        """يعرض حواراً صغيراً لتحديد فترة زمنية (من / إلى) قبل توليد التقرير.
+        يُعيد (d_from, d_to) حيث أي منهما قد يكون '' لعدم التقييد.
+        يُعيد None إذا ألغى المستخدم العملية."""
+        today = date.today().strftime('%Y-%m-%d')
+        year_start = date.today().strftime('%Y') + '-01-01'
+
+        dlg = tk.Toplevel(self)
+        dlg.title("تحديد الفترة الزمنية")
+        dlg.resizable(False, False)
+        dlg.grab_set()
+        dlg.configure(bg=COLOR_CARD)
+
+        tk.Label(dlg, text="تصفية التقرير بفترة زمنية",
+                 font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(padx=20, pady=(15, 5))
+        tk.Label(dlg, text="(اتركهما فارغين لعرض كل البيانات)",
+                 font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack()
+
+        frm = tk.Frame(dlg, bg=COLOR_CARD, padx=20, pady=10)
+        frm.pack()
+        tk.Label(frm, text="من:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
+                 anchor="e", width=6).grid(row=0, column=1, padx=5, pady=4, sticky="e")
+        from_var = tk.StringVar(value=year_start)
+        tk.Entry(frm, textvariable=from_var, font=FONT_MAIN, width=14,
+                 bg=COLOR_INPUT_BG, relief="flat", bd=4).grid(row=0, column=0, padx=5, pady=4)
+
+        tk.Label(frm, text="إلى:", font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT,
+                 anchor="e", width=6).grid(row=1, column=1, padx=5, pady=4, sticky="e")
+        to_var = tk.StringVar(value=today)
+        tk.Entry(frm, textvariable=to_var, font=FONT_MAIN, width=14,
+                 bg=COLOR_INPUT_BG, relief="flat", bd=4).grid(row=1, column=0, padx=5, pady=4)
+
+        tk.Label(frm, text="(YYYY-MM-DD)", font=FONT_TINY, bg=COLOR_CARD,
+                 fg=COLOR_TEXT_LIGHT).grid(row=2, column=0, columnspan=2)
+
+        result = [None]
+
+        def _apply():
+            d_f = from_var.get().strip()
+            d_t = to_var.get().strip()
+            def valid(s):
+                if not s: return True
+                try: datetime.strptime(s, '%Y-%m-%d'); return True
+                except: return False
+            if not valid(d_f):
+                messagebox.showerror("خطأ", "تنسيق تاريخ البداية غير صحيح\nالمطلوب: YYYY-MM-DD", parent=dlg)
+                return
+            if not valid(d_t):
+                messagebox.showerror("خطأ", "تنسيق تاريخ النهاية غير صحيح\nالمطلوب: YYYY-MM-DD", parent=dlg)
+                return
+            result[0] = (d_f, d_t)
+            dlg.destroy()
+
+        def _all():
+            result[0] = ("", "")
+            dlg.destroy()
+
+        btn_frm = tk.Frame(dlg, bg=COLOR_CARD, padx=20, pady=10)
+        btn_frm.pack()
+        ModernButton(btn_frm, "تطبيق", _apply, icon="✔️",
+                     color=COLOR_PRIMARY).pack(side="right", padx=5)
+        ModernButton(btn_frm, "كل الفترات", _all, icon="🗓️",
+                     color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
+        ModernButton(btn_frm, "إلغاء", dlg.destroy, icon="✕",
+                     color=COLOR_DANGER).pack(side="right", padx=5)
+
+        dlg.wait_window()
+        return result[0]
+
     def _get_candidate(self):
         if not self.selected_candidate_id:
             show_error("يرجى تحديد مترشح من القائمة أولاً"); return None
@@ -5919,17 +6041,23 @@ class DocumentsFrame(tk.Frame):
 
     def _doc_candidates_list(self):
         if not self._check(): return
+        dr = self._ask_date_range_for_doc()
+        if dr is None: return
+        d_from, d_to = dr
         path = self._ask_save("قائمة_المترشحين.pdf")
         if not path: return
         school = SchoolInfoDB.get()
-        cands = CandidateDB.get_all()
+        cands = CandidateDB.get_by_date_range(d_from, d_to)
+        period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
         doc = self._make_doc(path, rightMargin=1.5*cm, leftMargin=1.5*cm,
                              pagesize=A4); s = _pdf_styles(); story = []
         _pdf_header(story, school, "قائمة المترشحين")
-        rows = [["رقم الهاتف","نوع الرخصة","الجنس","تاريخ الميلاد","الاسم الكامل","رقم"]]
+        story.append(Paragraph(ar(period_txt), s["right"]))
+        story.append(Spacer(1, 0.3*cm))
+        rows = [["رقم الهاتف","نوع الرخصة","الجنس","تاريخ التسجيل","الاسم الكامل","رقم"]]
         for i, c in enumerate(cands, 1):
             rows.append([c.get('phone',''), c.get('license_type',''),
-                         c.get('gender',''), c.get('birth_date',''),
+                         c.get('gender',''), c.get('registration_date',''),
                          f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
         story.append(_styled_table(rows,
             [3.5*cm, 2.5*cm, 1.8*cm, 3*cm, 5.5*cm, 1.2*cm]))
