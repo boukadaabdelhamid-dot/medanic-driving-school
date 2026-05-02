@@ -7729,14 +7729,25 @@ class DocumentsFrame(tk.Frame):
         manager_name = school.get('manager_name', school_name)
 
         # ── أبعاد الجدول ────────────────────────────────────────────────────
-        # الأعمدة (يسار→يمين في الرسم، عربي فيُعكس):
+        # الأعمدة (الترتيب المنطقي العربي من اليمين إلى اليسار):
         # رقم | رقم التسجيل | اللقب والاسم | تاريخ الميلاد | السن | الصنف | ق.م | م | س | ملاحظة
         col_widths = [1.0, 2.2, 4.5, 2.5, 0.9, 1.1, 1.3, 1.3, 1.3, 2.2]
         total_w    = sum(col_widths)
         margin_l   = (page_w / cm - total_w) / 2
-        col_x = [margin_l]
-        for w in col_widths[:-1]:
-            col_x.append(col_x[-1] + w)
+        # col_x[i] = الحافة اليسرى لكل عمود (cm)
+        # عربي RTL: العمود 0 (رقم) هو الأيمن → col_x تتناقص مع زيادة i
+        # فرنسي LTR: العمود 0 هو الأيسر → col_x تتزايد مع زيادة i
+        if is_fr:
+            col_x = [margin_l]
+            for w in col_widths[:-1]:
+                col_x.append(col_x[-1] + w)
+        else:
+            right_edge = page_w / cm - margin_l
+            col_x = []
+            x = right_edge
+            for w in col_widths:
+                col_x.append(x - w)
+                x -= w
 
         # مؤشرات الأعمدة الفرعية لنتيجة الامتحان (ق.م، م، س) = cols 6,7,8
         RESULT_START = 6   # index أول عمود فرعي
@@ -7757,12 +7768,21 @@ class DocumentsFrame(tk.Frame):
         # ── رسم رأس الجدول (مزدوج) ──────────────────────────────────────────
         def draw_table_header(y_top):
             """يرسم صفّي رأس الجدول ويُعيد y بعدهما."""
-            # الصف الأول: الخلايا العادية + خلية "نتيجة الامتحان" المدمجة
+            # الحافة اليسرى للخلية المدمجة "نتيجة الامتحان"
+            # RTL: العمود 8 (س) هو الأبعد يساراً → col_x[RESULT_END-1] هو أصغر قيمة
+            # LTR: العمود 6 (ق.م) هو الأقصى يساراً → col_x[RESULT_START]
+            if is_fr:
+                merged_left = col_x[RESULT_START]
+            else:
+                merged_left = col_x[RESULT_END - 1]
+            merged_w = sum(col_widths[RESULT_START:RESULT_END])
+
+            # ── الصف الأول: عناوين عادية + خلية مدمجة ──
             y1_bot = y_top - hdr_h1
             c.setFillColorRGB(0.15, 0.35, 0.65)
             c.rect(margin_l*cm, y1_bot*cm, total_w*cm, hdr_h1*cm, fill=1, stroke=1)
             c.setFillColorRGB(1, 1, 1)
-            c.setLineWidth(0.3)
+            # عناوين الأعمدة غير المدمجة
             for i, (lbl, cw, cx) in enumerate(zip(col_h1, col_widths, col_x)):
                 if RESULT_START <= i < RESULT_END:
                     continue  # تُرسم في الصف الثاني
@@ -7770,37 +7790,40 @@ class DocumentsFrame(tk.Frame):
                 mid_y = (y1_bot + hdr_h1 * 0.45) * cm
                 c.setFont(ARABIC_FONT_BOLD, 8)
                 c.drawCentredString(mid_x, mid_y, _t(lbl))
-            # خلية مدمجة لنتيجة الامتحان
-            merged_x = col_x[RESULT_START]
-            merged_w = sum(col_widths[RESULT_START:RESULT_END])
+            # الخلية المدمجة "نتيجة الامتحان"
             c.setFont(ARABIC_FONT_BOLD, 8)
             c.drawCentredString(
-                (merged_x + merged_w / 2) * cm,
+                (merged_left + merged_w / 2) * cm,
                 (y1_bot + hdr_h1 * 0.45) * cm,
                 _t(merged_label))
-            # خط فاصل داخلي للأعمدة
+            # فواصل عمودية — نتجنب الرسم داخل المنطقة المدمجة
+            # LTR: نتجاوز i ∈ {7,8} (داخل) ونرسم i=6 (حد أيسر) وi=9 (حد أيمن)
+            # RTL: col_x[6]>col_x[7]>col_x[8] → i=6 داخل المدمج، نتجاوز i∈{6,7,8}
             c.setStrokeColorRGB(0.6, 0.7, 0.9)
+            c.setLineWidth(0.3)
             for i, cx in enumerate(col_x[1:], 1):
-                if i == RESULT_START or i >= RESULT_END:
+                if is_fr:
+                    skip = RESULT_START < i < RESULT_END
+                else:
+                    skip = RESULT_START <= i < RESULT_END
+                if not skip:
                     c.line(cx*cm, y1_bot*cm, cx*cm, y_top*cm)
             c.setStrokeColorRGB(0, 0, 0)
 
-            # الصف الثاني: أعمدة نتيجة الامتحان الفرعية فقط
+            # ── الصف الثاني: الأعمدة الفرعية (ق.م / م / س) ──
             y2_top = y1_bot
             y2_bot = y2_top - hdr_h2
             c.setFillColorRGB(0.22, 0.45, 0.72)
-            # فقط الأعمدة الفرعية ملوّنة، باقي الصف شفاف
-            res_x = col_x[RESULT_START]
-            res_w = sum(col_widths[RESULT_START:RESULT_END])
-            c.rect(res_x*cm, y2_bot*cm, res_w*cm, hdr_h2*cm, fill=1, stroke=1)
+            c.rect(merged_left*cm, y2_bot*cm, merged_w*cm, hdr_h2*cm, fill=1, stroke=1)
             c.setFillColorRGB(1, 1, 1)
             for i in range(RESULT_START, RESULT_END):
                 mid_x = (col_x[i] + col_widths[i] / 2) * cm
                 mid_y = (y2_bot + hdr_h2 * 0.45) * cm
                 c.setFont(ARABIC_FONT_BOLD, 8)
                 c.drawCentredString(mid_x, mid_y, _t(col_h1[i]))
-            # خط عمودي داخلي
+            # فواصل عمودية داخلية للصف الثاني
             c.setStrokeColorRGB(0.6, 0.7, 0.9)
+            c.setLineWidth(0.3)
             for i in range(RESULT_START + 1, RESULT_END):
                 c.line(col_x[i]*cm, y2_bot*cm, col_x[i]*cm, y2_top*cm)
             c.setStrokeColorRGB(0, 0, 0)
@@ -7965,7 +7988,15 @@ class DocumentsFrame(tk.Frame):
             y = draw_full_header(cat)
             y = draw_table_header(y)
 
+            # حجز مساحة التذييل: ~4 cm
+            FOOTER_H = 4.0
             for idx, cand in enumerate(cat_cands):
+                # ── كسر الصفحة قبل الرسم (لا بعده) لتجنب الصفحة الفارغة ──
+                if y - row_h < FOOTER_H + 1.0:
+                    c.showPage()
+                    y = 27.5
+                    y = draw_table_header(y)
+
                 age_str   = calc_age(cand.get('birth_date', ''))
                 reg_num   = str(cand.get('national_id', '') or cand.get('id', ''))
                 full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
@@ -7999,10 +8030,6 @@ class DocumentsFrame(tk.Frame):
                                        _t(val) if i not in (0, 1, 4) else str(val))
 
                 y -= row_h
-                if y < 6.5:
-                    c.showPage()
-                    y = 27.5
-                    y = draw_table_header(y)
 
             draw_footer(cat_cands, y)
 
