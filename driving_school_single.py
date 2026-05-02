@@ -7557,19 +7557,73 @@ class DocumentsFrame(tk.Frame):
                  font=(FONT_FAMILY, 11)).pack(side=S(), padx=(0, 4))
         make_entry(sr, sv, width=30).pack(side=S(), fill="x", expand=True, ipady=3)
 
-        # أزرار تحديد الكل / إلغاء الكل
+        # ── فلاتر الصنف ──────────────────────────────────────────────────────
+        all_cats = sorted({(c.get('license_type') or 'B').strip() for c in all_cands})
+        cat_filter = tk.StringVar(value="all")   # "all" أو اسم صنف محدد
+
+        cat_bar = tk.Frame(left_col, bg="#f0f9ff", padx=6, pady=4)
+        cat_bar.pack(fill="x")
+        tk.Label(cat_bar,
+                 text=_pdf_t("فلترة حسب الصنف:", "Filtrer par catégorie :"),
+                 font=FONT_SMALL, bg="#f0f9ff", fg="#0369a1",
+                 anchor=A()).pack(side=S(), padx=(0, 6))
+
+        def _cat_btn(parent, label, value, color="#64748b"):
+            def _on():
+                cat_filter.set(value)
+                _refresh_cat_buttons()
+                populate_tree(sv.get().strip())
+            b = tk.Button(parent, text=label, font=FONT_SMALL,
+                          bg=color, fg="white", relief="flat",
+                          padx=8, pady=3, cursor="hand2", command=_on)
+            b.pack(side=S(), padx=2)
+            return b
+
+        cat_buttons = {}
+        cat_buttons["all"] = _cat_btn(cat_bar,
+                                       _pdf_t("الكل", "Tous"), "all", "#0369a1")
+        for cat in all_cats:
+            cat_buttons[cat] = _cat_btn(cat_bar, cat, cat, "#7c3aed")
+
+        def _refresh_cat_buttons():
+            active = cat_filter.get()
+            for key, btn in cat_buttons.items():
+                if key == active:
+                    btn.configure(relief="sunken", bd=2)
+                else:
+                    btn.configure(relief="flat", bd=0)
+        _refresh_cat_buttons()
+
+        # ── أزرار تحديد الكل / إلغاء الكل (للصنف الظاهر حالياً) ─────────────
         sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
         sel_row.pack(fill="x")
 
         # مجموعة iids المحددة
         selected_set = set()
 
+        def _visible_cands():
+            """يُعيد قائمة المترشحين المطابقين للفلترين (نص + صنف)."""
+            txt = sv.get().strip()
+            act_cat = cat_filter.get()
+            result = []
+            for cand in all_cands:
+                if act_cat != "all" and (cand.get('license_type') or 'B').strip() != act_cat:
+                    continue
+                full = f"{cand['last_name']} {cand['first_name']}"
+                if txt and txt.lower() not in full.lower() \
+                        and txt not in cand.get('phone', ''):
+                    continue
+                result.append(cand)
+            return result
+
         def select_all():
-            for c in all_cands: selected_set.add(c['id'])
+            for cand in _visible_cands():
+                selected_set.add(cand['id'])
             populate_tree(sv.get().strip())
 
         def deselect_all():
-            selected_set.clear()
+            for cand in _visible_cands():
+                selected_set.discard(cand['id'])
             populate_tree(sv.get().strip())
 
         tk.Button(sel_row, text=T("dispatch_select_all"), font=FONT_SMALL,
@@ -7616,8 +7670,14 @@ class DocumentsFrame(tk.Frame):
         def populate_tree(filter_text=""):
             for item in cand_tree.get_children():
                 cand_tree.delete(item)
+            act_cat = cat_filter.get()
             idx = 0
             for cand in all_cands:
+                # فلترة الصنف
+                if act_cat != "all" and \
+                        (cand.get('license_type') or 'B').strip() != act_cat:
+                    continue
+                # فلترة النص
                 full = f"{cand['last_name']} {cand['first_name']}"
                 if filter_text and filter_text.lower() not in full.lower() \
                         and filter_text not in cand.get('phone', ''):
