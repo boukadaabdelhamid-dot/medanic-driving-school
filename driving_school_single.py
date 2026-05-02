@@ -6962,7 +6962,7 @@ class _UserFormDialog(tk.Toplevel):
         canvas.pack(side="right", fill="both", expand=True)
 
         body = tk.Frame(canvas, bg=COLOR_BG, padx=20, pady=16)
-        canvas_win = canvas.create_window((0, 0), window=body, anchor="ne")
+        canvas_win = canvas.create_window((0, 0), window=body, anchor="nw")
 
         def _on_configure(e):
             canvas.configure(scrollregion=canvas.bbox("all"))
