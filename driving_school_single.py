@@ -797,6 +797,11 @@ STRINGS: dict = {
     "sidebar_role_admin":{"ar": "مدير النظام",          "fr": "Administrateur"},
     "sidebar_role_train":{"ar": "ممرّن",                "fr": "Moniteur"},
     "sidebar_user_def":  {"ar": "مستخدم",               "fr": "Utilisateur"},
+    # ── قيم افتراضية لحقول نموذج المترشح ────────────────────────────────────
+    "cdlg_default_nationality":   {"ar": "جزائرية",  "fr": "Algérienne"},
+    "cdlg_default_birth_country": {"ar": "الجزائر",  "fr": "Algérie"},
+    # ── ملاحظة الدفعة الأولى عند التسجيل ────────────────────────────────────
+    "pay_initial_note":  {"ar": "الدفعة الأولى عند التسجيل", "fr": "Acompte à l'inscription"},
 }
 
 
@@ -3079,8 +3084,8 @@ class CandidateDialog(tk.Toplevel):
         # ══════════════════════════════════════════════
         # القيم الافتراضية
         # ══════════════════════════════════════════════
-        self.vars["nationality"].set("جزائرية")
-        self.vars["birth_country"].set("الجزائر")
+        self.vars["nationality"].set(T("cdlg_default_nationality"))
+        self.vars["birth_country"].set(T("cdlg_default_birth_country"))
         self.vars["license_type"].set("B")
 
     def _on_wilaya_change(self, wilaya_key: str, commune_key: str, commune_widget):
@@ -3151,19 +3156,21 @@ class CandidateDialog(tk.Toplevel):
             tk.Label(card, text=f"✅ {passed}  ❌ {failed}  |  {T('cdlg_exam_tries')}: {total}",
                      font=FONT_TINY, bg=color, fg="white").pack()
 
-        # --- ملء الجدول ---
+        # --- ملء الجدول (القيم المعروضة مترجمة حسب اللغة) ---
         values = [
-            (r['id'], r['exam_type'], r['exam_date'],
-             r['result'], f"{r['score']:g}" if r['score'] else "—",
+            (r['id'],
+             to_disp_exam_type(r['exam_type']),
+             r['exam_date'],
+             to_disp_exam_result(r['result']),
+             f"{r['score']:g}" if r['score'] else "—",
              r['notes'] or "")
             for r in rows
         ]
         insert_zebra(self._exam_tree, values)
 
-        # لون النتيجة (ناجح = أخضر، راسب = أحمر)
-        for item in self._exam_tree.get_children():
-            vals = self._exam_tree.item(item, "values")
-            if vals and vals[3] == "ناجح":
+        # لون النتيجة — نقارن بالقيمة الأصلية من قاعدة البيانات (عربي دائماً)
+        for item, r in zip(self._exam_tree.get_children(), rows):
+            if r["result"] == "ناجح":
                 self._exam_tree.item(item, tags=("pass",))
             else:
                 self._exam_tree.item(item, tags=("fail",))
@@ -3423,7 +3430,7 @@ class CandidatesFrame(tk.Frame):
         init_pay = data.pop("initial_payment", 0)
         cid = CandidateDB.add(data)
         if init_pay > 0 and cid:
-            PaymentDB.add({"candidate_id": cid, "date": str(date.today()), "amount": init_pay, "payment_method": "نقدي", "notes": "الدفعة الأولى عند التسجيل"})
+            PaymentDB.add({"candidate_id": cid, "date": str(date.today()), "amount": init_pay, "payment_method": "نقدي", "notes": T("pay_initial_note")})
         self._load_list()
         show_info(T("cand_added"))
 
