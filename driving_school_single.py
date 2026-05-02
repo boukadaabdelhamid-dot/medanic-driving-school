@@ -7685,135 +7685,33 @@ class DocumentsFrame(tk.Frame):
     def _generate_exam_list_pdf(self, path, cands, school, exam_date,
                                  exam_center, doc_ref, wilaya_val, stage_type,
                                  default_name=None):
-        """يولّد PDF قائمة المترشحين للامتحان مطابق للنموذج الرسمي."""
+        """يولّد PDF قائمة المترشحين للامتحان — صفحة منفصلة لكل صنف."""
         from reportlab.pdfgen import canvas as rl_canvas
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.units import cm
-        import tempfile, datetime
+        from collections import defaultdict
 
         is_fr = LANG == "fr"
         page_w, page_h = A4
         c = rl_canvas.Canvas(path, pagesize=A4)
 
-        def txt_right(text, y_cm, font=ARABIC_FONT, size=10, x_cm=None):
-            c.setFont(font, size)
-            x = (x_cm * cm) if x_cm else (page_w - 1.5*cm)
-            txt = str(text) if is_fr else ar(str(text))
-            if is_fr:
-                c.drawString(1.5*cm, y_cm * cm, txt)
-            else:
-                c.drawRightString(x, y_cm * cm, txt)
+        # ── مساعدات نص ──────────────────────────────────────────────────────
+        def _t(text):
+            return str(text) if is_fr else ar(str(text))
 
-        def txt_left(text, y_cm, font=ARABIC_FONT, size=10, x_cm=1.5):
+        def txt_right(text, y_cm, font=ARABIC_FONT, size=10):
             c.setFont(font, size)
-            txt = str(text) if is_fr else ar(str(text))
-            if is_fr:
-                c.drawRightString(page_w - 1.5*cm, y_cm * cm, txt)
-            else:
-                c.drawString(x_cm * cm, y_cm * cm, txt)
+            c.drawRightString(page_w - 1.5*cm, y_cm * cm, _t(text))
+
+        def txt_left(text, y_cm, font=ARABIC_FONT, size=10):
+            c.setFont(font, size)
+            c.drawString(1.5*cm, y_cm * cm, _t(text))
 
         def txt_center(text, y_cm, font=ARABIC_FONT, size=10):
             c.setFont(font, size)
-            txt = str(text) if is_fr else ar(str(text))
-            c.drawCentredString(page_w / 2, y_cm * cm, txt)
+            c.drawCentredString(page_w / 2, y_cm * cm, _t(text))
 
-        # ========== Government header ==========
-        y = 28.5
-        txt_center(_pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
-                          "République Algérienne Démocratique et Populaire"),
-                   y, ARABIC_FONT_BOLD, 12 if is_fr else 13)
-        y -= 0.7
-        txt_center(_pdf_t("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
-                          "Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire"),
-                   y, ARABIC_FONT, 8 if is_fr else 10)
-        y -= 0.55
-        txt_center(_pdf_t("المندوبيـة الوطنيـة للأمن في الطرق",
-                          "Délégation Nationale à la Sécurité Routière"),
-                   y, ARABIC_FONT, 10)
-        y -= 0.55
-        txt_center(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_val}",
-                          f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {wilaya_val}"),
-                   y, ARABIC_FONT, 9 if is_fr else 10)
-
-        y -= 0.4
-        c.setLineWidth(1)
-        c.line(1.5*cm, y*cm, (page_w - 1.5*cm), y*cm)
-
-        # ========== Document title ==========
-        y -= 0.9
-        txt_center(_pdf_t("قائمة المترشحين لنيل رخصة السياقة",
-                          "Liste des candidats au permis de conduire"),
-                   y, ARABIC_FONT_BOLD, 13 if is_fr else 15)
-
-        title_w = 10*cm
-        title_x = (page_w - title_w) / 2
-        c.setLineWidth(1.2)
-        c.line(title_x, (y - 0.15)*cm, title_x + title_w, (y - 0.15)*cm)
-
-        # ========== School / exam info ==========
-        y -= 0.9
-        school_name = school.get('name', '.....................')
-        school_phone= school.get('phone', '')
-        school_cr   = school.get('commercial_register', '')
-
-        txt_right(_pdf_t(f"مدرسة تعليم السياقة:  {school_name}",
-                         f"Auto-école :  {school_name}"),
-                  y, ARABIC_FONT_BOLD, 10)
-
-        y -= 0.55
-        txt_right(_pdf_t("رقاش جمال الدين", school.get('manager_name', school_name)),
-                  y, ARABIC_FONT, 10)
-
-        y -= 0.55
-        left_info  = (f"R.C {school_cr}" if school_cr else "") if is_fr else (f"ب.ر.ت {school_cr}" if school_cr else "")
-        right_info = f"Réf. {doc_ref}" if (is_fr and doc_ref) else (f"ر.ت {doc_ref}" if doc_ref else "")
-        mid_info   = school_phone
-        if right_info:
-            txt_right(right_info, y, "Helvetica", 9)
-        if mid_info:
-            txt_center(mid_info, y, "Helvetica", 9)
-        if left_info:
-            txt_left(left_info, y, "Helvetica", 9)
-
-        y -= 0.55
-        txt_right(_pdf_t(f"مركز الامتحان: {exam_center}", f"Centre d'examen : {exam_center}"),
-                  y, ARABIC_FONT, 10)
-        txt_left(_pdf_t(f"تاريخ الامتحان: {exam_date}", f"Date d'examen : {exam_date}"),
-                 y, ARABIC_FONT, 10)
-
-        # ========== Table header ==========
-        y -= 0.6
-
-        col_widths = [1.2, 2.5, 5.0, 1.3, 1.2, 2.8, 3.5]
-        if is_fr:
-            col_headers = ["N°", "N° inscription", "Nom et Prénom", "Âge",
-                           "Cat.", "Nature de l'examen", "Observation"]
-        else:
-            col_headers = ["رقم", "رقم التسجيل", "اللقب و الاسم", "السن", "الصنف",
-                           "طبيعة الامتحان", "ملاحظة"]
-        row_h = 0.7
-        header_h = 0.9
-
-        total_w = sum(col_widths)
-        margin_l = (page_w/cm - total_w) / 2
-        col_x = [margin_l]
-        for w in col_widths[:-1]:
-            col_x.append(col_x[-1] + w)
-
-        def draw_header_row(y_top):
-            c.setFillColorRGB(0.2, 0.4, 0.7)
-            c.rect(margin_l*cm, (y_top - header_h)*cm, total_w*cm, header_h*cm, fill=1, stroke=1)
-            c.setFillColorRGB(1, 1, 1)
-            for i, (hdr, cw, cx) in enumerate(zip(col_headers, col_widths, col_x)):
-                c.setFont(ARABIC_FONT_BOLD, 9)
-                txt = str(hdr) if is_fr else ar(hdr)
-                c.drawCentredString((cx + cw/2)*cm, (y_top - header_h*0.55)*cm, txt)
-            c.setFillColorRGB(0, 0, 0)
-
-        draw_header_row(y)
-        y -= header_h
-
-        # ========== Data rows ==========
+        # ── حساب العمر ──────────────────────────────────────────────────────
         def calc_age(birth_str):
             try:
                 parts = birth_str.replace("/", "-").split("-")
@@ -7824,116 +7722,289 @@ class DocumentsFrame(tk.Frame):
                 pass
             return ""
 
+        # ── معلومات المدرسة ──────────────────────────────────────────────────
+        school_name  = school.get('name', '.....................')
+        school_phone = school.get('phone', '')
+        school_cr    = school.get('commercial_register', '')
+        manager_name = school.get('manager_name', school_name)
+
+        # ── أبعاد الجدول ────────────────────────────────────────────────────
+        # الأعمدة (يسار→يمين في الرسم، عربي فيُعكس):
+        # رقم | رقم التسجيل | اللقب والاسم | تاريخ الميلاد | السن | الصنف | ق.م | م | س | ملاحظة
+        col_widths = [1.0, 2.2, 4.5, 2.5, 0.9, 1.1, 1.3, 1.3, 1.3, 2.2]
+        total_w    = sum(col_widths)
+        margin_l   = (page_w / cm - total_w) / 2
+        col_x = [margin_l]
+        for w in col_widths[:-1]:
+            col_x.append(col_x[-1] + w)
+
+        # مؤشرات الأعمدة الفرعية لنتيجة الامتحان (ق.م، م، س) = cols 6,7,8
+        RESULT_START = 6   # index أول عمود فرعي
+        RESULT_END   = 9   # index ما بعد آخر عمود فرعي (exclusive)
+        row_h   = 0.65
+        hdr_h1  = 0.65   # ارتفاع صف رأس 1 (العناوين الكبيرة)
+        hdr_h2  = 0.55   # ارتفاع صف رأس 2 (العناوين الفرعية)
+
         if is_fr:
-            stage_label_map = {
-                "code": "Code de la route",
-                "creneau": "Manoeuvres",
-                "circuit": "Conduite",
-                "all": "Tous",
-            }
+            col_h1 = ["N°", "N° inscr.", "Nom et Prénom", "Date naiss.", "Âge",
+                      "Cat.", "C.R.", "Man.", "Con.", "Observation"]
+            merged_label = "Résultat"
         else:
-            stage_label_map = {
-                "code": "قانون المرور",
-                "creneau": "المناورات",
-                "circuit": "السياقة",
-                "all": "الكل",
-            }
+            col_h1 = ["رقم", "رقم التسجيل", "اللقب و الاسم", "تاريخ الميلاد", "السن",
+                      "الصنف", "ق.م", "م", "س", "ملاحظة"]
+            merged_label = "نتيجة الامتحان"
 
-        count_code = count_creneau = count_circuit = 0
-
-        for idx, cand in enumerate(cands):
-            stages = TrainingDB.get_by_candidate(cand['id'])
-            if stage_type == "all":
-                active_stage = None
-                for st in reversed(STAGE_ORDER):
-                    s = next((x for x in stages if x['stage_type'] == st), None)
-                    if s and s['status'] not in ("لم يبدأ", "ناجح"):
-                        active_stage = st
-                        break
-                if not active_stage:
-                    for st in STAGE_ORDER:
-                        s = next((x for x in stages if x['stage_type'] == st), None)
-                        if s and s['status'] == "لم يبدأ":
-                            active_stage = st
-                            break
-                if not active_stage:
-                    active_stage = "code"
-                exam_nature = stage_label_map.get(active_stage, "")
-            else:
-                exam_nature = stage_label_map.get(stage_type, "")
-
-            if "مرور" in exam_nature or "Code" in exam_nature or "code" in exam_nature:
-                count_code += 1
-            elif "مناور" in exam_nature or "anoeuv" in exam_nature:
-                count_creneau += 1
-            elif "سياقة" in exam_nature or "Conduite" in exam_nature:
-                count_circuit += 1
-
-            row_num = idx + 1
-            age_str = calc_age(cand.get('birth_date', ''))
-            reg_num = str(cand.get('national_id', '') or cand.get('id', ''))
-            full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
-            lic_type = cand.get('license_type', 'B')
-
-            if idx % 2 == 0:
-                c.setFillColorRGB(1, 1, 1)
-            else:
-                c.setFillColorRGB(0.95, 0.97, 1.0)
-            c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=1, stroke=0)
-            c.setFillColorRGB(0, 0, 0)
-
-            c.setStrokeColorRGB(0.78, 0.82, 0.9)
-            c.setLineWidth(0.4)
-            c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=0, stroke=1)
-            for cx in col_x[1:]:
-                c.line(cx*cm, (y - row_h)*cm, cx*cm, y*cm)
+        # ── رسم رأس الجدول (مزدوج) ──────────────────────────────────────────
+        def draw_table_header(y_top):
+            """يرسم صفّي رأس الجدول ويُعيد y بعدهما."""
+            # الصف الأول: الخلايا العادية + خلية "نتيجة الامتحان" المدمجة
+            y1_bot = y_top - hdr_h1
+            c.setFillColorRGB(0.15, 0.35, 0.65)
+            c.rect(margin_l*cm, y1_bot*cm, total_w*cm, hdr_h1*cm, fill=1, stroke=1)
+            c.setFillColorRGB(1, 1, 1)
+            c.setLineWidth(0.3)
+            for i, (lbl, cw, cx) in enumerate(zip(col_h1, col_widths, col_x)):
+                if RESULT_START <= i < RESULT_END:
+                    continue  # تُرسم في الصف الثاني
+                mid_x = (cx + cw / 2) * cm
+                mid_y = (y1_bot + hdr_h1 * 0.45) * cm
+                c.setFont(ARABIC_FONT_BOLD, 8)
+                c.drawCentredString(mid_x, mid_y, _t(lbl))
+            # خلية مدمجة لنتيجة الامتحان
+            merged_x = col_x[RESULT_START]
+            merged_w = sum(col_widths[RESULT_START:RESULT_END])
+            c.setFont(ARABIC_FONT_BOLD, 8)
+            c.drawCentredString(
+                (merged_x + merged_w / 2) * cm,
+                (y1_bot + hdr_h1 * 0.45) * cm,
+                _t(merged_label))
+            # خط فاصل داخلي للأعمدة
+            c.setStrokeColorRGB(0.6, 0.7, 0.9)
+            for i, cx in enumerate(col_x[1:], 1):
+                if i == RESULT_START or i >= RESULT_END:
+                    c.line(cx*cm, y1_bot*cm, cx*cm, y_top*cm)
             c.setStrokeColorRGB(0, 0, 0)
 
-            row_data = [str(row_num), reg_num, full_name, age_str, lic_type, exam_nature, ""]
-            for i, (val, cw, cx) in enumerate(zip(row_data, col_widths, col_x)):
-                c.setFont(ARABIC_FONT if i != 0 else "Helvetica", 9)
-                txt = str(val) if is_fr else ar(str(val))
-                c.drawCentredString((cx + cw/2)*cm, (y - row_h*0.58)*cm, txt)
+            # الصف الثاني: أعمدة نتيجة الامتحان الفرعية فقط
+            y2_top = y1_bot
+            y2_bot = y2_top - hdr_h2
+            c.setFillColorRGB(0.22, 0.45, 0.72)
+            # فقط الأعمدة الفرعية ملوّنة، باقي الصف شفاف
+            res_x = col_x[RESULT_START]
+            res_w = sum(col_widths[RESULT_START:RESULT_END])
+            c.rect(res_x*cm, y2_bot*cm, res_w*cm, hdr_h2*cm, fill=1, stroke=1)
+            c.setFillColorRGB(1, 1, 1)
+            for i in range(RESULT_START, RESULT_END):
+                mid_x = (col_x[i] + col_widths[i] / 2) * cm
+                mid_y = (y2_bot + hdr_h2 * 0.45) * cm
+                c.setFont(ARABIC_FONT_BOLD, 8)
+                c.drawCentredString(mid_x, mid_y, _t(col_h1[i]))
+            # خط عمودي داخلي
+            c.setStrokeColorRGB(0.6, 0.7, 0.9)
+            for i in range(RESULT_START + 1, RESULT_END):
+                c.line(col_x[i]*cm, y2_bot*cm, col_x[i]*cm, y2_top*cm)
+            c.setStrokeColorRGB(0, 0, 0)
+            c.setFillColorRGB(0, 0, 0)
+            return y2_bot
 
-            y -= row_h
+        # ── رسم الترويسة الرسمية الكاملة ─────────────────────────────────────
+        def draw_full_header(cat_name):
+            """يرسم الترويسة الحكومية + بيانات المدرسة + اسم الصنف. يُعيد y."""
+            y = 28.5
+            txt_center(_pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
+                               "République Algérienne Démocratique et Populaire"),
+                       y, ARABIC_FONT_BOLD, 13 if not is_fr else 11)
+            y -= 0.65
+            txt_center(_pdf_t("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
+                               "Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire"),
+                       y, ARABIC_FONT, 9 if not is_fr else 7)
+            y -= 0.55
+            txt_center(_pdf_t("المندوبيـة الوطنيـة للأمن في الطرق",
+                               "Délégation Nationale à la Sécurité Routière"),
+                       y, ARABIC_FONT, 9)
+            y -= 0.5
+            txt_center(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_val}",
+                               f"Délégation de Wilaya à la Sécurité Routière - {wilaya_val}"),
+                       y, ARABIC_FONT, 9)
+            y -= 0.35
+            c.setLineWidth(1)
+            c.line(1.5*cm, y*cm, page_w - 1.5*cm, y*cm)
 
-            if y < 5.5:
+            # عنوان الوثيقة
+            y -= 0.85
+            txt_center(_pdf_t("قائمة المترشحين لنيل رخصة السياقة",
+                               "Liste des candidats au permis de conduire"),
+                       y, ARABIC_FONT_BOLD, 14 if not is_fr else 12)
+            title_w = 9 * cm
+            title_x = (page_w - title_w) / 2
+            c.setLineWidth(1)
+            c.line(title_x, (y - 0.12)*cm, title_x + title_w, (y - 0.12)*cm)
+
+            # بيانات المدرسة
+            y -= 0.8
+            txt_right(_pdf_t(f"مدرسة تعليم السياقة:  {school_name}",
+                              f"Auto-école :  {school_name}"),
+                      y, ARABIC_FONT_BOLD, 10)
+
+            y -= 0.5
+            txt_right(_pdf_t(f"اسم و لقب المنتحي:  {manager_name}",
+                              f"Responsable :  {manager_name}"),
+                      y, ARABIC_FONT, 9)
+
+            y -= 0.48
+            bt_val  = school.get('registration_number', '') or school_cr
+            ref_val = doc_ref
+            if is_fr:
+                left_txt  = f"R.C {bt_val}"   if bt_val  else ""
+                right_txt = f"Réf. {ref_val}" if ref_val else ""
+            else:
+                left_txt  = f"ب ت:  {bt_val}"  if bt_val  else ""
+                right_txt = f"رت:  {ref_val}" if ref_val else ""
+            if right_txt:
+                txt_right(right_txt, y, "Helvetica", 9)
+            if school_phone:
+                txt_center(school_phone, y, "Helvetica", 9)
+            if left_txt:
+                txt_left(left_txt, y, "Helvetica", 9)
+
+            y -= 0.48
+            txt_right(_pdf_t(f"مركز الامتحان:  {exam_center}",
+                              f"Centre :  {exam_center}"),
+                      y, ARABIC_FONT, 9)
+            txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
+                             f"Date :  {exam_date}"),
+                     y, ARABIC_FONT, 9)
+
+            # اسم الصنف مميّز
+            y -= 0.45
+            cat_lbl = _pdf_t(f"الصنف:  {cat_name}", f"Catégorie :  {cat_name}")
+            txt_right(cat_lbl, y, ARABIC_FONT_BOLD, 10)
+            y -= 0.3
+            return y
+
+        # ── رسم تذييل الصنف ──────────────────────────────────────────────────
+        def draw_footer(cat_cands_list, y_cur):
+            count_total   = len(cat_cands_list)
+            count_code    = 0
+            count_creneau = 0
+            count_circuit = 0
+            for cand in cat_cands_list:
+                stages = TrainingDB.get_by_candidate(cand['id'])
+                if stage_type == "all":
+                    active_stage = None
+                    for st in reversed(STAGE_ORDER):
+                        s = next((x for x in stages if x['stage_type'] == st), None)
+                        if s and s['status'] not in ("لم يبدأ", "ناجح"):
+                            active_stage = st
+                            break
+                    if not active_stage:
+                        for st in STAGE_ORDER:
+                            s = next((x for x in stages if x['stage_type'] == st), None)
+                            if s and s['status'] == "لم يبدأ":
+                                active_stage = st
+                                break
+                    if not active_stage:
+                        active_stage = "code"
+                else:
+                    active_stage = stage_type
+                if active_stage == "code":
+                    count_code += 1
+                elif active_stage == "creneau":
+                    count_creneau += 1
+                elif active_stage == "circuit":
+                    count_circuit += 1
+
+            y = y_cur - 0.5
+            c.setLineWidth(0.8)
+            c.line(margin_l*cm, y*cm, (margin_l + total_w)*cm, y*cm)
+
+            y -= 0.5
+            txt_right(_pdf_t(f"المترشحين المدعوين: {count_total}",
+                              f"Candidats convoqués : {count_total}"),
+                      y, ARABIC_FONT_BOLD, 11)
+            y -= 0.55
+            txt_right(_pdf_t(f"قانون المرور: {count_code:02d}",
+                              f"Code de la route : {count_code:02d}"),
+                      y, ARABIC_FONT, 10)
+            txt_center(_pdf_t(f"المناورات: {count_creneau:02d}",
+                               f"Manoeuvres : {count_creneau:02d}"),
+                       y, ARABIC_FONT, 10)
+            txt_left(_pdf_t(f"السياقة: {count_circuit:02d}",
+                             f"Conduite : {count_circuit:02d}"),
+                     y, ARABIC_FONT, 10)
+
+            y -= 1.0
+            txt_right(_pdf_t("قانون المرور:", "Code de la route :"), y, ARABIC_FONT, 10)
+            y -= 0.45
+            txt_right(_pdf_t("د. المناورات:", "Manoeuvres :"),       y, ARABIC_FONT, 10)
+            y -= 0.45
+            txt_right(_pdf_t("السياقة:",      "Conduite :"),          y, ARABIC_FONT, 10)
+
+            txt_left(_pdf_t(f"{wilaya_val} يوم: {exam_date}",
+                             f"{wilaya_val} le : {exam_date}"),
+                     y + 0.9, ARABIC_FONT, 10)
+            txt_left(_pdf_t("ختم وتوقيع مدرسة تعليم السياقة",
+                             "Cachet et signature de l'auto-école"),
+                     y + 0.2, ARABIC_FONT_BOLD, 10)
+
+        # ── تجميع المترشحين حسب الصنف ────────────────────────────────────────
+        cat_groups = defaultdict(list)
+        for cand in cands:
+            cat = (cand.get('license_type') or 'B').strip() or 'B'
+            cat_groups[cat].append(cand)
+        categories = sorted(cat_groups.keys())
+
+        # ── حلقة الأصناف ─────────────────────────────────────────────────────
+        first_cat = True
+        for cat in categories:
+            cat_cands = cat_groups[cat]
+            if not first_cat:
                 c.showPage()
-                y = 27.0
-                draw_header_row(y)
-                y -= header_h
+            first_cat = False
 
-        # ========== Summary ==========
-        y -= 0.6
-        c.setLineWidth(0.8)
-        c.line(margin_l*cm, y*cm, (margin_l + total_w)*cm, y*cm)
+            y = draw_full_header(cat)
+            y = draw_table_header(y)
 
-        y -= 0.55
-        total_count = len(cands)
-        txt_right(_pdf_t(f"المترشحين المدعوين {total_count}",
-                         f"Candidats convoqués : {total_count}"),
-                  y, ARABIC_FONT_BOLD, 11)
+            for idx, cand in enumerate(cat_cands):
+                age_str   = calc_age(cand.get('birth_date', ''))
+                reg_num   = str(cand.get('national_id', '') or cand.get('id', ''))
+                full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
+                birth_d   = cand.get('birth_date', '')
+                lic_type  = cand.get('license_type', 'B')
+                row_num   = idx + 1
 
-        y -= 0.6
-        txt_right(_pdf_t(f"قانون المرور: {count_code:02d}", f"Code de la route : {count_code:02d}"),
-                  y, ARABIC_FONT, 10)
-        txt_center(_pdf_t(f"المناورات: {count_creneau:02d}", f"Manoeuvres : {count_creneau:02d}"),
-                   y, ARABIC_FONT, 10)
-        txt_left(_pdf_t(f"السياقة {count_circuit}", f"Conduite : {count_circuit}"),
-                 y, ARABIC_FONT, 10)
+                # خلفية الصف
+                if idx % 2 == 0:
+                    c.setFillColorRGB(1, 1, 1)
+                else:
+                    c.setFillColorRGB(0.95, 0.97, 1.0)
+                c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=1, stroke=0)
+                c.setFillColorRGB(0, 0, 0)
 
-        y -= 0.9
-        txt_right(_pdf_t("قانون المرور:", "Code de la route :"), y, ARABIC_FONT, 10)
-        y -= 0.4
-        txt_right(_pdf_t("د. المناورات:", "Manoeuvres :"), y, ARABIC_FONT, 10)
-        y -= 0.4
-        txt_right(_pdf_t("السياقة:", "Conduite :"), y, ARABIC_FONT, 10)
+                # حدود الصف
+                c.setStrokeColorRGB(0.78, 0.82, 0.9)
+                c.setLineWidth(0.4)
+                c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=0, stroke=1)
+                for i, cx in enumerate(col_x[1:], 1):
+                    c.line(cx*cm, (y - row_h)*cm, cx*cm, y*cm)
+                c.setStrokeColorRGB(0, 0, 0)
 
-        txt_left(_pdf_t(f"{wilaya_val} يوم: {exam_date}", f"{wilaya_val} le : {exam_date}"),
-                 y + 0.8, ARABIC_FONT, 10)
-        txt_left(_pdf_t("ختم وتوقيع مدرسة تعليم السياقة",
-                        "Cachet et signature de l'auto-école"),
-                 y + 0.1, ARABIC_FONT_BOLD, 10)
+                # بيانات الصف (مطابقة ترتيب col_widths/col_x)
+                row_data = [str(row_num), reg_num, full_name, birth_d,
+                            age_str, lic_type, "", "", "", ""]
+                for i, (val, cw, cx) in enumerate(zip(row_data, col_widths, col_x)):
+                    font = "Helvetica" if i in (0, 1, 4) else ARABIC_FONT
+                    c.setFont(font, 8)
+                    c.drawCentredString((cx + cw / 2)*cm, (y - row_h * 0.6)*cm,
+                                       _t(val) if i not in (0, 1, 4) else str(val))
+
+                y -= row_h
+                if y < 6.5:
+                    c.showPage()
+                    y = 27.5
+                    y = draw_table_header(y)
+
+            draw_footer(cat_cands, y)
 
         c.save()
         self._trigger_print(path, _pdf_t("قائمة المترشحين للامتحان",
