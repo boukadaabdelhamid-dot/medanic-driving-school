@@ -6194,15 +6194,16 @@ class DocumentsFrame(tk.Frame):
         if not self._check(): return
         cand = self._get_candidate()
         if not cand: return
-        
-        import tempfile, os
-        from datetime import datetime
+
+        import os
         from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.units import cm
-        
-        temp_dir = tempfile.gettempdir()
-        path = os.path.join(temp_dir, f"exam_form_{cand['id']}_{int(datetime.now().timestamp())}.pdf")
+
+        default_name = (f"formulaire_examen_{cand['last_name']}.pdf" if LANG == "fr"
+                        else f"استمارة_امتحان_{cand['last_name']}.pdf")
+        path = self._ask_save(default_name)
+        if not path: return
         
         school = SchoolInfoDB.get()
         c = canvas.Canvas(path, pagesize=A4)
@@ -6476,12 +6477,12 @@ class DocumentsFrame(tk.Frame):
         if not self._check(): return
         cand = self._get_candidate()
         if not cand: return
-        
-        import tempfile, os
-        from datetime import datetime
-        temp_dir = tempfile.gettempdir()
-        path = os.path.join(temp_dir, f"training_card_{cand['id']}_{int(datetime.now().timestamp())}.pdf")
-        
+
+        default_name = (f"fiche_formation_{cand['last_name']}.pdf" if LANG == "fr"
+                        else f"بطاقة_تكوين_{cand['last_name']}.pdf")
+        path = self._ask_save(default_name)
+        if not path: return
+
         school = SchoolInfoDB.get()
         from reportlab.pdfgen import canvas
         c = canvas.Canvas(path, pagesize=A4)
@@ -6662,11 +6663,6 @@ class DocumentsFrame(tk.Frame):
                   ARABIC_FONT_BOLD, 11)
         
         c.save()
-        try:
-            os.startfile(path, 'print')
-        except Exception:
-            try: os.startfile(path)
-            except Exception as e: show_error(f"خطأ: {e}")
         self._trigger_print(path, T("doc_training_card"))
 
     def _doc_contract(self):
@@ -7118,13 +7114,6 @@ class DocumentsFrame(tk.Frame):
         ModernButton(bf, T("btn_cancel"), dlg.destroy, icon="✗",
                      color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
 
-        direct_print_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(
-            bf, text=T("dispatch_print_direct"), variable=direct_print_var,
-            font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT,
-            selectcolor=COLOR_PRIMARY, activebackground=COLOR_BG,
-            cursor="hand2"
-        ).pack(side=So(), padx=(12, 0))
 
         def do_generate():
             if not selected_set:
@@ -7166,28 +7155,18 @@ class DocumentsFrame(tk.Frame):
                 "wilaya":         opts_vars["wilaya"].get().strip() or ".......",
             }
 
-            if direct_print_var.get():
-                import tempfile
-                temp_dir = tempfile.gettempdir()
-                date_str = settings['dispatch_date'].replace('/', '_')
-                ts = int(datetime.now().timestamp())
-                path = os.path.join(temp_dir, f"dispatch_table_{date_str}_{ts}.pdf")
-                dlg.destroy()
-                self._generate_dispatch_table_pdf(path, selected_cands, settings,
-                                                  direct_print=True)
-            else:
-                date_slug = settings['dispatch_date'].replace('/','_')
-                default_dispatch = (f"tableau_envoi_{date_slug}.pdf" if LANG == "fr"
-                                    else f"جدول_الإرسال_{date_slug}.pdf")
-                path = filedialog.asksaveasfilename(
-                    defaultextension=".pdf",
-                    filetypes=[("PDF Files", "*.pdf")],
-                    initialfile=default_dispatch,
-                    parent=dlg)
-                if not path:
-                    return
-                dlg.destroy()
-                self._generate_dispatch_table_pdf(path, selected_cands, settings)
+            date_slug = settings['dispatch_date'].replace('/','_')
+            default_dispatch = (f"tableau_envoi_{date_slug}.pdf" if LANG == "fr"
+                                else f"جدول_الإرسال_{date_slug}.pdf")
+            path = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF Files", "*.pdf")],
+                initialfile=default_dispatch,
+                parent=dlg)
+            if not path:
+                return
+            dlg.destroy()
+            self._generate_dispatch_table_pdf(path, selected_cands, settings)
 
         ModernButton(bf, T("dispatch_gen_pdf"), do_generate,
                      icon="📄", color=COLOR_PRIMARY).pack(side=S(), padx=5)
@@ -7265,18 +7244,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Paragraph("___________________________", s["center"]))
 
         doc.build(story)
-        if direct_print:
-            self._send_to_printer(path, T("print_default"), T("doc_dispatch"))
-            import threading, time
-            def _cleanup_temp():
-                time.sleep(30)
-                try:
-                    os.remove(path)
-                except Exception:
-                    pass
-            threading.Thread(target=_cleanup_temp, daemon=True).start()
-        else:
-            self._trigger_print(path, T("doc_dispatch"))
+        self._trigger_print(path, T("doc_dispatch"))
 
     # --- وثائق جماعية ---------------------------------------------------------
 
