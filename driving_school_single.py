@@ -593,6 +593,31 @@ STRINGS: dict = {
     "examlist_creneau": {"ar": "المناورات (كرينو)",   "fr": "Manœuvres (créneau)"},
     "examlist_circuit": {"ar": "السياقة (طريق)",      "fr": "Conduite (circuit)"},
     "examlist_gen_pdf": {"ar": "توليد الوثيقة PDF",   "fr": "Générer le document PDF"},
+    # ── Currency & HTML Receipt ───────────────────────────────────────────────
+    "currency_unit":     {"ar": "دج",                       "fr": "DA"},
+    "receipt_title":     {"ar": "وصل دفع",                  "fr": "Reçu de paiement"},
+    "receipt_address_lbl":{"ar": "العنوان",                 "fr": "Adresse"},
+    "receipt_phone_lbl": {"ar": "الهاتف",                   "fr": "Tél"},
+    "receipt_cand_lbl":  {"ar": "المترشح",                  "fr": "Candidat"},
+    "receipt_cand_phone":{"ar": "رقم الهاتف",               "fr": "Tél"},
+    "receipt_col_num":   {"ar": "رقم",                      "fr": "N°"},
+    "receipt_col_date":  {"ar": "التاريخ",                  "fr": "Date"},
+    "receipt_col_amount":{"ar": "المبلغ",                   "fr": "Montant"},
+    "receipt_col_method":{"ar": "طريقة الدفع",              "fr": "Mode de paiement"},
+    "receipt_col_note":  {"ar": "ملاحظة",                   "fr": "Note"},
+    "receipt_sum_total": {"ar": "المبلغ الإجمالي للتكوين",  "fr": "Montant total formation"},
+    "receipt_sum_paid":  {"ar": "مجموع المدفوعات",          "fr": "Total versé"},
+    "receipt_sum_remaining":{"ar": "المبلغ المتبقي",        "fr": "Reste à payer"},
+    "receipt_issued":    {"ar": "حُرّر بتاريخ",             "fr": "Établi le"},
+    "receipt_signature": {"ar": "ختم وتوقيع المسؤول",       "fr": "Cachet et signature du responsable"},
+    # ── Payment misc ──────────────────────────────────────────────────────────
+    "pay_refund_note":   {"ar": "استرداد مبلغ",             "fr": "Remboursement"},
+    # ── DocumentsFrame library warnings ───────────────────────────────────────
+    "doc_warn_reportlab":{"ar": "⚠️  مكتبة reportlab غير مثبتة. شغّل: pip install reportlab",
+                          "fr": "⚠️  Bibliothèque reportlab manquante. Exécuter: pip install reportlab"},
+    "doc_warn_arabic_libs":{"ar": "⚠️  مكتبتا arabic_reshaper و python-bidi غير مثبتتين.\nقد تظهر الحروف العربية متفرقة. شغّل:\n   pip install arabic_reshaper python-bidi",
+                            "fr": "⚠️  Bibliothèques arabic_reshaper / python-bidi manquantes.\nExécuter: pip install arabic_reshaper python-bidi"},
+    "doc_ok_arabic":     {"ar": "✓  دعم العربية مفعّل",    "fr": "✓  Support arabe activé"},
     # ── تسجيل الدخول ────────────────────────────────────────────────────────
     "login_title":     {"ar": "تسجيل الدخول — برنامج ميدانيك", "fr": "Connexion — Meidanic"},
     "login_app_sub":   {"ar": "إدارة مدرسة تعليم السياقة — الجزائر", "fr": "Gestion auto-école — Algérie"},
@@ -858,6 +883,50 @@ BLOOD_TYPE_OPTIONS     = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 EXPENSE_TYPES          = ["وقود","صيانة","كراء","رواتب","تأمين","إعلان","مستلزمات مكتبية","أخرى"]
 EXAM_TYPE_OPTIONS      = ["نظري", "تطبيقي"]
 EXAM_RESULT_OPTIONS    = ["ناجح", "راسب"]
+
+# ── Bilingual option mappings (DB always stores Arabic values) ──────────────
+_GENDER_FR    = ["Masculin", "Féminin"]
+_GENDER_AR_L  = ["ذكر", "أنثى"]
+_GENDER_FR2AR = dict(zip(_GENDER_FR, _GENDER_AR_L))
+_GENDER_AR2FR = dict(zip(_GENDER_AR_L, _GENDER_FR))
+
+_MARITAL_FR    = ["Célibataire", "Marié(e)", "Divorcé(e)", "Veuf/Veuve"]
+_MARITAL_AR_L  = ["أعزب", "متزوج", "مطلق", "أرمل"]
+_MARITAL_FR2AR = dict(zip(_MARITAL_FR, _MARITAL_AR_L))
+_MARITAL_AR2FR = dict(zip(_MARITAL_AR_L, _MARITAL_FR))
+
+_PAYMTH_FR    = ["Espèces", "Virement bancaire", "Chèque"]
+_PAYMTH_AR    = ["نقدي", "تحويل بنكي", "شيك"]
+_PAYMTH_FR2AR = dict(zip(_PAYMTH_FR, _PAYMTH_AR))
+_PAYMTH_AR2FR = dict(zip(_PAYMTH_AR, _PAYMTH_FR))
+
+_ETYPE_FR    = ["Théorique", "Pratique"]
+_ETYPE_AR    = ["نظري", "تطبيقي"]
+_ETYPE_FR2AR = dict(zip(_ETYPE_FR, _ETYPE_AR))
+_ETYPE_AR2FR = dict(zip(_ETYPE_AR, _ETYPE_FR))
+
+_ERES_FR    = ["Reçu", "Échoué"]
+_ERES_AR    = ["ناجح", "راسب"]
+_ERES_FR2AR = dict(zip(_ERES_FR, _ERES_AR))
+_ERES_AR2FR = dict(zip(_ERES_AR, _ERES_FR))
+
+def gender_opts():         return _GENDER_FR    if LANG == "fr" else _GENDER_AR_L
+def marital_opts():        return _MARITAL_FR   if LANG == "fr" else _MARITAL_AR_L
+def payment_method_opts(): return _PAYMTH_FR    if LANG == "fr" else _PAYMTH_AR
+def exam_type_opts():      return _ETYPE_FR     if LANG == "fr" else _ETYPE_AR
+def exam_result_opts():    return _ERES_FR      if LANG == "fr" else _ERES_AR
+
+def to_ar_gender(v):      return _GENDER_FR2AR.get(v, v)
+def to_ar_marital(v):     return _MARITAL_FR2AR.get(v, v)
+def to_ar_pay_mth(v):     return _PAYMTH_FR2AR.get(v, v)
+def to_ar_exam_type(v):   return _ETYPE_FR2AR.get(v, v)
+def to_ar_exam_result(v): return _ERES_FR2AR.get(v, v)
+
+def to_disp_gender(v):      return _GENDER_AR2FR.get(v, v)   if LANG == "fr" else v
+def to_disp_marital(v):     return _MARITAL_AR2FR.get(v, v)  if LANG == "fr" else v
+def to_disp_pay_mth(v):     return _PAYMTH_AR2FR.get(v, v)   if LANG == "fr" else v
+def to_disp_exam_type(v):   return _ETYPE_AR2FR.get(v, v)    if LANG == "fr" else v
+def to_disp_exam_result(v): return _ERES_AR2FR.get(v, v)     if LANG == "fr" else v
 ALGERIA_WILAYAS = [
     "01 - أدرار", "02 - الشلف", "03 - الأغواط", "04 - أم البواقي",
     "05 - باتنة", "06 - بجاية", "07 - بسكرة", "08 - بشار",
@@ -2800,8 +2869,8 @@ class CandidateDialog(tk.Toplevel):
         personal = [
             (T("cdlg_f_lastname"),  "last_name",          "entry", None),
             (T("cdlg_f_firstname"), "first_name",         "entry", None),
-            (T("cdlg_f_gender"),    "gender",             "combo", GENDER_OPTIONS),
-            (T("cdlg_f_marital"),   "marital_status",     "combo", MARITAL_OPTIONS),
+            (T("cdlg_f_gender"),    "gender",             "combo", gender_opts()),
+            (T("cdlg_f_marital"),   "marital_status",     "combo", marital_opts()),
             (T("cdlg_f_nin"),       "national_id",        "entry", None),
             (T("cdlg_f_blood"),     "blood_type",         "combo", BLOOD_TYPE_OPTIONS),
             (T("cdlg_f_father"),    "father_name",        "entry", None),
@@ -2997,6 +3066,10 @@ class CandidateDialog(tk.Toplevel):
             if k == "instructor_name":
                 inst = InstructorDB.get(c.get("instructor_id")) if c.get("instructor_id") else None
                 v.set(f"{inst['last_name']} {inst['first_name']}" if inst else "")
+            elif k == "gender":
+                v.set(to_disp_gender(str(c.get(k, "") or "")))
+            elif k == "marital_status":
+                v.set(to_disp_marital(str(c.get(k, "") or "")))
             else:
                 v.set(str(c.get(k, "")) if c.get(k) is not None else "")
         self.born_abroad_var.set(int(c.get("is_born_abroad") or 0))
@@ -3020,8 +3093,8 @@ class CandidateDialog(tk.Toplevel):
             if r["result"] == "ناجح":
                 stats[t]["passed"] += 1
 
-        for etype in EXAM_TYPE_OPTIONS:
-            s = stats.get(etype, {"total": 0, "passed": 0})
+        for etype_ar, etype_disp in zip(_ETYPE_AR, exam_type_opts()):
+            s = stats.get(etype_ar, {"total": 0, "passed": 0})
             total  = s["total"]
             passed = s["passed"]
             failed = total - passed
@@ -3030,7 +3103,7 @@ class CandidateDialog(tk.Toplevel):
             card   = tk.Frame(self._exam_stats_frame, bg=color,
                               padx=14, pady=10, relief="flat")
             card.pack(side=S(), padx=6)
-            tk.Label(card, text=f"{T('cdlg_exam_card')} {etype}",
+            tk.Label(card, text=f"{T('cdlg_exam_card')} {etype_disp}",
                      font=FONT_BOLD, bg=color, fg="white").pack()
             tk.Label(card, text=f"{passed}/{total}  ({pct}%  {T('cdlg_exam_pct')})",
                      font=(FONT_FAMILY, 10), bg=color, fg="white").pack()
@@ -3098,8 +3171,10 @@ class CandidateDialog(tk.Toplevel):
                      "second_nationality", "current_address", "embassy", "consulate",
                      "file_number", "file_date", "address_commune", "address_wilaya"]
         d = {k: self.vars[k].get().strip() for k in text_keys}
-        for k in ["gender", "marital_status", "blood_type", "license_type"]:
-            d[k] = self.vars[k].get()
+        d["blood_type"]     = self.vars["blood_type"].get()
+        d["license_type"]   = self.vars["license_type"].get()
+        d["gender"]         = to_ar_gender(self.vars["gender"].get())
+        d["marital_status"] = to_ar_marital(self.vars["marital_status"].get())
         d["nationality"]    = self.vars["nationality"].get().strip() or "جزائرية"
         d["birth_country"]  = self.vars["birth_country"].get().strip() or "الجزائر"
         d["instructor_id"]  = instr
@@ -3163,15 +3238,15 @@ class ExamResultDialog(tk.Toplevel):
                 w = make_entry(f, var, width=24)
             w.pack(fill="x", ipady=5, pady=(2, 0))
 
-        self.v_type   = tk.StringVar(value=EXAM_TYPE_OPTIONS[0])
+        self.v_type   = tk.StringVar(value=exam_type_opts()[0])
         self.v_date   = tk.StringVar(value=str(date.today()))
-        self.v_result = tk.StringVar(value=EXAM_RESULT_OPTIONS[0])
+        self.v_result = tk.StringVar(value=exam_result_opts()[0])
         self.v_score  = tk.StringVar(value="")
         self.v_notes  = tk.StringVar(value="")
 
-        lbl_entry(0, 0, T("exdlg_f_type"),   self.v_type,   "combo", EXAM_TYPE_OPTIONS)
+        lbl_entry(0, 0, T("exdlg_f_type"),   self.v_type,   "combo", exam_type_opts())
         lbl_entry(0, 1, T("exdlg_f_date"),   self.v_date,   "entry")
-        lbl_entry(1, 0, T("exdlg_f_result"), self.v_result, "combo", EXAM_RESULT_OPTIONS)
+        lbl_entry(1, 0, T("exdlg_f_result"), self.v_result, "combo", exam_result_opts())
         lbl_entry(1, 1, T("exdlg_f_score"),  self.v_score,  "entry")
         lbl_entry(2, 0, T("exdlg_f_notes"),  self.v_notes,  "entry", colspan=2)
 
@@ -3185,8 +3260,8 @@ class ExamResultDialog(tk.Toplevel):
 
     def _save(self):
         exam_date = self.v_date.get().strip()
-        exam_type = self.v_type.get()
-        result    = self.v_result.get()
+        exam_type = to_ar_exam_type(self.v_type.get())
+        result    = to_ar_exam_result(self.v_result.get())
         if not exam_type or not result:
             show_error(T("exam_err_type_result")); return
         try:
@@ -3417,7 +3492,7 @@ class InstructorDialog(tk.Toplevel):
         fields1 = [
             (T("idlg_f_fname"),   "first_name",       "entry"),
             (T("idlg_f_lname"),   "last_name",        "entry"),
-            (T("cdlg_f_gender"),  "gender",           "combo", GENDER_OPTIONS),
+            (T("cdlg_f_gender"),  "gender",           "combo", gender_opts()),
             (T("idlg_f_bdate"),   "birth_date",       "entry"),
             (T("idlg_f_bplace"),  "birth_place",      "entry"),
             (T("idlg_f_phone"),   "phone",            "entry"),
@@ -3475,14 +3550,17 @@ class InstructorDialog(tk.Toplevel):
 
     def _fill(self, d):
         for k, v in self.vars.items():
-            v.set(str(d.get(k, "")))
+            val = str(d.get(k, "") or "")
+            if k == "gender":
+                val = to_disp_gender(val)
+            v.set(val)
 
     def _save(self):
         d = {k: self.vars[k].get().strip() for k in
              ("first_name","last_name","birth_date","birth_place","phone","address",
               "license_number","license_date","categories","contract_duration",
               "salary","contract_start_date","notice_period","contract_signing_date")}
-        d["gender"] = self.vars["gender"].get()
+        d["gender"] = to_ar_gender(self.vars["gender"].get())
         d["experience_years"] = self.vars["experience_years"].get().strip() or "0"
         if not d["first_name"] or not d["last_name"]:
             show_error(T("cand_err_name")); return
@@ -4267,7 +4345,9 @@ class TrainingFrame(tk.Frame):
 
         field_row(T("train_date_field"),  "exam_date", default=str(date.today()))
         field_row(T("train_score_field"), "score", default="0")
-        field_row(T("train_result_field"),"result", "combo", ["راسب", "ناجح"], default="راسب")
+        field_row(T("train_result_field"),"result", "combo",
+                  [exam_result_opts()[1], exam_result_opts()[0]],
+                  default=exam_result_opts()[1])
         field_row(T("train_notes_field"), "notes", default="")
 
         def _save():
@@ -4411,7 +4491,7 @@ class PaymentsFrame(tk.Frame):
         section_title(fc, T("pay_add_section"), icon="➕")
         
         fields = [(T("pay_date"), "date", "entry"), (T("pay_amount"), "amount", "entry"),
-                  (T("pay_method"), "payment_method", "combo", PAYMENT_METHOD_OPTIONS), (T("pay_note"), "notes", "entry")]
+                  (T("pay_method"), "payment_method", "combo", payment_method_opts()), (T("pay_note"), "notes", "entry")]
         
         for fi in fields:
             row = tk.Frame(fc, bg=COLOR_CARD); row.pack(fill="x", pady=2)
@@ -4463,7 +4543,7 @@ class PaymentsFrame(tk.Frame):
     def _load_candidates(self):
         rows = CandidateDB.get_all(self.search_var.get())
         values = [(r['id'], r['last_name'], r['first_name'], r['phone'],
-                   f"{r['total_amount']:,.0f} دج") for r in rows]
+                   f"{r['total_amount']:,.0f} {T('currency_unit')}") for r in rows]
         insert_zebra(self.cand_tree, values)
 
     def _on_candidate_select(self, event):
@@ -4477,10 +4557,11 @@ class PaymentsFrame(tk.Frame):
         total = cand['total_amount'] if cand else 0
         paid = PaymentDB.get_total_by_candidate(self.selected_candidate_id) if cand else 0
         rem = total - paid
-        self.lbl_total.config(text=f"{T('pay_lbl_total')} {total:,.0f} دج")
-        self.lbl_paid.config(text=f"{T('pay_lbl_paid')} {paid:,.0f} دج")
+        cur = T("currency_unit")
+        self.lbl_total.config(text=f"{T('pay_lbl_total')} {total:,.0f} {cur}")
+        self.lbl_paid.config(text=f"{T('pay_lbl_paid')} {paid:,.0f} {cur}")
         self.lbl_remaining.config(
-            text=f"{T('pay_lbl_remaining')} {rem:,.0f} دج",
+            text=f"{T('pay_lbl_remaining')} {rem:,.0f} {cur}",
             fg=COLOR_ACCENT if rem > 0 else "#a7f3d0")
         self._load_payments()
 
@@ -4538,7 +4619,7 @@ class PaymentsFrame(tk.Frame):
         PaymentDB.add({"candidate_id": self.selected_candidate_id,
                        "date": self.vars["date"].get().strip() or str(date.today()),
                        "amount": amt,
-                       "payment_method": self.vars["payment_method"].get() or "نقدي",
+                       "payment_method": to_ar_pay_mth(self.vars["payment_method"].get()) or "نقدي",
                        "notes": self.vars["notes"].get().strip()})
         self.vars["amount"].set(""); self.vars["notes"].set("")
         self._refresh_candidate_ui()
@@ -4579,12 +4660,30 @@ class PaymentsFrame(tk.Frame):
             date_str = p.get('date', '')
             rows_html += f"<tr><td>{i}</td><td>{date_str}</td><td>{amt}</td><td>{method}</td><td>{notes}</td></tr>"
 
+        _dir  = "rtl" if LANG == "ar" else "ltr"
+        _lang = LANG
+        _cur  = T("currency_unit")
+        _rcp  = T("receipt_title")
+        _addr_lbl = T("receipt_address_lbl")
+        _ph_lbl   = T("receipt_phone_lbl")
+        _cand_lbl = T("receipt_cand_lbl")
+        _phone_lbl= T("receipt_cand_phone")
+        _col_num  = T("receipt_col_num")
+        _col_date = T("receipt_col_date")
+        _col_amt  = f"{T('receipt_col_amount')} ({_cur})"
+        _col_mth  = T("receipt_col_method")
+        _col_note = T("receipt_col_note")
+        _sum_total= T("receipt_sum_total")
+        _sum_paid = T("receipt_sum_paid")
+        _sum_rem  = T("receipt_sum_remaining")
+        _issued   = T("receipt_issued")
+        _sign     = T("receipt_signature")
         html_content = f"""
         <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
+        <html dir="{_dir}" lang="{_lang}">
         <head>
             <meta charset="UTF-8">
-            <title>وصل دفع - {cand_name}</title>
+            <title>{_rcp} - {cand_name}</title>
             <style>
                 body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 30px; font-size: 15px; color: #111; }}
                 .header {{ text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 15px; margin-bottom: 30px; }}
@@ -4616,26 +4715,26 @@ class PaymentsFrame(tk.Frame):
         <body onload="setTimeout(function(){{ window.print(); }}, 500);">
             <div class="header">
                 <h1>{school_name}</h1>
-                <p>العنوان: {school_address} | الهاتف: {school_phone}</p>
+                <p>{_addr_lbl}: {school_address} | {_ph_lbl}: {school_phone}</p>
             </div>
             
             <div class="center-title">
-                <div class="title">وصل دفع</div>
+                <div class="title">{_rcp}</div>
             </div>
             
             <div class="info">
-                <p><strong>المترشح:</strong> {cand_name}</p>
-                <p><strong>رقم الهاتف:</strong> {cand_phone}</p>
+                <p><strong>{_cand_lbl}:</strong> {cand_name}</p>
+                <p><strong>{_phone_lbl}:</strong> {cand_phone}</p>
             </div>
             
             <table>
                 <thead>
                     <tr>
-                        <th>رقم</th>
-                        <th>التاريخ</th>
-                        <th>المبلغ (دج)</th>
-                        <th>طريقة الدفع</th>
-                        <th>ملاحظة</th>
+                        <th>{_col_num}</th>
+                        <th>{_col_date}</th>
+                        <th>{_col_amt}</th>
+                        <th>{_col_mth}</th>
+                        <th>{_col_note}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -4645,16 +4744,16 @@ class PaymentsFrame(tk.Frame):
             
             <div class="summary-container">
                 <table class="summary">
-                    <tr><th>المبلغ الإجمالي للتكوين</th><td>{cand['total_amount']:,.0f} دج</td></tr>
-                    <tr><th>مجموع المدفوعات</th><td>{total_paid:,.0f} دج</td></tr>
-                    <tr><th>المبلغ المتبقي</th><td>{rem:,.0f} دج</td></tr>
+                    <tr><th>{_sum_total}</th><td>{cand['total_amount']:,.0f} {_cur}</td></tr>
+                    <tr><th>{_sum_paid}</th><td>{total_paid:,.0f} {_cur}</td></tr>
+                    <tr><th>{_sum_rem}</th><td>{rem:,.0f} {_cur}</td></tr>
                 </table>
             </div>
             
             <div class="footer">
-                <p>حُرّر بتاريخ: {date.today().strftime('%Y-%m-%d')}</p>
+                <p>{_issued}: {date.today().strftime('%Y-%m-%d')}</p>
                 <br>
-                <p>ختم وتوقيع المسؤول: ............................</p>
+                <p>{_sign}: ............................</p>
             </div>
         </body>
         </html>
@@ -4681,11 +4780,11 @@ class PaymentsFrame(tk.Frame):
         except ValueError:
             show_error(T("pay_err_amount_num")); return
         notes = self.vars["notes"].get().strip()
-        notes = f"استرداد مبلغ: {notes}" if notes else "استرداد مبلغ"
+        notes = f"{T('pay_refund_note')}: {notes}" if notes else T("pay_refund_note")
         PaymentDB.add({"candidate_id": self.selected_candidate_id,
                        "date": self.vars["date"].get().strip() or str(date.today()),
                        "amount": -amt,
-                       "payment_method": self.vars["payment_method"].get() or "نقدي",
+                       "payment_method": to_ar_pay_mth(self.vars["payment_method"].get()) or "نقدي",
                        "notes": notes})
         self.vars["amount"].set(""); self.vars["notes"].set("")
         self._refresh_candidate_ui()
@@ -4930,10 +5029,10 @@ class ReportsFrame(tk.Frame):
                 return False
 
         if not valid_date(d_from):
-            messagebox.showerror("تنسيق خاطئ", "تنسيق تاريخ البداية غير صحيح\nالمطلوب: YYYY-MM-DD")
+            messagebox.showerror(T("msg_error"), T("period_bad_from"))
             return
         if not valid_date(d_to):
-            messagebox.showerror("تنسيق خاطئ", "تنسيق تاريخ النهاية غير صحيح\nالمطلوب: YYYY-MM-DD")
+            messagebox.showerror(T("msg_error"), T("period_bad_to"))
             return
 
         # إجمالي المدفوعات والمصاريف في الفترة
@@ -5657,19 +5756,19 @@ class DocumentsFrame(tk.Frame):
         if not HAS_REPORTLAB:
             warn = tk.Frame(wrap, bg="#fef3c7", padx=15, pady=10)
             warn.pack(fill="x", pady=(0, 10))
-            tk.Label(warn, text="⚠️  مكتبة reportlab غير مثبتة. شغّل: pip install reportlab",
+            tk.Label(warn, text=T("doc_warn_reportlab"),
                      font=FONT_BOLD, bg="#fef3c7", fg="#92400e",
                      anchor=A()).pack(anchor=A())
         elif not HAS_ARABIC_LIBS:
             warn = tk.Frame(wrap, bg="#fef3c7", padx=15, pady=10)
             warn.pack(fill="x", pady=(0, 10))
-            tk.Label(warn, text="⚠️  مكتبتا arabic_reshaper و python-bidi غير مثبتتين.\nقد تظهر الحروف العربية متفرقة. شغّل:\n   pip install arabic_reshaper python-bidi",
+            tk.Label(warn, text=T("doc_warn_arabic_libs"),
                      font=FONT_BOLD, bg="#fef3c7", fg="#92400e",
                      justify=J(), anchor=A()).pack(anchor=A())
         else:
             ok = tk.Frame(wrap, bg="#d1fae5", padx=15, pady=10)
             ok.pack(fill="x", pady=(0, 10))
-            tk.Label(ok, text=f"✓  دعم العربية مفعّل (الخط: {os.path.basename(ARABIC_FONT) if ARABIC_FONT != 'Helvetica' else 'النظامي'})",
+            tk.Label(ok, text=T("doc_ok_arabic"),
                      font=FONT_BOLD, bg="#d1fae5", fg="#065f46",
                      anchor=A()).pack(anchor=A())
 
@@ -8215,20 +8314,20 @@ class DrivingSchoolApp:
         outer = tk.Frame(parent, bg=COLOR_SIDEBAR, cursor="hand2")
         outer.pack(fill="x")
 
-        # شريط اللون النشط (يسار — بجانب محتوى التطبيق)
+        # شريط اللون النشط — يتكيف مع اتجاه اللغة
         accent = tk.Frame(outer, bg=COLOR_SIDEBAR, width=4)
-        accent.pack(side="left", fill="y")
+        accent.pack(side=S(), fill="y")
 
         inner = tk.Frame(outer, bg=COLOR_SIDEBAR, padx=12, pady=10)
-        inner.pack(side="left", fill="both", expand=True)
+        inner.pack(side=So(), fill="both", expand=True)
 
         icon_lbl = tk.Label(inner, text=icon, font=(FONT_FAMILY, 13),
                             bg=COLOR_SIDEBAR, fg="#64748b")
-        icon_lbl.pack(side="left", padx=(0, 8))
+        icon_lbl.pack(side=S(), padx=(0, 8))
 
         text_lbl = tk.Label(inner, text=label, font=(FONT_FAMILY, 10, "bold"),
-                            bg=COLOR_SIDEBAR, fg="#94a3b8", anchor="w")
-        text_lbl.pack(side="left", fill="x", expand=True)
+                            bg=COLOR_SIDEBAR, fg="#94a3b8", anchor=A())
+        text_lbl.pack(side=S(), fill="x", expand=True)
 
         ref = {"outer": outer, "inner": inner,
                "icon": icon_lbl, "text": text_lbl, "accent": accent}
