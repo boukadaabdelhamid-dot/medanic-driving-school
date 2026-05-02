@@ -6607,6 +6607,10 @@ class DocumentsFrame(tk.Frame):
                          "N° d'enregistrement : ........................."),
                   ARABIC_FONT_BOLD, 11)
         
+        # ── جلب حصص المترشح من قاعدة البيانات ──
+        raw_sessions = SessionDB.get_all(candidate_id=cand['id'])
+        raw_sessions.sort(key=lambda s: (s.get('session_date',''), s.get('session_time','')))
+
         # Session grid / الجدول الرئيسي للحصص
         y_grid = 12.5
         def draw_grid_block(x_start, num_start, num_end):
@@ -6621,14 +6625,27 @@ class DocumentsFrame(tk.Frame):
                 draw_rect(cx, curr_y, cw[j], th)
                 draw_text(cx + cw[j]/2, curr_y+0.15, h, ARABIC_FONT_BOLD, 8, "center")
                 cx += cw[j]
-            
+
             for r in range(num_start, num_end + 1):
                 curr_y -= th
                 cx = x_start
+                # الحصة الموافقة لهذا الرقم (0-indexed)
+                sess = raw_sessions[r - 1] if (r - 1) < len(raw_sessions) else None
                 for j in range(4):
                     draw_rect(cx, curr_y, cw[j], th)
                     if j == 0:
                         draw_text(cx + cw[j]/2, curr_y+0.15, str(r), "Helvetica", 9, "center")
+                    elif j == 1 and sess:
+                        # تاريخ الحصة
+                        draw_text(cx + cw[j]/2, curr_y+0.15,
+                                  str(sess.get('session_date', '')),
+                                  "Helvetica", 8, "center")
+                    elif j == 2 and sess:
+                        # وقت الحصة + المدة
+                        t   = str(sess.get('session_time', ''))
+                        dur = str(sess.get('duration', ''))
+                        cell_txt = f"{t}  ({dur}mn)" if t else (f"{dur}mn" if dur else "")
+                        draw_text(cx + cw[j]/2, curr_y+0.15, cell_txt, "Helvetica", 7, "center")
                     cx += cw[j]
 
         draw_grid_block(11.5, 1, 13)
