@@ -93,18 +93,13 @@ STRINGS: dict = {
     "dash_payments":     {"ar": "المدفوعات (دج)",               "fr": "Paiements (DA)"},
     "dash_expenses":     {"ar": "المصاريف (دج)",                "fr": "Dépenses (DA)"},
     "dash_profit":       {"ar": "💎  الأرباح الصافية لسنة",    "fr": "💎  Bénéfice net année"},
-    "dash_alerts":       {"ar": "تنبيهات وإشعارات هامة",        "fr": "Alertes importantes"},
     "dash_today_sess":   {"ar": "حصص اليوم",                    "fr": "Séances du jour"},
-    "dash_recent":       {"ar": "المترشحون المسجلون حديثاً",    "fr": "Candidats récemment inscrits"},
     "dash_no_sessions":  {"ar": "لا توجد حصص مجدولة لهذا اليوم","fr": "Aucune séance planifiée aujourd'hui"},
-    "dash_next_sess":    {"ar": "⏭  أقرب حصة قادمة:",          "fr": "⏭  Prochaine séance:"},
     "dash_see_details":  {"ar": "← عرض التفاصيل",              "fr": "→ Voir détails"},
     "dash_success_rate": {"ar": "نجاح",                         "fr": "Réussite"},
     "dash_attempts":     {"ar": "المحاولات:",                   "fr": "Tentatives:"},
     "dash_passed_lbl":   {"ar": "ناجح:",                        "fr": "Réussi:"},
     "dash_failed_lbl":   {"ar": "راسب:",                        "fr": "Échoué:"},
-    "dash_unpaid":       {"ar": "مترشحين لم يسددوا كامل المستحقات.", "fr": "candidats n'ont pas payé intégralement."},
-    "dash_there_are":    {"ar": "هناك",                         "fr": "Il y a"},
     # ── معلومات المدرسة ──────────────────────────────────────────────────────
     "school_title":    {"ar": "🏫  معلومات المدرسة",                                         "fr": "🏫  Informations École"},
     "school_subtitle": {"ar": "بيانات المدرسة الرسمية المستعملة في الوثائق المطبوعة",        "fr": "Données officielles utilisées dans les documents imprimés"},
@@ -233,7 +228,6 @@ STRINGS: dict = {
     # ── المدفوعات (رسائل إضافية) ─────────────────────────────────────────────
     "pay_err_print":    {"ar": "حدث خطأ أثناء طباعة الوصل",  "fr": "Erreur lors de l'impression du reçu"},
     "pay_err_amount":   {"ar": "يرجى إدخال مبلغ صحيح أكبر من الصفر", "fr": "Veuillez saisir un montant valide supérieur à zéro"},
-    "pay_err_amount_num":{"ar": "المبلغ يجب أن يكون رقماً",  "fr": "Le montant doit être un nombre"},
     "pay_refunded":     {"ar": "تم استرداد المبلغ بنجاح",    "fr": "Remboursement effectué avec succès"},
     "pay_deleted":      {"ar": "تم حذف الدفعة",              "fr": "Paiement supprimé"},
     "pay_sel_first":    {"ar": "يرجى تحديد دفعة من السجل",  "fr": "Sélectionnez un paiement d'abord"},
@@ -305,6 +299,179 @@ STRINGS: dict = {
     # ── إدارة المستخدمين (رسائل إضافية) ──────────────────────────────────────
     "users_err_del_admin":{"ar": "لا يمكن حذف حساب admin.",         "fr": "Impossible de supprimer le compte admin."},
     "users_err_del_self": {"ar": "لا يمكنك حذف حسابك الخاص.",       "fr": "Vous ne pouvez pas supprimer votre propre compte."},
+    # ── حوار المترشح (tabs / sections / fields / buttons) ────────────────────
+    "cdlg_title_add":    {"ar": "➕  تسجيل مترشح جديد",        "fr": "➕  Nouveau candidat"},
+    "cdlg_title_edit":   {"ar": "✏️  تعديل بيانات المترشح",    "fr": "✏️  Modifier le candidat"},
+    "cdlg_subtitle":     {"ar": "استمارة الترشح لاجتياز امتحانات رخصة السياقة",
+                          "fr": "Formulaire de candidature aux examens du permis de conduire"},
+    "cdlg_btn_cancel":   {"ar": "إلغاء",                       "fr": "Annuler"},
+    "cdlg_btn_save_add": {"ar": "✅  تسجيل المترشح",           "fr": "✅  Enregistrer"},
+    "cdlg_btn_save_edit":{"ar": "💾  حفظ التعديل",             "fr": "💾  Enregistrer"},
+    "cdlg_tab_personal": {"ar": "👤  البيانات الشخصية",        "fr": "👤  Données personnelles"},
+    "cdlg_tab_birth":    {"ar": "🎂  الميلاد والعنوان",        "fr": "🎂  Naissance & adresse"},
+    "cdlg_tab_reg":      {"ar": "🚗  التسجيل والتكوين",        "fr": "🚗  Inscription & formation"},
+    "cdlg_tab_exams":    {"ar": "📊  نتائج الامتحانات",        "fr": "📊  Résultats d'examens"},
+    "cdlg_sec_file":     {"ar": "بيانات الملف",                "fr": "Données du dossier"},
+    "cdlg_sec_personal": {"ar": "المعلومات الشخصية",           "fr": "Informations personnelles"},
+    "cdlg_sec_birth":    {"ar": "تاريخ ومكان الميلاد",         "fr": "Date et lieu de naissance"},
+    "cdlg_sec_addr":     {"ar": "العنوان الحالي",              "fr": "Adresse actuelle"},
+    "cdlg_sec_license":  {"ar": "الصنف المطلوب ونوع الرخصة",  "fr": "Catégorie et type de permis"},
+    "cdlg_sec_inst_pay": {"ar": "الممرن والمبالغ المالية",     "fr": "Moniteur et montants"},
+    "cdlg_sec_prev_lic": {"ar": "الأصناف المتحصل عليها من قبل","fr": "Catégories déjà obtenues"},
+    "cdlg_sec_exam_hist":{"ar": "سجل الامتحانات",              "fr": "Historique des examens"},
+    "cdlg_f_file_num":   {"ar": "رقم الملف",                  "fr": "N° dossier"},
+    "cdlg_f_file_date":  {"ar": "تاريخ إيداع الملف",          "fr": "Date de dépôt"},
+    "cdlg_f_lastname":   {"ar": "اللقب / Nom *",              "fr": "Nom *"},
+    "cdlg_f_firstname":  {"ar": "الاسم / Prénom *",           "fr": "Prénom *"},
+    "cdlg_f_gender":     {"ar": "الجنس",                      "fr": "Sexe"},
+    "cdlg_f_marital":    {"ar": "الحالة العائلية",            "fr": "Situation familiale"},
+    "cdlg_f_nin":        {"ar": "رقم التعريف الوطني (NIN)",   "fr": "NIN"},
+    "cdlg_f_blood":      {"ar": "فصيلة الدم",                 "fr": "Groupe sanguin"},
+    "cdlg_f_father":     {"ar": "اسم الأب",                   "fr": "Prénom du père"},
+    "cdlg_f_mother":     {"ar": "اسم ولقب الأم",              "fr": "Nom & prénom de la mère"},
+    "cdlg_f_phone":      {"ar": "رقم الهاتف",                 "fr": "Téléphone"},
+    "cdlg_f_nat":        {"ar": "الجنسية الأصلية",            "fr": "Nationalité d'origine"},
+    "cdlg_f_nat2":       {"ar": "الجنسية المكتسبة (إن وجدت)", "fr": "Nationalité acquise (si applicable)"},
+    "cdlg_f_disab":      {"ar": "إعاقة / إصابة (إن وجدت)",   "fr": "Handicap / blessure (si applicable)"},
+    "cdlg_f_bdate":      {"ar": "تاريخ الميلاد (YYYY-MM-DD)", "fr": "Date de naissance (YYYY-MM-DD)"},
+    "cdlg_f_bcountry":   {"ar": "بلد الميلاد",                "fr": "Pays de naissance"},
+    "cdlg_f_bcommune":   {"ar": "بلدية / مدينة الميلاد",     "fr": "Commune de naissance"},
+    "cdlg_f_bwilaya":    {"ar": "ولاية الميلاد",              "fr": "Wilaya de naissance"},
+    "cdlg_f_embassy":    {"ar": "السفارة (للمولودين بالخارج)","fr": "Ambassade (nés à l'étranger)"},
+    "cdlg_f_consulate":  {"ar": "القنصلية أو مكتب التسجيل",  "fr": "Consulat ou bureau d'enregistrement"},
+    "cdlg_f_acommune":   {"ar": "بلدية / مدينة السكن",       "fr": "Commune de résidence"},
+    "cdlg_f_awilaya":    {"ar": "ولاية السكن",                "fr": "Wilaya de résidence"},
+    "cdlg_f_addr":       {"ar": "العنوان الكامل (الشارع، الحي...)","fr": "Adresse complète (rue, quartier...)"},
+    "cdlg_f_lic_type":   {"ar": "🎯  نوع الرخصة المطلوبة *", "fr": "🎯  Type de permis demandé *"},
+    "cdlg_f_lic_hint":   {"ar": "A: دراجة نارية  |  B: سيارة  |  C: شاحنة  |  D: حافلة  |  E: مقطورة",
+                          "fr": "A: Moto  |  B: Voiture  |  C: Camion  |  D: Bus  |  E: Remorque"},
+    "cdlg_f_inst":       {"ar": "الممرن المُكلَّف",           "fr": "Moniteur assigné"},
+    "cdlg_f_total_amt":  {"ar": "المبلغ الإجمالي للتكوين (دج) *","fr": "Montant total formation (DA) *"},
+    "cdlg_f_init_pay":   {"ar": "المبلغ المدفوع عند التسجيل (دج)","fr": "Acompte à l'inscription (DA)"},
+    "cdlg_f_prev_lic":   {"ar": "الأصناف السابقة (مثال: A, B, C1)","fr": "Catégories précédentes (ex: A, B, C1)"},
+    "cdlg_f_prev_hint":  {"ar": "أدخل رموز الأصناف القديمة مفصولة بفاصلة — مثال:  B, A1, C1",
+                          "fr": "Saisissez les catégories séparées par des virgules — ex: B, A1, C1"},
+    "cdlg_born_abroad":  {"ar": "  مولود(ة) بالخارج — تفعيل حقول بلد الميلاد والسفارة/القنصلية",
+                          "fr": "  Né(e) à l'étranger — activer les champs pays/ambassade/consulat"},
+    "cdlg_save_first":   {"ar": "احفظ بيانات المترشح أولاً، ثم ارجع لهذا التبويب لإضافة نتائج الامتحانات.",
+                          "fr": "Enregistrez d'abord le candidat, puis revenez dans cet onglet pour ajouter des résultats."},
+    "cdlg_btn_add_res":  {"ar": "إضافة نتيجة",               "fr": "Ajouter résultat"},
+    "cdlg_btn_del_res":  {"ar": "حذف المحدد",                "fr": "Supprimer sélectionné"},
+    "cdlg_exam_card":    {"ar": "امتحان",                     "fr": "Examen"},
+    "cdlg_exam_pct":     {"ar": "ناجح",                      "fr": "réussi"},
+    "cdlg_exam_tries":   {"ar": "محاولات",                   "fr": "tentatives"},
+    # ── حوار الامتحان (ExamResultDialog) ─────────────────────────────────────
+    "exdlg_title":       {"ar": "إضافة نتيجة امتحان",         "fr": "Ajouter résultat d'examen"},
+    "exdlg_header":      {"ar": "📝  إضافة نتيجة امتحان",     "fr": "📝  Nouveau résultat d'examen"},
+    "exdlg_f_type":      {"ar": "نوع الامتحان *",             "fr": "Type d'examen *"},
+    "exdlg_f_date":      {"ar": "تاريخ الامتحان (YYYY-MM-DD) *","fr": "Date d'examen (YYYY-MM-DD) *"},
+    "exdlg_f_result":    {"ar": "النتيجة *",                  "fr": "Résultat *"},
+    "exdlg_f_score":     {"ar": "الدرجة / العلامة (اختياري)","fr": "Note (optionnel)"},
+    "exdlg_f_notes":     {"ar": "ملاحظات (اختياري)",          "fr": "Observations (optionnel)"},
+    "exdlg_btn_cancel":  {"ar": "إلغاء",                      "fr": "Annuler"},
+    "exdlg_btn_save":    {"ar": "✅  حفظ النتيجة",            "fr": "✅  Enregistrer"},
+    # ── حوار الممرن (InstructorDialog) ───────────────────────────────────────
+    "idlg_win_title":    {"ar": "بيانات الممرن",              "fr": "Données du moniteur"},
+    "idlg_title_add":    {"ar": "➕  إضافة ممرن جديد",        "fr": "➕  Nouveau moniteur"},
+    "idlg_title_edit":   {"ar": "✏️  تعديل بيانات الممرن",   "fr": "✏️  Modifier le moniteur"},
+    "idlg_tab_basic":    {"ar": "👤 البيانات الأساسية",       "fr": "👤 Données de base"},
+    "idlg_tab_contract": {"ar": "📜 بيانات العقد",            "fr": "📜 Contrat"},
+    "idlg_f_fname":      {"ar": "الاسم *",                    "fr": "Prénom *"},
+    "idlg_f_lname":      {"ar": "اللقب *",                    "fr": "Nom *"},
+    "idlg_f_bdate":      {"ar": "تاريخ الميلاد",              "fr": "Date de naissance"},
+    "idlg_f_bplace":     {"ar": "مكان الميلاد",               "fr": "Lieu de naissance"},
+    "idlg_f_phone":      {"ar": "رقم الهاتف",                 "fr": "Téléphone"},
+    "idlg_f_addr":       {"ar": "العنوان",                    "fr": "Adresse"},
+    "idlg_f_lic_num":    {"ar": "رقم رخصة السياقة",           "fr": "N° permis de conduire"},
+    "idlg_f_lic_date":   {"ar": "تاريخ الحصول عليها",         "fr": "Date d'obtention"},
+    "idlg_f_cats":       {"ar": "الأصناف (مثال: A,B)",        "fr": "Catégories (ex: A,B)"},
+    "idlg_f_exp":        {"ar": "سنوات الخبرة",               "fr": "Années d'expérience"},
+    "idlg_f_dur":        {"ar": "مدة العقد (مثلاً: سنة)",     "fr": "Durée du contrat (ex: 1 an)"},
+    "idlg_f_salary":     {"ar": "الأجر الشهري (دج)",          "fr": "Salaire mensuel (DA)"},
+    "idlg_f_start":      {"ar": "تاريخ بداية العمل",          "fr": "Date de début"},
+    "idlg_f_sign":       {"ar": "تاريخ إمضاء العقد",          "fr": "Date de signature"},
+    "idlg_f_notice":     {"ar": "مدة الإخطار (بالأشهر)",      "fr": "Préavis (en mois)"},
+    "idlg_btn_cancel":   {"ar": "إلغاء",                      "fr": "Annuler"},
+    "idlg_btn_save":     {"ar": "حفظ البيانات",               "fr": "Enregistrer"},
+    # ── لوحة المعلومات (Dashboard) ───────────────────────────────────────────
+    "dash_alerts":       {"ar": "تنبيهات وإشعارات هامة",       "fr": "Alertes et notifications"},
+    "dash_veh_alert":    {"ar": "قرب انتهاء التأمين/المراقبة",  "fr": "assurance/contrôle proche expiration"},
+    "dash_unpaid":       {"ar": "مترشحين لم يسددوا كامل المستحقات.",
+                          "fr": "candidats avec des impayés."},
+    "dash_today":        {"ar": "حصص اليوم",                   "fr": "Séances d'aujourd'hui"},
+    "dash_no_sess":      {"ar": "لا توجد حصص مجدولة لهذا اليوم","fr": "Aucune séance prévue aujourd'hui"},
+    "dash_next_sess":    {"ar": "⏭  أقرب حصة قادمة:",         "fr": "⏭  Prochaine séance:"},
+    "dash_recent":       {"ar": "المترشحون المسجلون حديثاً",   "fr": "Candidats récemment inscrits"},
+    "dash_view_detail":  {"ar": "← عرض التفاصيل",             "fr": "→ Voir les détails"},
+    "dash_col_time":     {"ar": "الوقت",                      "fr": "Heure"},
+    "dash_col_cand":     {"ar": "المترشح",                    "fr": "Candidat"},
+    "dash_col_inst":     {"ar": "الممرن",                     "fr": "Moniteur"},
+    "dash_col_type":     {"ar": "النوع",                      "fr": "Type"},
+    "dash_col_dur":      {"ar": "المدة(د)",                   "fr": "Durée(mn)"},
+    "dash_col_full":     {"ar": "الاسم الكامل",               "fr": "Nom complet"},
+    "dash_col_phone":    {"ar": "الهاتف",                     "fr": "Téléphone"},
+    "dash_col_lic":      {"ar": "نوع الرخصة",                 "fr": "Type permis"},
+    "dash_col_total":    {"ar": "المبلغ الإجمالي",            "fr": "Montant total"},
+    "dash_col_date":     {"ar": "تاريخ التسجيل",              "fr": "Date inscription"},
+    "dash_profit_cur":   {"ar": "دج",                         "fr": "DA"},
+    "dash_pct_pass":     {"ar": "% ناجح",                     "fr": "% réussite"},
+    "dash_tries":        {"ar": "المحاولات",                  "fr": "Tentatives"},
+    "dash_pass":         {"ar": "ناجح",                       "fr": "Réussi"},
+    "dash_fail":         {"ar": "راسب",                       "fr": "Échec"},
+    "dash_there_are":    {"ar": "هناك",                       "fr": "Il y a"},
+    "dash_veh_text":     {"ar": "مركبة",                      "fr": "Véhicule"},
+    # ── نافذة التدريب (TrainingFrame inline labels) ───────────────────────────
+    "train_sec_current":    {"ar": "إدارة المرحلة الحالية",    "fr": "Gestion de l'étape actuelle"},
+    "train_choose_cand":    {"ar": "الرجاء اختيار مترشح",      "fr": "Veuillez choisir un candidat"},
+    "train_btn_pass":       {"ar": "نجاح",                     "fr": "Réussite"},
+    "train_btn_fail":       {"ar": "رسوب",                     "fr": "Échec"},
+    "train_search_cand":    {"ar": "ابحث عن مترشح:",           "fr": "Rechercher candidat:"},
+    "train_choose_cand_sec":{"ar": "اختر المترشح",             "fr": "Choisir le candidat"},
+    "train_hours_info":  {"ar": "الحجم الساعي: 30 ساعة كود | 30 ساعة سياقة",
+                          "fr": "Volume horaire: 30h code | 30h conduite"},
+    "train_stage_lbl":   {"ar": "المرحلة:",            "fr": "Étape:"},
+    "train_status_lbl":  {"ar": "الحالة:",             "fr": "Statut:"},
+    "train_stage_init":  {"ar": "المرحلة: -",          "fr": "Étape: -"},
+    "train_status_init": {"ar": "الحالة: -",           "fr": "Statut: -"},
+    "train_must_pass":   {"ar": "يجب النجاح في",       "fr": "Doit réussir"},
+    "train_first":       {"ar": "أولاً",               "fr": "d'abord"},
+    "train_locked_lbl":  {"ar": "مقفلة",               "fr": "verrouillée"},
+    "train_history_ttl": {"ar": "سجل مراحل التكوين",  "fr": "Historique de formation"},
+    "train_history_cand":{"ar": "سجل مراحل التكوين للمترشح:", "fr": "Historique de formation:"},
+    "train_exam_ttl":    {"ar": "نتائج الامتحانات",    "fr": "Résultats d'examens"},
+    "train_exam_cand":   {"ar": "📋  نتائج الامتحانات للمترشح:", "fr": "📋  Résultats d'examens:"},
+    "train_choose_stage":{"ar": "اختر المرحلة:",       "fr": "Choisir étape:"},
+    "train_add_result":  {"ar": "تسجيل نتيجة امتحان", "fr": "Ajouter résultat"},
+    "train_del_sel":     {"ar": "حذف المحدد",          "fr": "Supprimer sélectionné"},
+    "train_exam_new":    {"ar": "تسجيل نتيجة امتحان جديدة", "fr": "Nouveau résultat d'examen"},
+    "train_stage_field": {"ar": "المرحلة:",            "fr": "Étape:"},
+    "train_date_field":  {"ar": "تاريخ الامتحان:",    "fr": "Date d'examen:"},
+    "train_score_field": {"ar": "العلامة (/ 40):",     "fr": "Note (/ 40):"},
+    "train_result_field":{"ar": "النتيجة:",            "fr": "Résultat:"},
+    "train_notes_field": {"ar": "ملاحظات:",            "fr": "Observations:"},
+    "train_btn_save":    {"ar": "حفظ",                 "fr": "Enregistrer"},
+    "train_btn_cancel":  {"ar": "إلغاء",               "fr": "Annuler"},
+    "train_col_num":     {"ar": "رقم",                 "fr": "N°"},
+    "train_col_stage":   {"ar": "المرحلة",             "fr": "Étape"},
+    "train_col_status":  {"ar": "الحالة",              "fr": "Statut"},
+    "train_col_start":   {"ar": "تاريخ البداية",       "fr": "Date début"},
+    "train_col_end":     {"ar": "تاريخ النهاية",       "fr": "Date fin"},
+    "train_col_score":   {"ar": "النتيجة",             "fr": "Résultat"},
+    "train_col_notes":   {"ar": "ملاحظات",             "fr": "Observations"},
+    "train_col_exam_date":{"ar": "تاريخ الامتحان",    "fr": "Date examen"},
+    "train_col_score40": {"ar": "العلامة / 40",        "fr": "Note / 40"},
+    "train_res_pass":    {"ar": "✅ ناجح",              "fr": "✅ Réussi"},
+    "train_res_fail":    {"ar": "❌ راسب",              "fr": "❌ Échoué"},
+    # ── مدفوعات (نافذة دفعات المترشح) ────────────────────────────────────────
+    "pay_col_num":       {"ar": "رقم",                 "fr": "N°"},
+    "pay_col_date2":     {"ar": "التاريخ",             "fr": "Date"},
+    "pay_col_amount_da": {"ar": "المبلغ (دج)",         "fr": "Montant (DA)"},
+    "pay_col_method2":   {"ar": "طريقة الدفع",         "fr": "Mode de paiement"},
+    "pay_col_note2":     {"ar": "ملاحظة",              "fr": "Observation"},
+    "pay_btn_del":       {"ar": "حذف الدفعة المحددة", "fr": "Supprimer paiement"},
+    "pay_btn_close":     {"ar": "إغلاق",               "fr": "Fermer"},
+    # ── عام (section_title, stat_card) ────────────────────────────────────────
+    "lbl_this_item":     {"ar": "هذا العنصر",          "fr": "cet élément"},
     # ── الوثائق ──────────────────────────────────────────────────────────────
     "doc_title":         {"ar": "🖨️  طباعة الوثائق بالعربية",                     "fr": "🖨️  Impression des documents"},
     "doc_subtitle":      {"ar": "إنتاج كل الوثائق الرسمية بصيغة PDF بنص عربي مُنسّق","fr": "Produire tous les documents officiels en PDF"},
@@ -450,6 +617,16 @@ def A() -> str:
 def J() -> str:
     """محاذاة النص بحسب اتجاه اللغة: right للعربية، left للفرنسية."""
     return "right" if LANG == "ar" else "left"
+
+
+def S() -> str:
+    """جانب تعبئة العناصر الرئيسية: right للعربية (RTL)، left للفرنسية (LTR)."""
+    return "right" if LANG == "ar" else "left"
+
+
+def So() -> str:
+    """جانب تعبئة العناصر الثانوية (عكس S): left للعربية، right للفرنسية."""
+    return "left" if LANG == "ar" else "right"
 
 
 # ============================================================================
@@ -1942,7 +2119,9 @@ class ModernButton(tk.Button):
     def _darken(hex_color, amount=0.2):  return _clr_darken(hex_color, amount)
 
 
-def confirm_delete(name="هذا العنصر"):
+def confirm_delete(name=None):
+    if name is None:
+        name = T("lbl_this_item")
     return messagebox.askyesno(
         T("msg_confirm_del"),
         f"{T('msg_confirm_del_q')} {name}؟"
@@ -1969,9 +2148,9 @@ def section_title(parent, text, icon=""):
     lbl = tk.Label(f, text=f"{icon}  {text}" if icon else text,
                    font=(FONT_FAMILY, 13, "bold"), bg=COLOR_CARD,
                    fg=COLOR_PRIMARY, anchor=A())
-    lbl.pack(side="right")
+    lbl.pack(side=S())
     line = tk.Frame(f, bg=COLOR_PRIMARY_LIGHT, height=2)
-    line.pack(side="right", fill="x", expand=True, padx=(10, 0), pady=(8, 0))
+    line.pack(side=S(), fill="x", expand=True, padx=(10, 0), pady=(8, 0))
     return f
 
 
@@ -2034,20 +2213,20 @@ def stat_card(parent, title, value, icon, color, command=None):
     hc = _clr_lighten(color, 0.12)
     card = tk.Frame(parent, bg=color, padx=20, pady=18,
                     cursor="hand2" if command else "")
-    card.pack(side="right", fill="both", expand=True, padx=6)
+    card.pack(side=S(), fill="both", expand=True, padx=6)
     top = tk.Frame(card, bg=color); top.pack(fill="x")
     icon_lbl = tk.Label(top, text=icon, font=(FONT_FAMILY, 26),
-                        bg=color, fg="white"); icon_lbl.pack(side="right")
+                        bg=color, fg="white"); icon_lbl.pack(side=S())
     title_lbl = tk.Label(top, text=title, font=(FONT_FAMILY, 10, "bold"),
                          bg=color, fg="white", anchor=A())
-    title_lbl.pack(side="right", padx=8)
+    title_lbl.pack(side=S(), padx=8)
     val_lbl = tk.Label(card, text=value, font=(FONT_FAMILY, 20, "bold"),
                        bg=color, fg="white", anchor=A())
     val_lbl.pack(fill="x", pady=(6, 0))
     if command:
-        arr_lbl = tk.Label(card, text="← عرض التفاصيل",
+        arr_lbl = tk.Label(card, text=T("dash_view_detail"),
                            font=(FONT_FAMILY, 8), bg=color, fg="white",
-                           anchor="w"); arr_lbl.pack(fill="x", pady=(4, 0))
+                           anchor=A()); arr_lbl.pack(fill="x", pady=(4, 0))
         all_w = [card, top, icon_lbl, title_lbl, val_lbl, arr_lbl]
         def _enter(e):
             for w in all_w: w.configure(bg=hc)
@@ -2114,10 +2293,10 @@ class DashboardFrame(tk.Frame):
         pf.pack(fill="x", pady=(0, 20))
         tk.Label(pf, text=f"{T('dash_profit')} {y}",
                  font=(FONT_FAMILY, 14, "bold"),
-                 bg=profit_color, fg="white", anchor=A()).pack(side="right")
-        tk.Label(pf, text= f"{profit:,.0f} دج",
+                 bg=profit_color, fg="white", anchor=A()).pack(side=S())
+        tk.Label(pf, text=f"{profit:,.0f} {T('dash_profit_cur')}",
                  font=(FONT_FAMILY, 22, "bold"),
-                 bg=profit_color, fg="white", anchor="w").pack(side="left")
+                 bg=profit_color, fg="white", anchor=A()).pack(side=So())
 
         # إحصائيات النجاح (Success Rates) — مبنية على سجل الامتحانات الفعلي
         exam_stats = {s['stage_type']: s for s in ExamAttemptsDB.get_stats_by_stage()}
@@ -2141,14 +2320,14 @@ class DashboardFrame(tk.Frame):
 
             lbl_title  = tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT)
             lbl_title.pack(anchor=A())
-            lbl_rate   = tk.Label(sc, text=f"{rate:.1f}%  نجاح", font=(FONT_FAMILY, 16, "bold"),
+            lbl_rate   = tk.Label(sc, text=f"{rate:.1f}%  {T('dash_pct_pass')}", font=(FONT_FAMILY, 16, "bold"),
                      bg=COLOR_CARD, fg=color)
             lbl_rate.pack(anchor=A())
             lbl_detail = tk.Label(sc,
-                     text=f"المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
+                     text=f"{T('dash_tries')}: {total}  |  {T('dash_pass')}: {passed}  |  {T('dash_fail')}: {total - passed}",
                      font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
             lbl_detail.pack(anchor=A())
-            lbl_link   = tk.Label(sc, text="← عرض التفاصيل", font=FONT_TINY,
+            lbl_link   = tk.Label(sc, text=T("dash_view_detail"), font=FONT_TINY,
                      bg=COLOR_CARD, fg=COLOR_PRIMARY, cursor=card_cursor)
             lbl_link.pack(anchor=A())
 
@@ -2163,14 +2342,14 @@ class DashboardFrame(tk.Frame):
         if v_alerts or unpaid:
             no_outer, no_body = make_card(wrap, padding=15)
             no_outer.pack(fill="x", pady=(0, 20))
-            section_title(no_body, "تنبيهات وإشعارات هامة", icon="🔔")
+            section_title(no_body, T("dash_alerts"), icon="🔔")
             
             for v in v_alerts:
-                msg = f"مركبة {v['model']} ({v['plate_number']}): قرب انتهاء التأمين/المراقبة"
+                msg = f"{T('dash_veh_text')} {v['model']} ({v['plate_number']}): {T('dash_veh_alert')}"
                 tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_DANGER, anchor=A()).pack(fill="x")
             
             if unpaid:
-                msg = f"هناك {len(unpaid)} مترشحين لم يسددوا كامل المستحقات."
+                msg = f"{T('dash_there_are')} {len(unpaid)} {T('dash_unpaid')}"
                 tk.Label(no_body, text=msg, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_WARNING, anchor=A()).pack(fill="x")
 
 
@@ -2187,12 +2366,12 @@ class DashboardFrame(tk.Frame):
         sched_outer.pack(fill="x", pady=(0, 16))
         sh = tk.Frame(sched_body, bg=COLOR_CARD)
         sh.pack(fill="x", pady=(0, 8))
-        section_title(sched_body, f"حصص اليوم  ({len(today_sessions)})", icon="📅")
+        section_title(sched_body, f"{T('dash_today')}  ({len(today_sessions)})", icon="📅")
 
         if today_sessions:
             sess_tree = create_treeview(sched_body,
                 ("time", "candidate", "instructor", "type", "dur"),
-                ("الوقت", "المترشح", "الممرن", "النوع", "المدة(د)"),
+                (T("dash_col_time"), T("dash_col_cand"), T("dash_col_inst"), T("dash_col_type"), T("dash_col_dur")),
                 (80, 180, 160, 110, 70), height=min(len(today_sessions), 5))
             rows_s = [(s['session_time'], s['candidate_name'],
                        s['instructor_name'], s['session_type'],
@@ -2200,7 +2379,7 @@ class DashboardFrame(tk.Frame):
                       for s in today_sessions]
             insert_zebra(sess_tree, rows_s)
         else:
-            tk.Label(sched_body, text="لا توجد حصص مجدولة لهذا اليوم",
+            tk.Label(sched_body, text=T("dash_no_sess"),
                      font=FONT_MAIN, bg=COLOR_CARD,
                      fg=COLOR_TEXT_LIGHT, anchor=A()).pack(fill="x", pady=6)
 
@@ -2213,26 +2392,26 @@ class DashboardFrame(tk.Frame):
                                padx=12, pady=8)
             nxt_bar.pack(fill="x", pady=(8, 0))
             tk.Label(nxt_bar,
-                     text=f"⏭  أقرب حصة قادمة:  {nxt['session_date']}  {nxt['session_time']}  —  {nxt['candidate_name']}  /  {nxt['instructor_name']}",
+                     text=f"{T('dash_next_sess')}  {nxt['session_date']}  {nxt['session_time']}  —  {nxt['candidate_name']}  /  {nxt['instructor_name']}",
                      font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
                      fg=COLOR_PRIMARY, anchor=A()).pack(fill="x")
 
         # المترشحون الأخيرون
         outer, body = make_card(wrap)
         outer.pack(fill="both", expand=True)
-        section_title(body, "المترشحون المسجلون حديثاً", icon="🆕")
+        section_title(body, T("dash_recent"), icon="🆕")
 
         tree = create_treeview(body,
             ("name", "phone", "license", "instructor", "amount", "date"),
-            ("الاسم الكامل", "الهاتف", "نوع الرخصة", "الممرن",
-             "المبلغ الإجمالي", "تاريخ التسجيل"),
+            (T("dash_col_full"), T("dash_col_phone"), T("dash_col_lic"), T("dash_col_inst"),
+             T("dash_col_total"), T("dash_col_date")),
             (180, 120, 100, 160, 130, 130), height=6)
 
         latest = sorted(cands, key=lambda x: x.get('registration_date', ''),
                         reverse=True)[:10]
         rows = [(f"{c['last_name']} {c['first_name']}", c['phone'], c['license_type'],
                  c.get('instructor_name', '—') or '—',
-                 f"{c['total_amount']:,.0f} دج", c['registration_date'])
+                 f"{c['total_amount']:,.0f} {T('dash_profit_cur')}", c['registration_date'])
                 for c in latest]
         insert_zebra(tree, rows)
 
@@ -2400,22 +2579,22 @@ class CandidateDialog(tk.Toplevel):
         # ===== رأس النافذة =====
         head = tk.Frame(self, bg=COLOR_PRIMARY, pady=16, padx=20)
         head.pack(fill="x", side="top")
-        title_text = "✏️  تعديل بيانات المترشح" if self.candidate else "➕  تسجيل مترشح جديد"
+        title_text = T("cdlg_title_edit") if self.candidate else T("cdlg_title_add")
         tk.Label(head, text=title_text, font=(FONT_FAMILY, 15, "bold"),
-                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side="right")
-        tk.Label(head, text="استمارة الترشح لاجتياز امتحانات رخصة السياقة",
+                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side=S())
+        tk.Label(head, text=T("cdlg_subtitle"),
                  font=(FONT_FAMILY, 10), bg=COLOR_PRIMARY, fg="#c7d2fe",
-                 anchor="w").pack(side="left")
+                 anchor=A()).pack(side=So())
 
         # ===== شريط الأزرار (يُعبَّأ أولاً ليبقى ظاهراً دائماً) =====
         bf = tk.Frame(self, bg=COLOR_BG, pady=10)
         bf.pack(side="bottom", fill="x", padx=20)
         tk.Frame(bf, bg=COLOR_BORDER, height=1).pack(fill="x", pady=(0, 10))
-        ModernButton(bf, "إلغاء", self.destroy, icon="✗",
-                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
-        save_lbl = "💾  حفظ التعديل" if self.candidate else "✅  تسجيل المترشح"
+        ModernButton(bf, T("cdlg_btn_cancel"), self.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
+        save_lbl = T("cdlg_btn_save_edit") if self.candidate else T("cdlg_btn_save_add")
         ModernButton(bf, save_lbl, self._save,
-                     color=COLOR_SUCCESS, size="large").pack(side="right", padx=5)
+                     color=COLOR_SUCCESS, size="large").pack(side=S(), padx=5)
 
         # ===== المحتوى (يملأ الفراغ المتبقي) =====
         wrap = tk.Frame(self, bg=COLOR_BG, padx=12, pady=8)
@@ -2428,35 +2607,35 @@ class CandidateDialog(tk.Toplevel):
         # التبويب 1: بيانات الملف والمعلومات الشخصية
         # ══════════════════════════════════════════════
         tab1 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
-        nb.add(tab1, text="👤  البيانات الشخصية")
+        nb.add(tab1, text=T("cdlg_tab_personal"))
 
         # -- قسم: بيانات الملف (رقم الملف + تاريخ الإيداع) --
-        section_title(tab1, "بيانات الملف", icon="📁")
+        section_title(tab1, T("cdlg_sec_file"), icon="📁")
         gf = tk.Frame(tab1, bg=COLOR_CARD)
         gf.pack(fill="x")
         gf.columnconfigure(0, weight=1); gf.columnconfigure(1, weight=1)
-        self._make_field(gf, "رقم الملف",           "file_number", row=0, col=0)
-        self._make_field(gf, "تاريخ إيداع الملف",   "file_date",   row=0, col=1)
+        self._make_field(gf, T("cdlg_f_file_num"),  "file_number", row=0, col=0)
+        self._make_field(gf, T("cdlg_f_file_date"), "file_date",   row=0, col=1)
 
         # -- قسم: المعلومات الشخصية --
-        section_title(tab1, "المعلومات الشخصية", icon="📝")
+        section_title(tab1, T("cdlg_sec_personal"), icon="📝")
         g1 = tk.Frame(tab1, bg=COLOR_CARD)
         g1.pack(fill="both", expand=True)
         g1.columnconfigure(0, weight=1); g1.columnconfigure(1, weight=1)
 
         personal = [
-            ("اللقب / Nom *",               "last_name",          "entry", None),
-            ("الاسم / Prénom *",             "first_name",         "entry", None),
-            ("الجنس",                        "gender",             "combo", GENDER_OPTIONS),
-            ("الحالة العائلية",              "marital_status",     "combo", MARITAL_OPTIONS),
-            ("رقم التعريف الوطني (NIN)",     "national_id",        "entry", None),
-            ("فصيلة الدم",                   "blood_type",         "combo", BLOOD_TYPE_OPTIONS),
-            ("اسم الأب",                     "father_name",        "entry", None),
-            ("اسم ولقب الأم",                "mother_name",        "entry", None),
-            ("رقم الهاتف",                   "phone",              "entry", None),
-            ("الجنسية الأصلية",              "nationality",        "entry", None),
-            ("الجنسية المكتسبة (إن وجدت)",  "second_nationality", "entry", None),
-            ("إعاقة / إصابة (إن وجدت)",     "disability",         "entry", None),
+            (T("cdlg_f_lastname"),  "last_name",          "entry", None),
+            (T("cdlg_f_firstname"), "first_name",         "entry", None),
+            (T("cdlg_f_gender"),    "gender",             "combo", GENDER_OPTIONS),
+            (T("cdlg_f_marital"),   "marital_status",     "combo", MARITAL_OPTIONS),
+            (T("cdlg_f_nin"),       "national_id",        "entry", None),
+            (T("cdlg_f_blood"),     "blood_type",         "combo", BLOOD_TYPE_OPTIONS),
+            (T("cdlg_f_father"),    "father_name",        "entry", None),
+            (T("cdlg_f_mother"),    "mother_name",        "entry", None),
+            (T("cdlg_f_phone"),     "phone",              "entry", None),
+            (T("cdlg_f_nat"),       "nationality",        "entry", None),
+            (T("cdlg_f_nat2"),      "second_nationality", "entry", None),
+            (T("cdlg_f_disab"),     "disability",         "entry", None),
         ]
         for i, (lbl, key, kind, vals) in enumerate(personal):
             self._make_field(g1, lbl, key, kind, vals, row=i // 2, col=i % 2)
@@ -2465,15 +2644,15 @@ class CandidateDialog(tk.Toplevel):
         # التبويب 2: الميلاد والعنوان
         # ══════════════════════════════════════════════
         tab2 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
-        nb.add(tab2, text="🎂  الميلاد والعنوان")
+        nb.add(tab2, text=T("cdlg_tab_birth"))
 
-        section_title(tab2, "تاريخ ومكان الميلاد", icon="🎂")
+        section_title(tab2, T("cdlg_sec_birth"), icon="🎂")
 
         # خيار: مولود بالخارج
         ab_box = tk.Frame(tab2, bg=COLOR_PRIMARY_LIGHT, padx=12, pady=8)
         ab_box.pack(fill="x", pady=(0, 8))
         tk.Checkbutton(ab_box,
-                       text="  مولود(ة) بالخارج — تفعيل حقول بلد الميلاد والسفارة/القنصلية",
+                       text=T("cdlg_born_abroad"),
                        variable=self.born_abroad_var,
                        command=self._toggle_abroad_fields,
                        font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
@@ -2484,15 +2663,15 @@ class CandidateDialog(tk.Toplevel):
         g2.pack(fill="x")
         g2.columnconfigure(0, weight=1); g2.columnconfigure(1, weight=1)
 
-        self._make_field(g2, "تاريخ الميلاد (YYYY-MM-DD)",
+        self._make_field(g2, T("cdlg_f_bdate"),
                          "birth_date", "entry", row=0, col=0)
-        self._make_field(g2, "بلد الميلاد",
+        self._make_field(g2, T("cdlg_f_bcountry"),
                          "birth_country", "entry", row=0, col=1)
         _, self._birth_commune_w, _ = self._make_field(
-            g2, "بلدية / مدينة الميلاد",
+            g2, T("cdlg_f_bcommune"),
             "birth_place_commune", "combo", [], row=1, col=0)
         _, _birth_wilaya_w, _ = self._make_field(
-            g2, "ولاية الميلاد",
+            g2, T("cdlg_f_bwilaya"),
             "birth_place_wilaya", "combo", ALGERIA_WILAYAS, row=1, col=1)
         self.vars["birth_place_wilaya"].trace_add(
             "write", lambda *_: self._on_wilaya_change("birth_place_wilaya",
@@ -2500,20 +2679,20 @@ class CandidateDialog(tk.Toplevel):
                                                        self._birth_commune_w))
 
         _, _w_emb, c_emb = self._make_field(
-            g2, "السفارة (للمولودين بالخارج)", "embassy", "entry", row=2, col=0)
+            g2, T("cdlg_f_embassy"),  "embassy",  "entry", row=2, col=0)
         _, _w_con, c_con = self._make_field(
-            g2, "القنصلية أو مكتب التسجيل",   "consulate","entry", row=2, col=1)
+            g2, T("cdlg_f_consulate"),"consulate","entry", row=2, col=1)
         self._abroad_widgets = [c_emb, c_con]
 
         # -- العنوان الحالي --
-        section_title(tab2, "العنوان الحالي", icon="🏠")
+        section_title(tab2, T("cdlg_sec_addr"), icon="🏠")
         g_addr = tk.Frame(tab2, bg=COLOR_CARD)
         g_addr.pack(fill="x")
         g_addr.columnconfigure(0, weight=1); g_addr.columnconfigure(1, weight=1)
         _, self._addr_commune_w, _ = self._make_field(
-            g_addr, "بلدية / مدينة السكن",
+            g_addr, T("cdlg_f_acommune"),
             "address_commune", "combo", [], row=0, col=0)
-        self._make_field(g_addr, "ولاية السكن",
+        self._make_field(g_addr, T("cdlg_f_awilaya"),
                          "address_wilaya",  "combo", ALGERIA_WILAYAS, row=0, col=1)
         self.vars["address_wilaya"].trace_add(
             "write", lambda *_: self._on_wilaya_change("address_wilaya",
@@ -2522,7 +2701,7 @@ class CandidateDialog(tk.Toplevel):
 
         addr_cell = tk.Frame(tab2, bg=COLOR_CARD)
         addr_cell.pack(fill="x", padx=10, pady=4)
-        make_label(addr_cell, "العنوان الكامل (الشارع، الحي...)", font=FONT_BOLD).pack(anchor=A())
+        make_label(addr_cell, T("cdlg_f_addr"), font=FONT_BOLD).pack(anchor=A())
         v_addr = tk.StringVar(); self.vars["current_address"] = v_addr
         make_entry(addr_cell, v_addr, width=80).pack(fill="x", ipady=5, pady=(2, 0))
 
@@ -2530,46 +2709,46 @@ class CandidateDialog(tk.Toplevel):
         # التبويب 3: التسجيل والتكوين والأصناف السابقة
         # ══════════════════════════════════════════════
         tab3 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
-        nb.add(tab3, text="🚗  التسجيل والتكوين")
+        nb.add(tab3, text=T("cdlg_tab_reg"))
 
         # -- نوع الرخصة --
-        section_title(tab3, "الصنف المطلوب ونوع الرخصة", icon="🎯")
+        section_title(tab3, T("cdlg_sec_license"), icon="🎯")
         lic_card = tk.Frame(tab3, bg=COLOR_PRIMARY_LIGHT, padx=14, pady=10)
         lic_card.pack(fill="x", pady=(0, 10))
-        tk.Label(lic_card, text="🎯  نوع الرخصة المطلوبة *",
+        tk.Label(lic_card, text=T("cdlg_f_lic_type"),
                  font=(FONT_FAMILY, 12, "bold"),
                  bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor=A()).pack(anchor=A())
         v_lic = tk.StringVar(); self.vars["license_type"] = v_lic
         make_combo(lic_card, v_lic, LICENSE_OPTIONS, width=20).pack(
             anchor=A(), pady=(4, 2), ipady=4)
-        tk.Label(lic_card, text="A: دراجة نارية  |  B: سيارة  |  C: شاحنة  |  D: حافلة  |  E: مقطورة",
+        tk.Label(lic_card, text=T("cdlg_f_lic_hint"),
                  font=FONT_SMALL, bg=COLOR_PRIMARY_LIGHT, fg=COLOR_PRIMARY_DARK, anchor=A()).pack(anchor=A())
 
         # -- الممرن والمبالغ --
-        section_title(tab3, "الممرن والمبالغ المالية", icon="💰")
+        section_title(tab3, T("cdlg_sec_inst_pay"), icon="💰")
         opts = self._instructor_options()
         g3 = tk.Frame(tab3, bg=COLOR_CARD)
         g3.pack(fill="x")
         g3.columnconfigure(0, weight=1); g3.columnconfigure(1, weight=1)
 
-        self._make_field(g3, "الممرن المُكلَّف",
+        self._make_field(g3, T("cdlg_f_inst"),
                          "instructor_name", "combo", opts, row=0, col=0)
-        self._make_field(g3, "المبلغ الإجمالي للتكوين (دج) *",
+        self._make_field(g3, T("cdlg_f_total_amt"),
                          "total_amount", "entry", row=0, col=1)
         if not self.candidate:
-            self._make_field(g3, "المبلغ المدفوع عند التسجيل (دج)",
+            self._make_field(g3, T("cdlg_f_init_pay"),
                              "initial_payment", "entry", row=1, col=0)
 
         # -- الأصناف المتحصل عليها من قبل --
-        section_title(tab3, "الأصناف المتحصل عليها من قبل", icon="📋")
+        section_title(tab3, T("cdlg_sec_prev_lic"), icon="📋")
         prev_note = tk.Frame(tab3, bg="#fffbeb", padx=10, pady=6)
         prev_note.pack(fill="x", pady=(0, 6))
         tk.Label(prev_note,
-                 text="أدخل رموز الأصناف القديمة مفصولة بفاصلة — مثال:  B, A1, C1",
+                 text=T("cdlg_f_prev_hint"),
                  font=FONT_SMALL, bg="#fffbeb", fg="#92400e", anchor=A()).pack(anchor=A())
         prev_cell = tk.Frame(tab3, bg=COLOR_CARD)
         prev_cell.pack(fill="x", padx=10, pady=2)
-        make_label(prev_cell, "الأصناف السابقة (مثال: A, B, C1)", font=FONT_BOLD).pack(anchor=A())
+        make_label(prev_cell, T("cdlg_f_prev_lic"), font=FONT_BOLD).pack(anchor=A())
         v_prev = tk.StringVar(); self.vars["previous_licenses"] = v_prev
         make_entry(prev_cell, v_prev, width=60).pack(fill="x", ipady=4, pady=(2, 0))
 
@@ -2577,7 +2756,7 @@ class CandidateDialog(tk.Toplevel):
         # التبويب 4: نتائج الامتحانات (تعديل فقط)
         # ══════════════════════════════════════════════
         tab4 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
-        nb.add(tab4, text="📊  نتائج الامتحانات")
+        nb.add(tab4, text=T("cdlg_tab_exams"))
 
         if self.candidate:
             # -- ملخص الإحصائيات --
@@ -2585,13 +2764,13 @@ class CandidateDialog(tk.Toplevel):
             self._exam_stats_frame.pack(fill="x", pady=(0, 10))
 
             # -- جدول النتائج --
-            section_title(tab4, "سجل الامتحانات", icon="📋")
+            section_title(tab4, T("cdlg_sec_exam_hist"), icon="📋")
             tree_outer, tree_card = make_card(tab4, padding=8)
             tree_outer.pack(fill="both", expand=True, pady=(0, 8))
             self._exam_tree = create_treeview(
                 tree_card,
                 ("id", "exam_type", "exam_date", "result", "score", "notes"),
-                ("رقم", "نوع الامتحان", "التاريخ", "النتيجة", "الدرجة", "ملاحظات"),
+                (T("cand_col_num"), T("exdlg_f_type"), T("exdlg_f_date"), T("exdlg_f_result"), T("exdlg_f_score"), T("cand_col_notes")),
                 (0, 120, 120, 90, 80, 220),
                 height=8
             )
@@ -2600,15 +2779,15 @@ class CandidateDialog(tk.Toplevel):
             # -- أزرار الإضافة والحذف --
             btn_bar = tk.Frame(tab4, bg=COLOR_CARD)
             btn_bar.pack(fill="x")
-            ModernButton(btn_bar, "إضافة نتيجة", self._add_exam_result,
-                         icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
-            ModernButton(btn_bar, "حذف المحدد", self._delete_exam_result,
-                         icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
+            ModernButton(btn_bar, T("cdlg_btn_add_res"), self._add_exam_result,
+                         icon="➕", color=COLOR_SUCCESS).pack(side=S(), padx=4)
+            ModernButton(btn_bar, T("cdlg_btn_del_res"), self._delete_exam_result,
+                         icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
 
             self._load_exam_results()
         else:
             tk.Label(tab4,
-                     text="احفظ بيانات المترشح أولاً، ثم ارجع لهذا التبويب لإضافة نتائج الامتحانات.",
+                     text=T("cdlg_save_first"),
                      font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT,
                      wraplength=500, justify=J(), anchor="center").pack(
                          expand=True, anchor="center")
@@ -2676,12 +2855,12 @@ class CandidateDialog(tk.Toplevel):
             color  = COLOR_SUCCESS if pct >= 50 else (COLOR_WARNING if total == 0 else COLOR_DANGER)
             card   = tk.Frame(self._exam_stats_frame, bg=color,
                               padx=14, pady=10, relief="flat")
-            card.pack(side="right", padx=6)
-            tk.Label(card, text=f"امتحان {etype}",
+            card.pack(side=S(), padx=6)
+            tk.Label(card, text=f"{T('cdlg_exam_card')} {etype}",
                      font=FONT_BOLD, bg=color, fg="white").pack()
-            tk.Label(card, text=f"{passed}/{total}  ({pct}%  ناجح)",
+            tk.Label(card, text=f"{passed}/{total}  ({pct}%  {T('cdlg_exam_pct')})",
                      font=(FONT_FAMILY, 10), bg=color, fg="white").pack()
-            tk.Label(card, text=f"✅ {passed}  ❌ {failed}  |  محاولات: {total}",
+            tk.Label(card, text=f"✅ {passed}  ❌ {failed}  |  {T('cdlg_exam_tries')}: {total}",
                      font=FONT_TINY, bg=color, fg="white").pack()
 
         # --- ملء الجدول ---
@@ -2779,7 +2958,7 @@ class ExamResultDialog(tk.Toplevel):
         super().__init__(parent)
         self.candidate_id = candidate_id
         self.on_save = on_save
-        self.title("إضافة نتيجة امتحان")
+        self.title(T("exdlg_title"))
         self.geometry("480x400")
         self.resizable(False, False)
         self.configure(bg=COLOR_BG)
@@ -2790,9 +2969,9 @@ class ExamResultDialog(tk.Toplevel):
     def _build(self):
         head = tk.Frame(self, bg=COLOR_PRIMARY, pady=14, padx=20)
         head.pack(fill="x")
-        tk.Label(head, text="📝  إضافة نتيجة امتحان",
+        tk.Label(head, text=T("exdlg_header"),
                  font=(FONT_FAMILY, 14, "bold"),
-                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side="right")
+                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side=S())
 
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
         wrap.pack(fill="both", expand=True)
@@ -2816,19 +2995,19 @@ class ExamResultDialog(tk.Toplevel):
         self.v_score  = tk.StringVar(value="")
         self.v_notes  = tk.StringVar(value="")
 
-        lbl_entry(0, 0, "نوع الامتحان *",         self.v_type,   "combo", EXAM_TYPE_OPTIONS)
-        lbl_entry(0, 1, "تاريخ الامتحان (YYYY-MM-DD) *", self.v_date, "entry")
-        lbl_entry(1, 0, "النتيجة *",               self.v_result, "combo", EXAM_RESULT_OPTIONS)
-        lbl_entry(1, 1, "الدرجة / العلامة (اختياري)", self.v_score, "entry")
-        lbl_entry(2, 0, "ملاحظات (اختياري)",       self.v_notes,  "entry", colspan=2)
+        lbl_entry(0, 0, T("exdlg_f_type"),   self.v_type,   "combo", EXAM_TYPE_OPTIONS)
+        lbl_entry(0, 1, T("exdlg_f_date"),   self.v_date,   "entry")
+        lbl_entry(1, 0, T("exdlg_f_result"), self.v_result, "combo", EXAM_RESULT_OPTIONS)
+        lbl_entry(1, 1, T("exdlg_f_score"),  self.v_score,  "entry")
+        lbl_entry(2, 0, T("exdlg_f_notes"),  self.v_notes,  "entry", colspan=2)
 
         bf = tk.Frame(self, bg=COLOR_BG, pady=10)
         bf.pack(side="bottom", fill="x", padx=20)
         tk.Frame(bf, bg=COLOR_BORDER, height=1).pack(fill="x", pady=(0, 8))
-        ModernButton(bf, "إلغاء", self.destroy,
-                     icon="✗", color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
-        ModernButton(bf, "✅  حفظ النتيجة", self._save,
-                     color=COLOR_SUCCESS, size="large").pack(side="right", padx=5)
+        ModernButton(bf, T("exdlg_btn_cancel"), self.destroy,
+                     icon="✗", color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
+        ModernButton(bf, T("exdlg_btn_save"), self._save,
+                     color=COLOR_SUCCESS, size="large").pack(side=S(), padx=5)
 
     def _save(self):
         exam_date = self.v_date.get().strip()
@@ -2938,7 +3117,7 @@ class CandidatesFrame(tk.Frame):
         values = [(r['id'], r['last_name'], r['first_name'],
                    r.get('national_id', '') or '—', r['gender'], r['phone'],
                    r['license_type'], r.get('instructor_name', '') or '—',
-                   f"{r['total_amount']:,.0f} دج", r['registration_date'])
+                   f"{r['total_amount']:,.0f} {T('dash_profit_cur')}", r['registration_date'])
                   for r in rows]
         insert_zebra(self.tree, values)
 
@@ -3029,7 +3208,7 @@ class InstructorDialog(tk.Toplevel):
         self.on_save = on_save
         self.instructor = instructor
         self.vars = {}
-        self.title("بيانات الممرن")
+        self.title(T("idlg_win_title"))
         self.geometry("850x680")
         self.configure(bg=COLOR_BG)
         self.transient(parent)
@@ -3041,9 +3220,9 @@ class InstructorDialog(tk.Toplevel):
     def _build(self):
         head = tk.Frame(self, bg=COLOR_PURPLE, pady=15, padx=20)
         head.pack(fill="x")
-        title_text = "✏️  تعديل بيانات الممرن" if self.instructor else "➕  إضافة ممرن جديد"
+        title_text = T("idlg_title_edit") if self.instructor else T("idlg_title_add")
         tk.Label(head, text=title_text, font=(FONT_FAMILY, 15, "bold"),
-                 bg=COLOR_PURPLE, fg="white", anchor=A()).pack(side="right")
+                 bg=COLOR_PURPLE, fg="white", anchor=A()).pack(side=S())
 
         wrap = tk.Frame(self, bg=COLOR_BG, padx=15, pady=10)
         wrap.pack(fill="both", expand=True)
@@ -3054,7 +3233,7 @@ class InstructorDialog(tk.Toplevel):
         
         # التبويب 1: البيانات الشخصية والمهنية
         tab1 = tk.Frame(nb, bg=COLOR_CARD, padx=15, pady=10)
-        nb.add(tab1, text="👤 البيانات الأساسية")
+        nb.add(tab1, text=T("idlg_tab_basic"))
         
         grid1 = tk.Frame(tab1, bg=COLOR_CARD)
         grid1.pack(fill="both", expand=True)
@@ -3062,17 +3241,17 @@ class InstructorDialog(tk.Toplevel):
         grid1.columnconfigure(1, weight=1)
 
         fields1 = [
-            ("الاسم *", "first_name", "entry"),
-            ("اللقب *", "last_name", "entry"),
-            ("الجنس", "gender", "combo", GENDER_OPTIONS),
-            ("تاريخ الميلاد", "birth_date", "entry"),
-            ("مكان الميلاد", "birth_place", "entry"),
-            ("رقم الهاتف", "phone", "entry"),
-            ("العنوان", "address", "entry"),
-            ("رقم رخصة السياقة", "license_number", "entry"),
-            ("تاريخ الحصول عليها", "license_date", "entry"),
-            ("الأصناف (مثال: A,B)", "categories", "entry"),
-            ("سنوات الخبرة", "experience_years", "entry"),
+            (T("idlg_f_fname"),   "first_name",       "entry"),
+            (T("idlg_f_lname"),   "last_name",        "entry"),
+            (T("cdlg_f_gender"),  "gender",           "combo", GENDER_OPTIONS),
+            (T("idlg_f_bdate"),   "birth_date",       "entry"),
+            (T("idlg_f_bplace"),  "birth_place",      "entry"),
+            (T("idlg_f_phone"),   "phone",            "entry"),
+            (T("idlg_f_addr"),    "address",          "entry"),
+            (T("idlg_f_lic_num"), "license_number",   "entry"),
+            (T("idlg_f_lic_date"),"license_date",     "entry"),
+            (T("idlg_f_cats"),    "categories",       "entry"),
+            (T("idlg_f_exp"),     "experience_years", "entry"),
         ]
         
         for i, fi in enumerate(fields1):
@@ -3089,7 +3268,7 @@ class InstructorDialog(tk.Toplevel):
 
         # التبويب 2: بيانات العقد والتوظيف
         tab2 = tk.Frame(nb, bg=COLOR_CARD, padx=15, pady=10)
-        nb.add(tab2, text="📜 بيانات العقد")
+        nb.add(tab2, text=T("idlg_tab_contract"))
         
         grid2 = tk.Frame(tab2, bg=COLOR_CARD)
         grid2.pack(fill="both", expand=True)
@@ -3097,11 +3276,11 @@ class InstructorDialog(tk.Toplevel):
         grid2.columnconfigure(1, weight=1)
         
         fields2 = [
-            ("مدة العقد (مثلاً: سنة)", "contract_duration", "entry"),
-            ("الأجر الشهري (دج)", "salary", "entry"),
-            ("تاريخ بداية العمل", "contract_start_date", "entry"),
-            ("تاريخ إمضاء العقد", "contract_signing_date", "entry"),
-            ("مدة الإخطار (بالأشهر)", "notice_period", "entry"),
+            (T("idlg_f_dur"),    "contract_duration",    "entry"),
+            (T("idlg_f_salary"), "salary",               "entry"),
+            (T("idlg_f_start"),  "contract_start_date",  "entry"),
+            (T("idlg_f_sign"),   "contract_signing_date","entry"),
+            (T("idlg_f_notice"), "notice_period",        "entry"),
         ]
         
         for i, fi in enumerate(fields2):
@@ -3115,10 +3294,10 @@ class InstructorDialog(tk.Toplevel):
 
         bf = tk.Frame(self, bg=COLOR_BG, pady=12)
         bf.pack(side="bottom", fill="x", padx=20)
-        ModernButton(bf, "إلغاء", self.destroy, icon="✗",
-                     color=COLOR_TEXT_LIGHT).pack(side="left", padx=5)
-        ModernButton(bf, "حفظ البيانات", self._save, icon="💾",
-                     color=COLOR_SUCCESS).pack(side="right", padx=5)
+        ModernButton(bf, T("idlg_btn_cancel"), self.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
+        ModernButton(bf, T("idlg_btn_save"), self._save, icon="💾",
+                     color=COLOR_SUCCESS).pack(side=S(), padx=5)
 
     def _fill(self, d):
         for k, v in self.vars.items():
@@ -3603,10 +3782,10 @@ class TrainingFrame(tk.Frame):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
         wrap.pack(fill="both", expand=True)
 
-        tk.Label(wrap, text="📚  مراحل التكوين",
+        tk.Label(wrap, text=T("train_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=0)
-        tk.Label(wrap, text="إدارة مراحل التكوين الثلاث: الكود، الكرينو، السياقة",
+        tk.Label(wrap, text=T("train_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor=A()).pack(fill="x", pady=(0, 10))
 
@@ -3619,34 +3798,34 @@ class TrainingFrame(tk.Frame):
         right_frame.pack_propagate(False)
 
         fo, fc = make_card(right_frame); fo.pack(fill="both", expand=True)
-        section_title(fc, "إدارة المرحلة الحالية", icon="🎯")
+        section_title(fc, T("train_sec_current"), icon="🎯")
 
-        self.lbl_cand_name = tk.Label(fc, text="الرجاء اختيار مترشح", font=(FONT_FAMILY, 14, "bold"), bg=COLOR_CARD, fg=COLOR_HEADER)
+        self.lbl_cand_name = tk.Label(fc, text=T("train_choose_cand"), font=(FONT_FAMILY, 14, "bold"), bg=COLOR_CARD, fg=COLOR_HEADER)
         self.lbl_cand_name.pack(pady=5)
         
-        lbl_hours = tk.Label(fc, text="الحجم الساعي: 30 ساعة كود | 30 ساعة سياقة", font=(FONT_FAMILY, 10), bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
+        lbl_hours = tk.Label(fc, text=T("train_hours_info"), font=(FONT_FAMILY, 10), bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
         lbl_hours.pack(pady=(0, 10))
 
-        self.lbl_current_stage = tk.Label(fc, text="المرحلة: -", font=(FONT_FAMILY, 14, "bold"), bg=COLOR_CARD, fg=COLOR_PRIMARY)
+        self.lbl_current_stage = tk.Label(fc, text=T("train_stage_init"), font=(FONT_FAMILY, 14, "bold"), bg=COLOR_CARD, fg=COLOR_PRIMARY)
         self.lbl_current_stage.pack(pady=5)
         
-        self.lbl_stage_status = tk.Label(fc, text="الحالة: -", font=FONT_MAIN, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
+        self.lbl_stage_status = tk.Label(fc, text=T("train_status_init"), font=FONT_MAIN, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT)
         self.lbl_stage_status.pack(pady=5)
 
-        self.btn_exam_results = ModernButton(fc, "نتائج الامتحانات", self._show_exam_results_window, icon="📋", color=COLOR_PURPLE)
+        self.btn_exam_results = ModernButton(fc, T("train_exam_ttl"), self._show_exam_results_window, icon="📋", color=COLOR_PURPLE)
         self.btn_exam_results.pack(fill="x", pady=(15, 5), ipady=2)
 
-        self.btn_history = ModernButton(fc, "سجل مراحل التكوين", self._show_history_window, icon="📜", color=COLOR_PRIMARY)
+        self.btn_history = ModernButton(fc, T("train_history_ttl"), self._show_history_window, icon="📜", color=COLOR_PRIMARY)
         self.btn_history.pack(fill="x", pady=(0, 10), ipady=2)
 
         action_btns = tk.Frame(fc, bg=COLOR_CARD)
         action_btns.pack(fill="x", pady=5)
 
-        self.btn_pass = ModernButton(action_btns, "نجاح", self._quick_pass, icon="✅", color=COLOR_SUCCESS)
-        self.btn_pass.pack(side="right", fill="x", expand=True, padx=(0, 2), ipady=2)
+        self.btn_pass = ModernButton(action_btns, T("train_btn_pass"), self._quick_pass, icon="✅", color=COLOR_SUCCESS)
+        self.btn_pass.pack(side=S(), fill="x", expand=True, padx=(0, 2), ipady=2)
 
-        self.btn_fail = ModernButton(action_btns, "رسوب", self._quick_fail, icon="❌", color=COLOR_WARNING)
-        self.btn_fail.pack(side="left", fill="x", expand=True, padx=(2, 0), ipady=2)
+        self.btn_fail = ModernButton(action_btns, T("train_btn_fail"), self._quick_fail, icon="❌", color=COLOR_WARNING)
+        self.btn_fail.pack(side=So(), fill="x", expand=True, padx=(2, 0), ipady=2)
 
         self._set_buttons_state("disabled")
 
@@ -3661,15 +3840,15 @@ class TrainingFrame(tk.Frame):
         self.search_var = tk.StringVar()
         self.search_var.trace("w", lambda *a: self._load_candidates())
         make_entry(sc, self.search_var, width=30).pack(side="right", fill="x", expand=True, ipady=4)
-        tk.Label(sc, text="ابحث عن مترشح:", font=FONT_BOLD,
-                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
+        tk.Label(sc, text=T("train_search_cand"), font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side=S(), padx=10)
 
         # قائمة المترشحين
         co, cc = make_card(left_frame, padding=5); co.pack(fill="both", expand=True, pady=(0, 5))
-        section_title(cc, "اختر المترشح", icon="👤")
+        section_title(cc, T("train_choose_cand_sec"), icon="👤")
         self.cand_tree = create_treeview(cc,
             ("id","last_name","first_name","phone","license_type"),
-            ("رقم","اللقب","الاسم","الهاتف","نوع الرخصة"),
+            (T("train_col_num"),T("cand_col_last"),T("cand_col_first"),T("cdlg_f_phone"),T("cand_col_lic")),
             (50,150,150,130,100), height=10)
         self.cand_tree.bind("<<TreeviewSelect>>", self._on_candidate_select)
 
@@ -3724,13 +3903,13 @@ class TrainingFrame(tk.Frame):
                 text=f"🔒 {stage_name}",
                 fg=COLOR_WARNING)
             self.lbl_stage_status.config(
-                text=f"يجب النجاح في {prev_name} أولاً",
+                text=f"{T('train_must_pass')} {prev_name} {T('train_first')}",
                 fg=COLOR_DANGER)
             self._set_buttons_state("disabled")
         else:
-            self.lbl_current_stage.config(text=f"المرحلة: {stage_name}",
+            self.lbl_current_stage.config(text=f"{T('train_stage_lbl')} {stage_name}",
                                           fg=COLOR_PRIMARY)
-            self.lbl_stage_status.config(text=f"الحالة: {active['status']}",
+            self.lbl_stage_status.config(text=f"{T('train_status_lbl')} {active['status']}",
                                          fg=COLOR_TEXT_LIGHT)
             if active['status'] == STATUS_PASS:
                 self._set_buttons_state("disabled")
@@ -3748,17 +3927,17 @@ class TrainingFrame(tk.Frame):
     def _show_history_window(self):
         if not self.selected_candidate_id: return
         win = tk.Toplevel(self)
-        win.title(f"سجل مراحل التكوين - {self._get_candidate_name()}")
+        win.title(f"{T('train_history_ttl')} - {self._get_candidate_name()}")
         win.geometry("900x450")
         win.configure(bg=COLOR_BG)
         win.transient(self.winfo_toplevel())
 
-        tk.Label(win, text=f"سجل مراحل التكوين للمترشح: {self._get_candidate_name()}",
+        tk.Label(win, text=f"{T('train_history_cand')} {self._get_candidate_name()}",
                  font=(FONT_FAMILY, 16, "bold"), bg=COLOR_BG, fg=COLOR_HEADER).pack(pady=15)
 
         tree = create_treeview(win,
             ("id","stage_type","status","start_date","end_date","score","notes"),
-            ("رقم","المرحلة","الحالة","تاريخ البداية","تاريخ النهاية","النتيجة","ملاحظات"),
+            (T("train_col_num"),T("train_col_stage"),T("train_col_status"),T("train_col_start"),T("train_col_end"),T("train_col_score"),T("train_col_notes")),
             (40,150,120,110,110,80,150), height=15)
 
         values = []
@@ -3766,7 +3945,7 @@ class TrainingFrame(tk.Frame):
             unlocked = self._is_unlocked(self.current_stages, s['stage_type'])
             label = STAGE_LABELS.get(s['stage_type'], s['stage_type'])
             if not unlocked:
-                label = f"🔒  {label}  (مقفلة)"
+                label = f"🔒  {label}  ({T('train_locked_lbl')})"
             elif s['status'] == STATUS_PASS:
                 label = f"✅  {label}"
             elif s['status'] == "راسب":
@@ -3778,7 +3957,7 @@ class TrainingFrame(tk.Frame):
                            s['score'] or "", s['notes'] or ""))
         insert_zebra(tree, values)
 
-        ModernButton(win, "إغلاق", win.destroy, color=COLOR_TEXT_LIGHT).pack(pady=15)
+        ModernButton(win, T("btn_close"), win.destroy, color=COLOR_TEXT_LIGHT).pack(pady=15)
 
     def _show_exam_results_window(self):
         if not self.selected_candidate_id: return
@@ -3786,7 +3965,7 @@ class TrainingFrame(tk.Frame):
         name = self._get_candidate_name()
 
         win = tk.Toplevel(self)
-        win.title(f"نتائج الامتحانات - {name}")
+        win.title(f"{T('train_exam_ttl')} - {name}")
         win.geometry("1000x620")
         win.configure(bg=COLOR_BG)
         win.transient(self.winfo_toplevel())
@@ -3794,8 +3973,8 @@ class TrainingFrame(tk.Frame):
         # ── العنوان ──────────────────────────────────────────────────
         hdr = tk.Frame(win, bg=COLOR_PRIMARY, padx=20, pady=12)
         hdr.pack(fill="x")
-        tk.Label(hdr, text=f"📋  نتائج الامتحانات للمترشح: {name}",
-                 font=(FONT_FAMILY, 16, "bold"), bg=COLOR_PRIMARY, fg="white").pack(side="right")
+        tk.Label(hdr, text=f"{T('train_exam_cand')} {name}",
+                 font=(FONT_FAMILY, 16, "bold"), bg=COLOR_PRIMARY, fg="white").pack(side=S())
 
         # ── صف الإحصائيات السريعة ────────────────────────────────────
         stats_frame = tk.Frame(win, bg=COLOR_BG, padx=15, pady=10)
@@ -3810,22 +3989,22 @@ class TrainingFrame(tk.Frame):
         stage_labels_list = [f"{v}  ({k})" for k, v in STAGE_LABELS.items()]
         stage_keys = list(STAGE_LABELS.keys())
 
-        tk.Label(toolbar, text="اختر المرحلة:", font=FONT_BOLD,
-                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="right", padx=(0, 6))
+        tk.Label(toolbar, text=T("train_choose_stage"), font=FONT_BOLD,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side=S(), padx=(0, 6))
         stage_combo = make_combo(toolbar, stage_var, stage_labels_list, width=28)
         stage_combo.current(0)
-        stage_combo.pack(side="right")
+        stage_combo.pack(side=S())
 
-        ModernButton(toolbar, "تسجيل نتيجة امتحان", icon="➕", color=COLOR_SUCCESS,
+        ModernButton(toolbar, T("train_add_result"), icon="➕", color=COLOR_SUCCESS,
                      command=lambda: self._add_exam_attempt_dialog(
                          win, cid, stage_keys[stage_combo.current()],
                          lambda: self._refresh_exam_window(win, cid, tree_ref, self._exam_stats_frame))
-                     ).pack(side="right", padx=(8, 0), ipady=2)
+                     ).pack(side=S(), padx=(8, 0), ipady=2)
 
-        ModernButton(toolbar, "حذف المحدد", icon="🗑️", color=COLOR_DANGER,
+        ModernButton(toolbar, T("train_del_sel"), icon="🗑️", color=COLOR_DANGER,
                      command=lambda: self._delete_exam_attempt(cid, tree_ref,
                          lambda: self._refresh_exam_window(win, cid, tree_ref, self._exam_stats_frame))
-                     ).pack(side="left", padx=(0, 0), ipady=2)
+                     ).pack(side=So(), padx=(0, 0), ipady=2)
 
         # ── جدول النتائج ─────────────────────────────────────────────
         table_frame = tk.Frame(win, bg=COLOR_BG, padx=15, pady=5)
@@ -3833,10 +4012,10 @@ class TrainingFrame(tk.Frame):
 
         tree_ref = create_treeview(table_frame,
             ("id","stage","exam_date","score","result","notes"),
-            ("رقم","المرحلة","تاريخ الامتحان","العلامة / 40","النتيجة","ملاحظات"),
+            (T("train_col_num"),T("train_col_stage"),T("train_col_exam_date"),T("train_col_score40"),T("train_col_score"),T("train_col_notes")),
             (40, 180, 120, 110, 100, 220), height=15)
 
-        ModernButton(win, "إغلاق", win.destroy, color=COLOR_TEXT_LIGHT).pack(pady=8)
+        ModernButton(win, T("btn_close"), win.destroy, color=COLOR_TEXT_LIGHT).pack(pady=8)
 
         self._refresh_exam_window(win, cid, tree_ref, self._exam_stats_frame)
 
@@ -3845,7 +4024,7 @@ class TrainingFrame(tk.Frame):
         values = []
         for a in attempts:
             stage_label = STAGE_LABELS.get(a['stage_type'], a['stage_type'])
-            result_icon = "✅ ناجح" if a['result'] == STATUS_PASS else "❌ راسب"
+            result_icon = T("train_res_pass") if a['result'] == STATUS_PASS else T("train_res_fail")
             values.append((a['id'], stage_label, a['exam_date'],
                            a['score'] if a['score'] else "—",
                            result_icon, a['notes'] or ""))
@@ -3868,20 +4047,20 @@ class TrainingFrame(tk.Frame):
                           highlightthickness=1, highlightbackground=COLOR_BORDER)
             sc.pack(side="right", fill="both", expand=True, padx=6)
             tk.Label(sc, text=label, font=FONT_BOLD, bg=COLOR_CARD, fg=COLOR_TEXT).pack(anchor=A())
-            tk.Label(sc, text=f"{rate:.0f}%  نجاح", font=(FONT_FAMILY, 18, "bold"),
+            tk.Label(sc, text=f"{rate:.0f}%  {T('dash_pct_pass')}", font=(FONT_FAMILY, 18, "bold"),
                      bg=COLOR_CARD, fg=color).pack(anchor=A())
-            tk.Label(sc, text=f"إجمالي المحاولات: {total}  |  ناجح: {passed}  |  راسب: {total - passed}",
+            tk.Label(sc, text=f"{T('dash_tries')}: {total}  |  {T('dash_pass')}: {passed}  |  {T('dash_fail')}: {total - passed}",
                      font=FONT_TINY, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT).pack(anchor=A())
 
     def _add_exam_attempt_dialog(self, parent_win, cid, stage_type, on_save):
         dlg = tk.Toplevel(parent_win)
-        dlg.title("تسجيل نتيجة امتحان")
+        dlg.title(T("train_add_result"))
         dlg.geometry("440x360")
         dlg.configure(bg=COLOR_BG)
         dlg.transient(parent_win)
         dlg.grab_set()
 
-        tk.Label(dlg, text="تسجيل نتيجة امتحان جديدة",
+        tk.Label(dlg, text=T("train_exam_new"),
                  font=(FONT_FAMILY, 15, "bold"), bg=COLOR_BG, fg=COLOR_HEADER).pack(pady=(18, 10))
 
         outer, body = make_card(dlg, padding=18)
@@ -3905,14 +4084,14 @@ class TrainingFrame(tk.Frame):
             w.pack(side="left", fill="x", expand=True, padx=(8, 0), ipady=3)
 
         stage_label = STAGE_LABELS.get(stage_type, stage_type)
-        tk.Label(body, text=f"المرحلة: {stage_label}",
+        tk.Label(body, text=f"{T('train_stage_field')} {stage_label}",
                  font=(FONT_FAMILY, 12, "bold"), bg=COLOR_CARD,
                  fg=COLOR_PRIMARY, anchor=A()).pack(fill="x", pady=(0, 8))
 
-        field_row("تاريخ الامتحان:", "exam_date", default=str(date.today()))
-        field_row("العلامة (/ 40):", "score", default="0")
-        field_row("النتيجة:", "result", "combo", ["راسب", "ناجح"], default="راسب")
-        field_row("ملاحظات:", "notes", default="")
+        field_row(T("train_date_field"),  "exam_date", default=str(date.today()))
+        field_row(T("train_score_field"), "score", default="0")
+        field_row(T("train_result_field"),"result", "combo", ["راسب", "ناجح"], default="راسب")
+        field_row(T("train_notes_field"), "notes", default="")
 
         def _save():
             try:
@@ -3933,8 +4112,8 @@ class TrainingFrame(tk.Frame):
             show_info(T("train_result_saved"))
 
         btn_frame = tk.Frame(dlg, bg=COLOR_BG); btn_frame.pack(fill="x", padx=15, pady=(0, 12))
-        ModernButton(btn_frame, "حفظ", _save, icon="💾", color=COLOR_SUCCESS).pack(side="right", ipady=2)
-        ModernButton(btn_frame, "إلغاء", dlg.destroy, color=COLOR_TEXT_LIGHT).pack(side="left", ipady=2)
+        ModernButton(btn_frame, T("train_btn_save"), _save, icon="💾", color=COLOR_SUCCESS).pack(side=S(), ipady=2)
+        ModernButton(btn_frame, T("train_btn_cancel"), dlg.destroy, color=COLOR_TEXT_LIGHT).pack(side=So(), ipady=2)
 
     def _delete_exam_attempt(self, cid, tree, on_delete):
         sel = tree.selection()
@@ -4152,7 +4331,7 @@ class PaymentsFrame(tk.Frame):
         
         self.pay_tree = create_treeview(win,
             ("id","date","amount","payment_method","notes"),
-            ("رقم","التاريخ","المبلغ (دج)","طريقة الدفع","ملاحظة"),
+            (T("pay_col_num"),T("pay_col_date2"),T("pay_col_amount_da"),T("pay_col_method2"),T("pay_col_note2")),
             (50,120,130,140,250), height=12)
         self.pay_tree.bind("<<TreeviewSelect>>", self._on_payment_select)
         
@@ -4160,8 +4339,8 @@ class PaymentsFrame(tk.Frame):
         
         bf = tk.Frame(win, bg=COLOR_BG)
         bf.pack(fill="x", pady=15, padx=20)
-        ModernButton(bf, "حذف الدفعة المحددة", self._delete, icon="🗑️", color=COLOR_DANGER).pack(side="left")
-        ModernButton(bf, "إغلاق", win.destroy, color=COLOR_TEXT_LIGHT).pack(side="right")
+        ModernButton(bf, T("pay_btn_del"), self._delete, icon="🗑️", color=COLOR_DANGER).pack(side=So())
+        ModernButton(bf, T("pay_btn_close"), win.destroy, color=COLOR_TEXT_LIGHT).pack(side=S())
 
     def _on_payment_select(self, event):
         sel = self.pay_tree.selection()
