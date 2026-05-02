@@ -1291,7 +1291,8 @@ def get_language() -> str:
 
 
 def set_language(lang: str):
-    """يحفظ اللغة في جدول settings ثم يُعيد تشغيل البرنامج."""
+    """يحفظ اللغة في جدول settings ويحدّث المتغيّر العام LANG.
+    لا تُعيد تشغيل البرنامج — الواجهة تُعاد بناؤها في نفس العملية."""
     global LANG
     try:
         conn = get_connection()
@@ -1304,9 +1305,6 @@ def set_language(lang: str):
     except Exception:
         pass
     LANG = lang
-    # إعادة تشغيل البرنامج بنفس المعاملات لتطبيق اللغة الجديدة
-    import os, sys
-    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 def init_db():
@@ -8582,6 +8580,7 @@ class DrivingSchoolApp:
                  bg="#0369a1", fg="white", pady=5, anchor="center").pack(fill="x")
         def _do_lang(e=None, _nl=new_lang):
             set_language(_nl)
+            self._rebuild_ui()
         lang_btn.bind("<Button-1>", _do_lang)
         for ch in lang_btn.winfo_children():
             ch.bind("<Button-1>", _do_lang)
@@ -8774,6 +8773,34 @@ class DrivingSchoolApp:
                 f = FrameClass(self.content)
             f.pack_forget()
             self._page_frames.append((f, title))
+
+    # ──────────────────────────────────────────────────────────
+    def _rebuild_ui(self):
+        """يُعيد بناء الواجهة بالكامل في نفس النافذة بعد تغيير اللغة،
+        دون إعادة تشغيل البرنامج أو فقدان جلسة تسجيل الدخول."""
+        saved_idx = self._current_idx
+
+        # تدمير كل عناصر النافذة الجذر
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        # إعادة تهيئة متغيرات الحالة
+        self._nav_refs     = []
+        self._current_idx  = -1
+        self._page_frames  = []
+        self._topbar_title = None
+        self._sidebar_logo = None
+
+        # إعادة بناء الواجهة بالكامل بالنص الجديد
+        self.root.title(T("app_title"))
+        self._setup_styles()
+        self._build_layout()
+        self._build_status_bar()
+
+        # العودة للصفحة التي كان المستخدم يراها
+        target = saved_idx if 0 <= saved_idx < len(self._page_frames) else 0
+        if target != 0:
+            self._navigate(target)
 
     # ──────────────────────────────────────────────────────────
     def _build_status_bar(self):
