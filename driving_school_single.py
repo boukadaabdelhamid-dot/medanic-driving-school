@@ -498,6 +498,30 @@ STRINGS: dict = {
     "sched_col_inst": {"ar": "الممرن",                "fr": "Moniteur"},
     "sched_col_type": {"ar": "النوع",                 "fr": "Type"},
     "sched_col_dur":  {"ar": "المدة(د)",              "fr": "Durée(min)"},
+    "sched_col_notes":{"ar": "ملاحظات",              "fr": "Notes"},
+    "sched_add_title":{"ar": "إضافة حصة جديدة",     "fr": "Nouvelle séance"},
+    "sched_edit_title":{"ar": "تعديل حصة تدريبية",  "fr": "Modifier la séance"},
+    "sched_btn_add":  {"ar": "إضافة حصة",            "fr": "Ajouter séance"},
+    "sched_btn_all":  {"ar": "كل الحصص",             "fr": "Toutes les séances"},
+    "sched_filter_date":{"ar": "التاريخ:",           "fr": "Date:"},
+    "sched_filter_inst":{"ar": "الممرّن:",           "fr": "Moniteur:"},
+    "sched_filter_cand":{"ar": "المترشح:",           "fr": "Candidat:"},
+    "sched_lbl_cand": {"ar": "المترشح *",            "fr": "Candidat *"},
+    "sched_lbl_inst": {"ar": "الممرّن *",            "fr": "Moniteur *"},
+    "sched_lbl_vehicle":{"ar": "المركبة",            "fr": "Véhicule"},
+    "sched_lbl_date": {"ar": "التاريخ * (YYYY-MM-DD)","fr": "Date * (YYYY-MM-DD)"},
+    "sched_lbl_time": {"ar": "الوقت *",              "fr": "Heure *"},
+    "sched_lbl_duration":{"ar": "المدة (دقيقة) *",  "fr": "Durée (min) *"},
+    "sched_lbl_type": {"ar": "نوع الحصة",            "fr": "Type de séance"},
+    "sched_lbl_notes":{"ar": "ملاحظات",              "fr": "Notes"},
+    "sched_no_vehicle":{"ar": "بلا مركبة",           "fr": "Sans véhicule"},
+    "sched_week_summary":{"ar": "حصص الأسبوع القادم:", "fr": "Séances semaine:"},
+    "sched_today_summary":{"ar": "حصص اليوم:",      "fr": "Séances aujourd'hui:"},
+    "sched_conflict_inst":{"ar": "الممرّن لديه حصة في", "fr": "Le moniteur a une séance à"},
+    "sched_conflict_veh": {"ar": "المركبة مستخدمة في", "fr": "Le véhicule est occupé à"},
+    "sched_conflict_dur": {"ar": "مدة",              "fr": "durée"},
+    "filter_all":     {"ar": "الكل",                 "fr": "Tous"},
+    "btn_filter":     {"ar": "تصفية",                "fr": "Filtrer"},
     # ── تسجيل الدخول ────────────────────────────────────────────────────────
     "login_title":     {"ar": "تسجيل الدخول — برنامج ميدانيك", "fr": "Connexion — Meidanic"},
     "login_app_sub":   {"ar": "إدارة مدرسة تعليم السياقة — الجزائر", "fr": "Gestion auto-école — Algérie"},
@@ -5092,7 +5116,7 @@ class SessionDialog(tk.Toplevel):
         super().__init__(parent)
         self.session_id = session_id
         self.on_save    = on_save
-        self.title("تعديل حصة تدريبية" if session_id else "إضافة حصة جديدة")
+        self.title(T("sched_edit_title") if session_id else T("sched_add_title"))
         self.geometry("580x600")
         self.resizable(False, False)
         self.grab_set()
@@ -5111,7 +5135,7 @@ class SessionDialog(tk.Toplevel):
         hdr.pack(fill="x")
         icon = "✏️" if self.session_id else "➕"
         tk.Label(hdr,
-                 text=f"{icon}  {'تعديل حصة تدريبية' if self.session_id else 'إضافة حصة جديدة'}",
+                 text=f"{icon}  {T('sched_edit_title') if self.session_id else T('sched_add_title')}",
                  font=(FONT_FAMILY, 14, "bold"), bg=COLOR_PRIMARY, fg="white").pack(anchor=A())
 
         wrap = tk.Frame(self, bg=COLOR_BG, padx=24, pady=14)
@@ -5124,7 +5148,7 @@ class SessionDialog(tk.Toplevel):
         self._cand_map = {f"{c['last_name']} {c['first_name']}": c['id'] for c in cands}
         self._inst_map = {f"{i['last_name']} {i['first_name']}": i['id'] for i in insts}
         # مركبات: "بلا مركبة" + كل مركبة
-        self._veh_map  = {"بلا مركبة": None}
+        self._veh_map  = {T("sched_no_vehicle"): None}
         for v in vehs:
             label = f"{v['model']} ({v.get('plate_number','') or '—'})"
             self._veh_map[label] = v['id']
@@ -5134,7 +5158,7 @@ class SessionDialog(tk.Toplevel):
                      bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
 
         # المترشح
-        lbl("المترشح *")
+        lbl(T("sched_lbl_cand"))
         self._vars['candidate'] = tk.StringVar()
         ttk.Combobox(wrap, textvariable=self._vars['candidate'],
                      values=list(self._cand_map.keys()),
@@ -5146,8 +5170,8 @@ class SessionDialog(tk.Toplevel):
         im_row.pack(fill="x", pady=(0, 10))
 
         inst_col = tk.Frame(im_row, bg=COLOR_BG)
-        inst_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
-        tk.Label(inst_col, text="الممرّن *", font=FONT_BOLD,
+        inst_col.pack(side=S(), fill="both", expand=True, padx=(6, 0))
+        tk.Label(inst_col, text=T("sched_lbl_inst"), font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['instructor'] = tk.StringVar()
         ttk.Combobox(inst_col, textvariable=self._vars['instructor'],
@@ -5156,10 +5180,10 @@ class SessionDialog(tk.Toplevel):
                      justify=J()).pack(fill="x", ipady=4)
 
         veh_col = tk.Frame(im_row, bg=COLOR_BG)
-        veh_col.pack(side="left", fill="both", expand=True)
-        tk.Label(veh_col, text="المركبة", font=FONT_BOLD,
+        veh_col.pack(side=So(), fill="both", expand=True)
+        tk.Label(veh_col, text=T("sched_lbl_vehicle"), font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
-        self._vars['vehicle'] = tk.StringVar(value="بلا مركبة")
+        self._vars['vehicle'] = tk.StringVar(value=T("sched_no_vehicle"))
         ttk.Combobox(veh_col, textvariable=self._vars['vehicle'],
                      values=list(self._veh_map.keys()),
                      state="readonly", font=FONT_MAIN,
@@ -5170,8 +5194,8 @@ class SessionDialog(tk.Toplevel):
         dt_row.pack(fill="x", pady=(0, 10))
 
         date_col = tk.Frame(dt_row, bg=COLOR_BG)
-        date_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
-        tk.Label(date_col, text="التاريخ * (YYYY-MM-DD)", font=FONT_BOLD,
+        date_col.pack(side=S(), fill="both", expand=True, padx=(6, 0))
+        tk.Label(date_col, text=T("sched_lbl_date"), font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['session_date'] = tk.StringVar(value=date.today().strftime('%Y-%m-%d'))
         tk.Entry(date_col, textvariable=self._vars['session_date'],
@@ -5179,8 +5203,8 @@ class SessionDialog(tk.Toplevel):
                  relief="solid", bd=1).pack(fill="x", ipady=5)
 
         time_col = tk.Frame(dt_row, bg=COLOR_BG)
-        time_col.pack(side="left", fill="both", expand=True)
-        tk.Label(time_col, text="الوقت *", font=FONT_BOLD,
+        time_col.pack(side=So(), fill="both", expand=True)
+        tk.Label(time_col, text=T("sched_lbl_time"), font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['session_time'] = tk.StringVar(value="08:00")
         ttk.Combobox(time_col, textvariable=self._vars['session_time'],
@@ -5192,8 +5216,8 @@ class SessionDialog(tk.Toplevel):
         dd_row.pack(fill="x", pady=(0, 10))
 
         dur_col = tk.Frame(dd_row, bg=COLOR_BG)
-        dur_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
-        tk.Label(dur_col, text="المدة (دقيقة) *", font=FONT_BOLD,
+        dur_col.pack(side=S(), fill="both", expand=True, padx=(6, 0))
+        tk.Label(dur_col, text=T("sched_lbl_duration"), font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['duration'] = tk.StringVar(value="60")
         ttk.Combobox(dur_col, textvariable=self._vars['duration'],
@@ -5201,8 +5225,8 @@ class SessionDialog(tk.Toplevel):
                      justify=J()).pack(fill="x", ipady=4)
 
         type_col = tk.Frame(dd_row, bg=COLOR_BG)
-        type_col.pack(side="left", fill="both", expand=True)
-        tk.Label(type_col, text="نوع الحصة", font=FONT_BOLD,
+        type_col.pack(side=So(), fill="both", expand=True)
+        tk.Label(type_col, text=T("sched_lbl_type"), font=FONT_BOLD,
                  bg=COLOR_BG, fg=COLOR_TEXT, anchor=A()).pack(fill="x")
         self._vars['session_type'] = tk.StringVar(value=SESSION_TYPE_OPTIONS[0])
         ttk.Combobox(type_col, textvariable=self._vars['session_type'],
@@ -5210,7 +5234,7 @@ class SessionDialog(tk.Toplevel):
                      font=FONT_MAIN, justify=J()).pack(fill="x", ipady=4)
 
         # ملاحظات
-        lbl("ملاحظات")
+        lbl(T("sched_lbl_notes"))
         self._notes_txt = tk.Text(wrap, height=3, font=FONT_MAIN,
                                   relief="solid", bd=1)
         self._notes_txt.pack(fill="x", pady=(4, 0))
@@ -5224,10 +5248,10 @@ class SessionDialog(tk.Toplevel):
         # أزرار
         bf = tk.Frame(self, bg=COLOR_BG, padx=24, pady=12)
         bf.pack(fill="x")
-        ModernButton(bf, text="حفظ", icon="💾",
-                     color=COLOR_SUCCESS, command=self._save).pack(side="right")
-        ModernButton(bf, text="إلغاء", icon="✖",
-                     color=COLOR_DANGER, command=self.destroy).pack(side="right", padx=(0, 8))
+        ModernButton(bf, text=T("btn_save"), icon="💾",
+                     color=COLOR_SUCCESS, command=self._save).pack(side=S())
+        ModernButton(bf, text=T("btn_cancel"), icon="✖",
+                     color=COLOR_DANGER, command=self.destroy).pack(side=S(), padx=(0, 8))
 
     # ──────────────────────────────────────────────────────────
     def _load(self):
@@ -5248,7 +5272,7 @@ class SessionDialog(tk.Toplevel):
                     self._vars['vehicle'].set(label)
                     break
         else:
-            self._vars['vehicle'].set("بلا مركبة")
+            self._vars['vehicle'].set(T("sched_no_vehicle"))
         self._vars['session_date'].set(s.get('session_date', ''))
         self._vars['session_time'].set(s.get('session_time', '08:00'))
         self._vars['duration'].set(str(s.get('duration', 60)))
@@ -5304,11 +5328,11 @@ class SessionDialog(tk.Toplevel):
         if inst_conflicts:
             c = inst_conflicts[0]
             conflict_msgs.append(
-                f"الممرّن لديه حصة في {c['session_time']} (مدة {c['duration']} د.)")
+                f"{T('sched_conflict_inst')} {c['session_time']} ({T('sched_conflict_dur')} {c['duration']})")
         if veh_conflicts:
             c = veh_conflicts[0]
             conflict_msgs.append(
-                f"المركبة مستخدمة في {c['session_time']} (مدة {c['duration']} د.)")
+                f"{T('sched_conflict_veh')} {c['session_time']} ({T('sched_conflict_dur')} {c['duration']})")
 
         if conflict_msgs:
             msg = f"⚠️  {T('sched_conflict')}:\n" + "\n".join(conflict_msgs)
@@ -5356,10 +5380,10 @@ class ScheduleFrame(tk.Frame):
         wrap.pack(fill="both", expand=True)
 
         # ── العنوان ──
-        tk.Label(wrap, text="📅  الجدول الزمني للحصص",
+        tk.Label(wrap, text=T("sched_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 4))
-        tk.Label(wrap, text="إدارة وتنظيم حصص التدريب — عرض، إضافة، تعديل وحذف",
+        tk.Label(wrap, text=T("sched_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG,
                  fg=COLOR_TEXT_LIGHT, anchor=A()).pack(fill="x", pady=(0, 14))
 
@@ -5369,64 +5393,64 @@ class ScheduleFrame(tk.Frame):
 
         # أزرار (يمين)
         btn_row = tk.Frame(ctl, bg=COLOR_BG)
-        btn_row.pack(side="right")
-        ModernButton(btn_row, text="إضافة حصة", icon="➕",
+        btn_row.pack(side=S())
+        ModernButton(btn_row, text=T("sched_btn_add"), icon="➕",
                      color=COLOR_SUCCESS,
-                     command=self._add).pack(side="right")
-        ModernButton(btn_row, text="تعديل", icon="✏️",
+                     command=self._add).pack(side=S())
+        ModernButton(btn_row, text=T("btn_edit"), icon="✏️",
                      color=COLOR_PRIMARY,
-                     command=self._edit).pack(side="right", padx=(0, 6))
-        ModernButton(btn_row, text="حذف", icon="🗑",
+                     command=self._edit).pack(side=S(), padx=(0, 6))
+        ModernButton(btn_row, text=T("btn_delete"), icon="🗑",
                      color=COLOR_DANGER,
-                     command=self._delete).pack(side="right", padx=(0, 6))
+                     command=self._delete).pack(side=S(), padx=(0, 6))
 
         # فلاتر (يسار)
         filter_row = tk.Frame(ctl, bg=COLOR_BG)
-        filter_row.pack(side="left")
+        filter_row.pack(side=So())
 
         tk.Label(filter_row, text="🔍", font=(FONT_FAMILY, 14),
-                 bg=COLOR_BG).pack(side="left", padx=(0, 4))
+                 bg=COLOR_BG).pack(side=So(), padx=(0, 4))
 
         # فلتر التاريخ
-        tk.Label(filter_row, text="التاريخ:", font=FONT_SMALL,
-                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="left")
+        tk.Label(filter_row, text=T("sched_filter_date"), font=FONT_SMALL,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side=So())
         self._date_var = tk.StringVar()
         tk.Entry(filter_row, textvariable=self._date_var, width=12,
                  font=FONT_MAIN, relief="solid", bd=1,
-                 justify=J()).pack(side="left", padx=4)
+                 justify=J()).pack(side=So(), padx=4)
 
         # فلتر الممرّن
-        tk.Label(filter_row, text="الممرّن:", font=FONT_SMALL,
-                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="left", padx=(8, 0))
+        tk.Label(filter_row, text=T("sched_filter_inst"), font=FONT_SMALL,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side=So(), padx=(8, 0))
         self._inst_filter_var = tk.StringVar()
-        insts = ["الكل"] + [f"{i['last_name']} {i['first_name']}"
+        insts = [T("filter_all")] + [f"{i['last_name']} {i['first_name']}"
                             for i in InstructorDB.get_all()]
         self._inst_combo = ttk.Combobox(filter_row,
                                          textvariable=self._inst_filter_var,
                                          values=insts, state="readonly",
                                          width=14, font=FONT_SMALL)
         self._inst_combo.current(0)
-        self._inst_combo.pack(side="left", padx=4)
+        self._inst_combo.pack(side=So(), padx=4)
 
         # فلتر المترشح
-        tk.Label(filter_row, text="المترشح:", font=FONT_SMALL,
-                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side="left", padx=(8, 0))
+        tk.Label(filter_row, text=T("sched_filter_cand"), font=FONT_SMALL,
+                 bg=COLOR_BG, fg=COLOR_TEXT).pack(side=So(), padx=(8, 0))
         self._cand_filter_var = tk.StringVar()
-        cands = ["الكل"] + [f"{c['last_name']} {c['first_name']}"
+        cands = [T("filter_all")] + [f"{c['last_name']} {c['first_name']}"
                              for c in CandidateDB.get_all()]
         self._cand_combo = ttk.Combobox(filter_row,
                                          textvariable=self._cand_filter_var,
                                          values=cands, state="readonly",
                                          width=14, font=FONT_SMALL)
         self._cand_combo.current(0)
-        self._cand_combo.pack(side="left", padx=4)
+        self._cand_combo.pack(side=So(), padx=4)
 
-        ModernButton(filter_row, text="تصفية", icon="🔎",
+        ModernButton(filter_row, text=T("btn_filter"), icon="🔎",
                      color=COLOR_INFO, size="small",
-                     command=self._load).pack(side="left", padx=4)
-        ModernButton(filter_row, text="كل الحصص", icon="↺",
+                     command=self._load).pack(side=So(), padx=4)
+        ModernButton(filter_row, text=T("sched_btn_all"), icon="↺",
                      color=COLOR_TEXT_LIGHT, size="small",
-                     command=self._reset_filter).pack(side="left")
+                     command=self._reset_filter).pack(side=So())
 
         # ── ملخص سريع للأسبوع ──
         self._week_lbl = tk.Label(wrap, text="",
@@ -5440,7 +5464,9 @@ class ScheduleFrame(tk.Frame):
 
         self.tree = create_treeview(tbl_body,
             ("date", "time", "dur", "type", "candidate", "instructor", "notes"),
-            ("التاريخ", "الوقت", "مدة(د)", "النوع", "المترشح", "الممرّن", "ملاحظات"),
+            (T("sched_col_date"), T("sched_col_time"), T("sched_col_dur"),
+             T("sched_col_type"), T("sched_col_cand"), T("sched_col_inst"),
+             T("sched_col_notes")),
             (100, 70, 60, 100, 180, 160, 160), height=18)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.tree.bind("<Double-Button-1>", lambda e: self._edit())
@@ -5448,9 +5474,9 @@ class ScheduleFrame(tk.Frame):
     # ──────────────────────────────────────────────────────────
     def _reset_filter(self):
         self._date_var.set("")
-        self._inst_filter_var.set("الكل")
+        self._inst_filter_var.set(T("filter_all"))
         self._inst_combo.current(0)
-        self._cand_filter_var.set("الكل")
+        self._cand_filter_var.set(T("filter_all"))
         self._cand_combo.current(0)
         self._load()
 
@@ -5461,7 +5487,7 @@ class ScheduleFrame(tk.Frame):
         # فلتر الممرّن
         inst_filter_name = self._inst_filter_var.get()
         inst_id = None
-        if inst_filter_name and inst_filter_name != "الكل":
+        if inst_filter_name and inst_filter_name != T("filter_all"):
             for i in InstructorDB.get_all():
                 if f"{i['last_name']} {i['first_name']}" == inst_filter_name:
                     inst_id = i['id']
@@ -5470,7 +5496,7 @@ class ScheduleFrame(tk.Frame):
         # فلتر المترشح
         cand_filter_name = self._cand_filter_var.get()
         cand_id = None
-        if cand_filter_name and cand_filter_name != "الكل":
+        if cand_filter_name and cand_filter_name != T("filter_all"):
             for c in CandidateDB.get_all():
                 if f"{c['last_name']} {c['first_name']}" == cand_filter_name:
                     cand_id = c['id']
@@ -5503,7 +5529,7 @@ class ScheduleFrame(tk.Frame):
         # ملخص الأسبوع
         week = SessionDB.get_week()
         self._week_lbl.configure(
-            text=f"حصص الأسبوع القادم: {len(week)}  |  حصص اليوم: {len(SessionDB.get_today())}"
+            text=f"{T('sched_week_summary')} {len(week)}  |  {T('sched_today_summary')} {len(SessionDB.get_today())}"
         )
 
     def _on_select(self, event=None):
