@@ -6121,9 +6121,7 @@ class DocumentsFrame(tk.Frame):
         path = self._ask_save("تقرير_المدفوعات.pdf")
         if not path: return
         school = SchoolInfoDB.get()
-        # جلب المترشحين الذين سجّلوا في الفترة
-        cands = CandidateDB.get_by_date_range(d_from, d_to)
-        # مدفوعات الفترة لكل مترشح
+        # مدفوعات الفترة مجمّعة حسب المترشح (فلترة بتاريخ الدفع)
         paid_map = PaymentDB.get_paid_per_candidate_in_range(d_from, d_to)
         period_txt = f"الفترة: {d_from or '—'}  →  {d_to or '—'}" if (d_from or d_to) else "كل الفترات"
         doc = self._make_doc(path); s = _pdf_styles(); story = []
@@ -6131,11 +6129,15 @@ class DocumentsFrame(tk.Frame):
         story.append(Paragraph(ar(period_txt), s["right"]))
         story.append(Spacer(1, 0.3*cm))
         rows = [["المدفوع في الفترة","الإجمالي المتفق عليه","الاسم الكامل","رقم"]]
-        total_global = 0; paid_global = 0
-        for i, c in enumerate(cands, 1):
-            paid = paid_map.get(c['id'], 0)
-            total_global += c['total_amount']; paid_global += paid
-            rows.append([f"{paid:,.0f}", f"{c['total_amount']:,.0f}",
+        paid_global = 0; total_global = 0; i = 0
+        for cid, paid in paid_map.items():
+            c = CandidateDB.get(cid)
+            if not c:
+                continue
+            i += 1
+            paid_global += paid
+            total_global += c.get('total_amount', 0)
+            rows.append([f"{paid:,.0f}", f"{c.get('total_amount',0):,.0f}",
                          f"{c.get('last_name','')} {c.get('first_name','')}", str(i)])
         story.append(_styled_table(rows, [3.5*cm, 3.5*cm, 6.5*cm, 1.5*cm]))
         story.append(Spacer(1, 0.5*cm))
