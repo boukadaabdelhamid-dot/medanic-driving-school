@@ -825,6 +825,31 @@ class PaymentDB:
         conn.close()
         return [dict(r) for r in rows]
 
+    @staticmethod
+    def get_total_in_range(d_from="", d_to=""):
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("date >= ?"); params.append(d_from)
+        if d_to:   conds.append("date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        row = conn.execute(
+            f"SELECT COALESCE(SUM(amount),0) as t FROM payments {where}", params).fetchone()
+        conn.close()
+        return row['t'] if row else 0
+
+    @staticmethod
+    def get_monthly_breakdown_range(d_from="", d_to=""):
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("date >= ?"); params.append(d_from)
+        if d_to:   conds.append("date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(
+            f"SELECT strftime('%Y-%m', date) as month, COALESCE(SUM(amount),0) as total "
+            f"FROM payments {where} GROUP BY month ORDER BY month", params).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
 
 class ExpenseDB:
     @staticmethod
@@ -886,6 +911,31 @@ class ExpenseDB:
             COALESCE(SUM(amount),0) as total FROM expenses
             WHERE strftime('%Y',date)=? GROUP BY month ORDER BY month""",
             (str(y),)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_total_in_range(d_from="", d_to=""):
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("date >= ?"); params.append(d_from)
+        if d_to:   conds.append("date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        row = conn.execute(
+            f"SELECT COALESCE(SUM(amount),0) as t FROM expenses {where}", params).fetchone()
+        conn.close()
+        return row['t'] if row else 0
+
+    @staticmethod
+    def get_monthly_breakdown_range(d_from="", d_to=""):
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("date >= ?"); params.append(d_from)
+        if d_to:   conds.append("date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(
+            f"SELECT strftime('%Y-%m', date) as month, COALESCE(SUM(amount),0) as total "
+            f"FROM expenses {where} GROUP BY month ORDER BY month", params).fetchall()
         conn.close()
         return [dict(r) for r in rows]
 
@@ -1121,6 +1171,36 @@ class ExamResultDB:
             GROUP BY month, exam_type
             ORDER BY month
         """, (str(year),)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_pass_rate_in_range(d_from="", d_to=""):
+        """معدل النجاح لكل نوع امتحان ضمن فترة زمنية."""
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("exam_date >= ?"); params.append(d_from)
+        if d_to:   conds.append("exam_date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(
+            f"SELECT exam_type, COUNT(*) AS total, "
+            f"SUM(CASE WHEN result='ناجح' THEN 1 ELSE 0 END) AS passed "
+            f"FROM exam_results {where} GROUP BY exam_type", params).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_monthly_breakdown_range(d_from="", d_to=""):
+        """تفصيل شهري ضمن فترة زمنية (YYYY-MM)."""
+        conn = get_connection()
+        params = []; conds = []
+        if d_from: conds.append("exam_date >= ?"); params.append(d_from)
+        if d_to:   conds.append("exam_date <= ?"); params.append(d_to)
+        where = ("WHERE " + " AND ".join(conds)) if conds else ""
+        rows = conn.execute(
+            f"SELECT strftime('%Y-%m', exam_date) AS month, exam_type, COUNT(*) AS total, "
+            f"SUM(CASE WHEN result='ناجح' THEN 1 ELSE 0 END) AS passed "
+            f"FROM exam_results {where} GROUP BY month, exam_type ORDER BY month", params).fetchall()
         conn.close()
         return [dict(r) for r in rows]
 
@@ -3816,22 +3896,29 @@ class ReportsFrame(tk.Frame):
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(fill="x", pady=(0, 15))
 
-        # شريط الفلتر
+        # شريط الفلتر الزمني
         fo, fc = make_card(wrap, padding=15); fo.pack(fill="x", pady=(0, 15))
-        tk.Label(fc, text="السنة:", font=FONT_BOLD,
-                 bg=COLOR_CARD, anchor="e").pack(side="right", padx=5)
-        self.year_var = tk.StringVar(value=str(date.today().year))
-        make_combo(fc, self.year_var,
-                   [str(y) for y in range(date.today().year, 2019, -1)],
-                   width=10).pack(side="right", padx=5, ipady=4)
-        tk.Label(fc, text="الشهر:", font=FONT_BOLD,
-                 bg=COLOR_CARD, anchor="e").pack(side="right", padx=5)
-        self.month_var = tk.StringVar(value=f"{date.today().month:02d}")
-        make_combo(fc, self.month_var,
-                   [f"{m:02d}" for m in range(1, 13)],
-                   width=8).pack(side="right", padx=5, ipady=4)
-        ModernButton(fc, "تحديث التقارير", self._refresh, icon="📈",
-                     color=COLOR_PRIMARY).pack(side="right", padx=15)
+        today_str     = date.today().strftime('%Y-%m-%d')
+        year_start    = date.today().strftime('%Y') + '-01-01'
+
+        ModernButton(fc, "تطبيق", self._refresh, icon="📈",
+                     color=COLOR_PRIMARY).pack(side="right", padx=5)
+        ModernButton(fc, "كل الفترات", self._reset_filter, icon="🗓️",
+                     color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
+
+        tk.Label(fc, text="إلى:", font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=(15, 3))
+        self.date_to_var = tk.StringVar(value=today_str)
+        make_entry(fc, self.date_to_var, width=13).pack(side="right", padx=3, ipady=4)
+
+        tk.Label(fc, text="من:", font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=(15, 3))
+        self.date_from_var = tk.StringVar(value=year_start)
+        make_entry(fc, self.date_from_var, width=13).pack(side="right", padx=3, ipady=4)
+
+        tk.Label(fc, text="🗓️  فلترة بالفترة الزمنية  (YYYY-MM-DD)",
+                 font=FONT_SMALL, bg=COLOR_CARD,
+                 fg=COLOR_TEXT_LIGHT, anchor="e").pack(side="right", padx=10)
 
         # بطاقات إحصائية
         self.stats_row = tk.Frame(wrap, bg=COLOR_BG); self.stats_row.pack(fill="x", pady=(0, 15))
@@ -3867,41 +3954,70 @@ class ReportsFrame(tk.Frame):
 
         self._refresh()
 
+    def _reset_filter(self):
+        """يمسح الفلتر الزمني ويعيد تحميل كل البيانات."""
+        self.date_from_var.set("")
+        self.date_to_var.set("")
+        self._refresh()
+
     def _refresh(self):
-        y = self.year_var.get(); m = self.month_var.get()
-        tp = PaymentDB.get_total_by_year(y); te = ExpenseDB.get_total_by_year(y)
+        d_from = self.date_from_var.get().strip()
+        d_to   = self.date_to_var.get().strip()
+
+        # التحقق من صحة تنسيق التاريخ
+        def valid_date(s):
+            if not s:
+                return True
+            try:
+                datetime.strptime(s, '%Y-%m-%d')
+                return True
+            except ValueError:
+                return False
+
+        if not valid_date(d_from):
+            messagebox.showerror("تنسيق خاطئ", "تنسيق تاريخ البداية غير صحيح\nالمطلوب: YYYY-MM-DD")
+            return
+        if not valid_date(d_to):
+            messagebox.showerror("تنسيق خاطئ", "تنسيق تاريخ النهاية غير صحيح\nالمطلوب: YYYY-MM-DD")
+            return
+
+        # إجمالي المدفوعات والمصاريف في الفترة
+        tp   = PaymentDB.get_total_in_range(d_from, d_to)
+        te   = ExpenseDB.get_total_in_range(d_from, d_to)
         prof = tp - te
-        mp = PaymentDB.get_total_by_month(y, int(m))
-        me = ExpenseDB.get_total_by_month(y, int(m))
-        mpr = mp - me
-        nc = len(CandidateDB.get_all()); ni = len(InstructorDB.get_all())
+        nc   = len(CandidateDB.get_all())
+        ni   = len(InstructorDB.get_all())
 
         # إعادة بناء البطاقات
-        for w in self.stats_row.winfo_children(): w.destroy()
-        nav = self._navigate_cb
+        for w in self.stats_row.winfo_children():
+            w.destroy()
+        nav     = self._navigate_cb
         go_pay  = (lambda: nav(6)) if nav else None
         go_exp  = (lambda: nav(7)) if nav else None
-        # بطاقتا الأرباح: تنتقل للتقارير ذاتها لعرض التفاصيل (index 8)
         go_rep  = (lambda: nav(8)) if nav else None
-        stat_card(self.stats_row, f"مدفوعات {y}",  f"{tp:,.0f}", "💰", COLOR_SUCCESS,
-                  command=go_pay)
-        stat_card(self.stats_row, f"مصاريف {y}",   f"{te:,.0f}", "💸", COLOR_DANGER,
-                  command=go_exp)
-        stat_card(self.stats_row, f"أرباح {y}",    f"{prof:,.0f}", "💎",
-                  COLOR_PRIMARY if prof >= 0 else COLOR_DANGER,
-                  command=go_rep)
-        mn = MONTHS_AR.get(m, m)
-        stat_card(self.stats_row, f"أرباح {mn}", f"{mpr:,.0f}", "📅",
-                  COLOR_PURPLE if mpr >= 0 else COLOR_DANGER,
-                  command=go_rep)
 
-        # تفصيل شهري — النقر المزدوج على صف ينتقل لقسم المدفوعات
-        ap = {r['month']: r['total'] for r in PaymentDB.get_monthly_breakdown(y)}
-        ae = {r['month']: r['total'] for r in ExpenseDB.get_monthly_breakdown(y)}
+        stat_card(self.stats_row, "إجمالي المدفوعات", f"{tp:,.0f}",   "💰",
+                  COLOR_SUCCESS, command=go_pay)
+        stat_card(self.stats_row, "إجمالي المصاريف",  f"{te:,.0f}",   "💸",
+                  COLOR_DANGER,  command=go_exp)
+        stat_card(self.stats_row, "صافي الأرباح",     f"{prof:,.0f}", "💎",
+                  COLOR_PRIMARY if prof >= 0 else COLOR_DANGER, command=go_rep)
+        stat_card(self.stats_row, "المترشحون", str(nc), "👥", COLOR_INFO)
+        stat_card(self.stats_row, "الممرنون",  str(ni), "🚗", COLOR_PURPLE)
+
+        # ── التفصيل الشهري للفترة المحددة ────────────────────────────────
+        ap = {r['month']: r['total'] for r in PaymentDB.get_monthly_breakdown_range(d_from, d_to)}
+        ae = {r['month']: r['total'] for r in ExpenseDB.get_monthly_breakdown_range(d_from, d_to)}
+        all_months = sorted(set(ap.keys()) | set(ae.keys()))
+
         rows = []
-        for mm in range(1, 13):
-            ms = f"{mm:02d}"; p = ap.get(ms, 0); e = ae.get(ms, 0)
-            rows.append((MONTHS_AR.get(ms, ms), f"{p:,.0f}", f"{e:,.0f}", f"{p - e:,.0f}"))
+        for ym in all_months:
+            p = ap.get(ym, 0); e = ae.get(ym, 0)
+            parts = ym.split('-')
+            month_lbl = MONTHS_AR.get(parts[1], parts[1]) + '  ' + parts[0]
+            rows.append((month_lbl, f"{p:,.0f}", f"{e:,.0f}", f"{p - e:,.0f}"))
+        if not rows:
+            rows = [("لا توجد بيانات في هذه الفترة", "—", "—", "—")]
         insert_zebra(self.monthly_tree, rows)
 
         # نقر مزدوج على صف التفصيل الشهري → ينتقل للمدفوعات
@@ -3911,58 +4027,61 @@ class ReportsFrame(tk.Frame):
         self.monthly_tree.bind("<Double-Button-1>", _on_month_dbl)
         self.monthly_tree.configure(cursor="hand2")
 
-        # ── إحصائيات الامتحانات ──────────────────────────────────────────────
+        # ── إحصائيات الامتحانات ─────────────────────────────────────────
         for w in self._exam_stats_row.winfo_children():
             w.destroy()
 
-        pass_data = ExamResultDB.get_pass_rate_by_type()
-        total_all = sum(r['total'] for r in pass_data)
+        pass_data  = ExamResultDB.get_pass_rate_in_range(d_from, d_to)
+        total_all  = sum(r['total']  for r in pass_data)
         passed_all = sum(r['passed'] for r in pass_data)
         overall_pct = int(passed_all / total_all * 100) if total_all else 0
 
-        # بطاقة المعدل الكلي
-        overall_color = COLOR_SUCCESS if overall_pct >= 50 else (COLOR_WARNING if total_all == 0 else COLOR_DANGER)
-        stat_card(self._exam_stats_row,
-                  "المعدل الكلي للنجاح",
-                  f"{overall_pct}%",
-                  "🎓", overall_color)
+        overall_color = COLOR_SUCCESS if overall_pct >= 50 else (
+            COLOR_WARNING if total_all == 0 else COLOR_DANGER)
+        stat_card(self._exam_stats_row, "المعدل الكلي للنجاح",
+                  f"{overall_pct}%", "🎓", overall_color)
 
-        # بطاقة لكل نوع
         for r in pass_data:
-            total  = r['total']
-            passed = r['passed']
+            total  = r['total']; passed = r['passed']
             pct    = int(passed / total * 100) if total else 0
-            color  = COLOR_SUCCESS if pct >= 50 else (COLOR_WARNING if total == 0 else COLOR_DANGER)
+            color  = COLOR_SUCCESS if pct >= 50 else (
+                COLOR_WARNING if total == 0 else COLOR_DANGER)
             stat_card(self._exam_stats_row,
                       f"نجاح {r['exam_type']}",
                       f"{pct}%  ({passed}/{total})",
                       "📝", color)
 
-        # جدول التفصيل الشهري للامتحانات + المخطط الشريطي
-        monthly_exam = ExamResultDB.get_monthly_breakdown(y)
-        # بناء قاموس {شهر → {نوع → {total, passed}}}
+        # جدول التفصيل الشهري للامتحانات
+        monthly_exam = ExamResultDB.get_monthly_breakdown_range(d_from, d_to)
         em = {}
         for r in monthly_exam:
             mo_ = r['month']
             em.setdefault(mo_, {})
             em[mo_][r['exam_type']] = {"total": r['total'], "passed": r['passed']}
 
+        all_exam_months = sorted(em.keys())
         exam_rows = []
-        for mm in range(1, 13):
-            ms = f"{mm:02d}"
-            naz  = em.get(ms, {}).get("نظري",    {"total": 0, "passed": 0})
-            tat  = em.get(ms, {}).get("تطبيقي",  {"total": 0, "passed": 0})
+        for ym in all_exam_months:
+            parts     = ym.split('-')
+            month_lbl = MONTHS_AR.get(parts[1], parts[1]) + '  ' + parts[0]
+            naz = em[ym].get("نظري",   {"total": 0, "passed": 0})
+            tat = em[ym].get("تطبيقي", {"total": 0, "passed": 0})
             exam_rows.append((
-                MONTHS_AR.get(ms, ms),
+                month_lbl,
                 str(naz['total'])  if naz['total']  else "—",
                 str(naz['passed']) if naz['total']  else "—",
                 str(tat['total'])  if tat['total']  else "—",
                 str(tat['passed']) if tat['total']  else "—",
             ))
+        if not exam_rows:
+            exam_rows = [("لا توجد بيانات في هذه الفترة", "—", "—", "—", "—")]
         insert_zebra(self._exam_monthly_tree, exam_rows)
 
-        # ── رسم المخطط الشريطي الشهري ─────────────────────────────────────
-        self._draw_exam_bar_chart(em)
+        # ── رسم المخطط الشريطي (للسنة المستخرجة من تاريخ البداية) ────────
+        chart_year = d_from.split('-')[0] if d_from else str(date.today().year)
+        em_chart = {k.split('-')[1]: v for k, v in em.items()
+                    if k.startswith(chart_year + '-')}
+        self._draw_exam_bar_chart(em_chart)
 
     def _draw_exam_bar_chart(self, em):
         """يرسم مخططاً شريطياً شهرياً على Canvas يُظهر ناجحي نظري وتطبيقي."""
