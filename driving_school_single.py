@@ -3745,18 +3745,22 @@ class InstructorsFrame(tk.Frame):
     def _print_contract(self):
         if not self.selected_id:
             show_error(T("inst_sel_first")); return
-        
+
         ins = InstructorDB.get(self.selected_id)
         school = SchoolInfoDB.get()
-        
-        import tempfile, os
-        from datetime import datetime
+
         from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.units import cm
-        
-        temp_dir = tempfile.gettempdir()
-        path = os.path.join(temp_dir, f"instructor_contract_{ins['id']}_{int(datetime.now().timestamp())}.pdf")
+
+        default_name = (f"contrat_moniteur_{ins.get('last_name','')}.pdf" if LANG == "fr"
+                        else f"عقد_الممرن_{ins.get('last_name','')}.pdf")
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")],
+            initialfile=default_name)
+        if not path: return
+
         c = canvas.Canvas(path, pagesize=A4)
         
         def draw_text(x_cm, y_cm, text, font=ARABIC_FONT, size=11, align="right", bold=False):
@@ -4679,20 +4683,23 @@ class PaymentsFrame(tk.Frame):
     def _print_receipt(self):
         if not self.selected_candidate_id:
             show_error(T("cand_sel_first")); return
-            
+
         cand = CandidateDB.get(self.selected_candidate_id)
         if not cand: return
-        
+
         school = SchoolInfoDB.get()
         payments = PaymentDB.get_by_candidate(cand['id'])
         total_paid = sum(p['amount'] for p in payments)
         rem = cand['total_amount'] - total_paid
 
-        import tempfile, os
-        from datetime import datetime
-        temp_dir = tempfile.gettempdir()
-        filename = f"receipt_{cand['id']}_{int(datetime.now().timestamp())}.html"
-        path = os.path.join(temp_dir, filename)
+        default_name = (f"recu_paiement_{cand.get('last_name','')}.html" if LANG == "fr"
+                        else f"وصل_دفع_{cand.get('last_name','')}.html")
+        import os
+        path = filedialog.asksaveasfilename(
+            defaultextension=".html",
+            filetypes=[("HTML Files", "*.html"), ("All Files", "*.*")],
+            initialfile=default_name)
+        if not path: return
 
         # إنشاء صفحة HTML للوصل لكي تفتح في المتصفح وتطبع تلقائياً
         school_name = school.get('name', 'مدرسة تعليم السياقة')
