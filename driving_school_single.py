@@ -8452,10 +8452,11 @@ class DrivingSchoolApp:
     # ──────────────────────────────────────────────────────────
     def _build_sidebar(self):
         sb = self.sidebar
+        is_admin = (self._current_user.get("role") == "admin")
 
-        # ── قسم اللوجو ──
+        # ── قسم اللوجو (أعلى) ──
         logo_area = tk.Frame(sb, bg=COLOR_HEADER, padx=0, pady=16)
-        logo_area.pack(fill="x")
+        logo_area.pack(fill="x", side="top")
 
         self._sidebar_logo = None
         logo_shown = False
@@ -8494,69 +8495,11 @@ class DrivingSchoolApp:
                  font=(FONT_FAMILY, 9),
                  bg=COLOR_HEADER, fg="#94a3b8").pack(pady=(2, 0))
 
-        # فاصل
-        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=(0, 6))
+        # فاصل أعلى
+        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=(0, 6), side="top")
 
-        # ── عناصر التنقل ──
-        nav_container = tk.Frame(sb, bg=COLOR_SIDEBAR)
-        nav_container.pack(fill="both", expand=True)
-
-        nav_defs = [
-            ("🏠", T("nav_dashboard")),
-            ("🏫", T("nav_school_info")),
-            ("🧾", T("nav_candidates")),
-            ("🚗", T("nav_instructors")),
-            ("📚", T("nav_training")),
-            ("📅", T("nav_schedule")),
-            ("💰", T("nav_payments")),
-            ("💸", T("nav_expenses")),
-            ("📊", T("nav_reports")),
-            ("🖨️", T("nav_documents")),
-        ]
-        is_admin = (self._current_user.get("role") == "admin")
-        self._nav_refs = []
-        for i, (icon, label) in enumerate(nav_defs):
-            self._make_nav_item(nav_container, icon, label, i)
-            # إخفاء عناصر القائمة التي لا يملك المستخدم صلاحيتها
-            perm_key = NAV_PERMISSIONS.get(i)
-            visible  = True
-            if perm_key is None:
-                # الرئيسية دائماً مرئية؛ الممرنون (index=3) للمدير فقط
-                if i == 3 and not is_admin:
-                    visible = False
-            else:
-                visible = is_admin or bool(
-                    self._current_user.get("permissions", {}).get(perm_key, False))
-            if not visible:
-                self._nav_refs[i]["outer"].pack_forget()
-
-        # فاصل سفلي
-        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=6)
-
-        # ── زر إدارة المستخدمين (للمدير فقط) ──
-        if is_admin:
-            users_btn = tk.Frame(sb, bg=COLOR_PURPLE, cursor="hand2", padx=10, pady=6)
-            users_btn.pack(fill="x", padx=8, pady=(0, 4))
-            tk.Label(users_btn, text=T("btn_users"),
-                     font=(FONT_FAMILY, 9, "bold"),
-                     bg=COLOR_PURPLE, fg="white").pack()
-            def _open_users(e=None):
-                UserManagementDialog(self.root,
-                                     current_user_id=self._current_user.get("id"))
-            users_btn.bind("<Button-1>", _open_users)
-            for ch in users_btn.winfo_children():
-                ch.bind("<Button-1>", _open_users)
-            def _users_hover(e):
-                users_btn.configure(bg="#7c3aed")
-                for ch in users_btn.winfo_children(): ch.configure(bg="#7c3aed")
-            def _users_leave(e):
-                users_btn.configure(bg=COLOR_PURPLE)
-                for ch in users_btn.winfo_children(): ch.configure(bg=COLOR_PURPLE)
-            users_btn.bind("<Enter>", _users_hover)
-            users_btn.bind("<Leave>", _users_leave)
-
-        # ── تذييل الشريط الجانبي: المستخدم + خروج ──
-        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=10, pady=(6, 0))
+        # ── التذييل السفلي: يُحجز أولاً بـ side="bottom" قبل أن يتوسع nav_container ──
+        # هذا يضمن ظهوره دائماً بغض النظر عن ارتفاع الشاشة
 
         bot = tk.Frame(sb, bg=COLOR_HEADER, padx=12, pady=10)
         bot.pack(fill="x", side="bottom")
@@ -8626,6 +8569,66 @@ class DrivingSchoolApp:
         tk.Label(bot, text=f"📅 {date.today().strftime('%Y-%m-%d')}  |  v2.0  🇩🇿",
                  font=(FONT_FAMILY, 8), bg=COLOR_HEADER, fg="#475569",
                  anchor="w").pack(fill="x", pady=(8, 0))
+
+        # ── الفاصل فوق bot — يُحجز قبل nav_container (side="bottom") ──
+        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=10, pady=(6, 0),
+                                                   side="bottom")
+
+        # ── زر إدارة المستخدمين (للمدير فقط) — side="bottom" ──
+        if is_admin:
+            users_btn = tk.Frame(sb, bg=COLOR_PURPLE, cursor="hand2", padx=10, pady=6)
+            users_btn.pack(fill="x", padx=8, pady=(0, 4), side="bottom")
+            tk.Label(users_btn, text=T("btn_users"),
+                     font=(FONT_FAMILY, 9, "bold"),
+                     bg=COLOR_PURPLE, fg="white").pack()
+            def _open_users(e=None):
+                UserManagementDialog(self.root,
+                                     current_user_id=self._current_user.get("id"))
+            users_btn.bind("<Button-1>", _open_users)
+            for ch in users_btn.winfo_children():
+                ch.bind("<Button-1>", _open_users)
+            def _users_hover(e):
+                users_btn.configure(bg="#7c3aed")
+                for ch in users_btn.winfo_children(): ch.configure(bg="#7c3aed")
+            def _users_leave(e):
+                users_btn.configure(bg=COLOR_PURPLE)
+                for ch in users_btn.winfo_children(): ch.configure(bg=COLOR_PURPLE)
+            users_btn.bind("<Enter>", _users_hover)
+            users_btn.bind("<Leave>", _users_leave)
+
+        # ── الفاصل فوق زر المستخدمين — side="bottom" ──
+        tk.Frame(sb, bg="#334155", height=1).pack(fill="x", padx=14, pady=6,
+                                                   side="bottom")
+
+        # ── عناصر التنقل — تملأ المساحة المتبقية بعد حجز التذييل ──
+        nav_container = tk.Frame(sb, bg=COLOR_SIDEBAR)
+        nav_container.pack(fill="both", expand=True, side="top")
+
+        nav_defs = [
+            ("🏠", T("nav_dashboard")),
+            ("🏫", T("nav_school_info")),
+            ("🧾", T("nav_candidates")),
+            ("🚗", T("nav_instructors")),
+            ("📚", T("nav_training")),
+            ("📅", T("nav_schedule")),
+            ("💰", T("nav_payments")),
+            ("💸", T("nav_expenses")),
+            ("📊", T("nav_reports")),
+            ("🖨️", T("nav_documents")),
+        ]
+        self._nav_refs = []
+        for i, (icon, label) in enumerate(nav_defs):
+            self._make_nav_item(nav_container, icon, label, i)
+            perm_key = NAV_PERMISSIONS.get(i)
+            visible  = True
+            if perm_key is None:
+                if i == 3 and not is_admin:
+                    visible = False
+            else:
+                visible = is_admin or bool(
+                    self._current_user.get("permissions", {}).get(perm_key, False))
+            if not visible:
+                self._nav_refs[i]["outer"].pack_forget()
 
     def _make_nav_item(self, parent, icon, label, index):
         outer = tk.Frame(parent, bg=COLOR_SIDEBAR, cursor="hand2")
