@@ -1016,6 +1016,7 @@ CURRENT_USER: dict = {}
 
 # ── الصلاحيات ──────────────────────────────────────────────────────────────
 PERMISSION_LABELS = {
+    "view_dashboard":     "عرض الرئيسية (لوحة القيادة)",
     "view_candidates":    "عرض المترشحين",
     "edit_candidates":    "إضافة / تعديل / حذف المترشحين",
     "view_payments":      "عرض المدفوعات",
@@ -1031,7 +1032,7 @@ PERMISSION_KEYS = list(PERMISSION_LABELS.keys())
 
 # صلاحية مطلوبة لكل صفحة (None = لا قيد — دائماً مرئية)
 NAV_PERMISSIONS = {
-    0: None,                   # الرئيسية
+    0: "view_dashboard",       # الرئيسية
     1: "manage_school_info",   # معلومات المدرسة
     2: "view_candidates",      # المترشحون
     3: None,                   # الممرنون (admin فقط — يُعالَج منفصلاً)
@@ -8464,7 +8465,23 @@ class DrivingSchoolApp:
         self.content.pack(fill="both", expand=True, padx=14, pady=(8, 12))
 
         self._build_frames()
-        self._navigate(0)
+        # انتقل لأول صفحة مسموحة للمستخدم
+        is_admin = (self._current_user.get("role") == "admin")
+        first_page = 0
+        for idx, (_, _title) in enumerate(self._page_frames):
+            pk = NAV_PERMISSIONS.get(idx)
+            if idx == 3:          # صفحة الممرنين — admin فقط
+                if is_admin:
+                    first_page = idx
+                    break
+                continue
+            if pk is None or is_admin:
+                first_page = idx
+                break
+            if self._current_user.get("permissions", {}).get(pk, False):
+                first_page = idx
+                break
+        self._navigate(first_page)
 
     # ──────────────────────────────────────────────────────────
     def _build_sidebar(self):
