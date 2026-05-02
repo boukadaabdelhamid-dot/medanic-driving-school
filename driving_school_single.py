@@ -6703,79 +6703,270 @@ class DocumentsFrame(tk.Frame):
         if not self._check(): return
         cand = self._get_candidate()
         if not cand: return
-        default_name = (f"contrat_formation_{cand['last_name']}.pdf" if LANG == "fr"
-                        else f"عقد_تكوين_{cand['last_name']}.pdf")
+        default_name = f"عقد_تكوين_{cand.get('last_name','')}.pdf"
         import tempfile as _tf; from datetime import datetime as _dtt
         path = _tf.gettempdir() + f"/contract_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
-        doc = self._make_doc(path); s = _pdf_styles(); story = []
 
-        if LANG == "fr":
-            _pdf_header(story, school, "Contrat de Formation entre l'Auto-École et le Candidat")
-            txt = f"""
-            Par le présent contrat, l'auto-école : <b>{school.get('name','....................')}</b>
-            dont le siège est à : <b>{school.get('address','....................')}</b>
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import cm
+        from reportlab.pdfbase.pdfmetrics import stringWidth
 
-            s'engage à former le/la candidat(e) : <b>{cand.get('last_name','')} {cand.get('first_name','')}</b>
-            né(e) le : <b>{cand.get('birth_date','')}</b> à : <b>{cand.get('birth_place_commune','')}</b>
-            pour l'obtention du permis de conduire de catégorie : <b>{cand.get('license_type','B')}</b>
+        page_w, page_h = A4
+        c = rl_canvas.Canvas(path, pagesize=A4)
 
-            <b>Article 1 : Obligations de l'auto-école</b>
-            L'auto-école s'engage à fournir une formation théorique (30 heures) et une formation pratique (30 heures) conformément au programme national en vigueur.
+        MR    = 19.5          # cm — الحافة اليمنى للنص
+        ML    = 1.5           # cm — الحافة اليسرى
+        TW    = (MR - ML)*cm  # عرض النص بالنقاط
+        TOP   = 28.2          # cm — أعلى سطر
+        BOT   = 2.0           # cm — أسفل حد
+        y     = [TOP]
 
-            <b>Article 2 : Obligations du candidat</b>
-            Le candidat s'engage à payer un montant total de : <b>{cand.get('total_amount',0):,.0f} DA</b>, et à respecter les horaires des cours et le règlement intérieur de l'auto-école.
+        def _new_page():
+            c.showPage(); y[0] = TOP
 
-            <b>Article 3 : Durée du contrat</b>
-            Le présent contrat est valable pour une durée de six (06) mois à compter de la date de signature, renouvelable d'un commun accord.
+        def _chk(need=0.8):
+            if y[0] < BOT + need: _new_page()
 
-            Fait à : ............................ le : <b>{date.today().strftime('%Y-%m-%d')}</b>
-            """
-            for line in txt.split('\n'):
-                if line.strip():
-                    story.append(Paragraph(line.strip(), s["right"]))
-                    story.append(Spacer(1, 0.2*cm))
-            story.append(Spacer(1, 2*cm))
-            t_data = [["Signature du candidat (ou tuteur)", "Cachet et signature de l'auto-école"]]
-            story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
-        else:
-            _pdf_header(story, school, ar("عقد تكوين بين مدرسة تعليم السياقة والمترشح"))
+        def _t(text, x=MR, size=11, bold=False, align="right"):
+            _chk()
+            f = ARABIC_FONT_BOLD if bold else ARABIC_FONT
+            c.setFont(f, size)
+            t = ar(str(text)) if text else ""
+            if align == "right":
+                c.drawRightString(x*cm, y[0]*cm, t)
+            elif align == "center":
+                c.drawCentredString(page_w/2, y[0]*cm, t)
+            else:
+                c.drawString(ML*cm, y[0]*cm, t)
 
-            def _p(text):
-                story.append(Paragraph(ar(str(text)), s["right"]))
-                story.append(Spacer(1, 0.25*cm))
+        def _nl(sp=0.65): y[0] -= sp
 
-            def _ph(text):
-                story.append(Paragraph(ar(str(text)), s["h2"]))
-                story.append(Spacer(1, 0.2*cm))
+        def _dots(v, n=35): return str(v).strip() if (v and str(v).strip()) else "."*n
 
-            story.append(Spacer(1, 0.4*cm))
-            _p(f"بموجب هذا العقد، تلتزم مدرسة تعليم السياقة: {school.get('name', '....................')}")
-            _p(f"والكائن مقرها بـ: {school.get('address', '....................')}")
-            story.append(Spacer(1, 0.3*cm))
-            _p(f"بتكوين المترشح(ة): {cand.get('last_name','')} {cand.get('first_name','')}")
-            _p(f"المولود(ة) بتاريخ: {cand.get('birth_date','')}  بـ: {cand.get('birth_place_commune','')}")
-            _p(f"للحصول على رخصة السياقة من الصنف: {cand.get('license_type','B')}")
-            story.append(Spacer(1, 0.5*cm))
+        def _field(lbl, val, n=35):
+            _t(f"{lbl}  {_dots(val, n)}"); _nl()
 
-            _ph("البند 1: التزامات المدرسة")
-            _p("تلتزم المدرسة بتقديم تكوين نظري (30 ساعة) وتكوين تطبيقي (30 ساعة) وفقاً للبرنامج الوطني المعمول به.")
-            story.append(Spacer(1, 0.4*cm))
+        def _two(l1, v1, l2, v2, n=20):
+            _t(f"  {l2}  {_dots(v2, n)}                {l1}  {_dots(v1, n)}"); _nl()
 
-            _ph("البند 2: التزامات المترشح")
-            _p(f"يلتزم المترشح بدفع مبلغ إجمالي قدره: {cand.get('total_amount', 0):,.0f} دج، وباحترام مواعيد الدروس وقوانين المدرسة.")
-            story.append(Spacer(1, 0.4*cm))
+        def _wrap(text, size=11, lh=0.6, x=MR, bold=False):
+            """يلتف النص تلقائياً إذا تجاوز عرض الصفحة."""
+            f = ARABIC_FONT_BOLD if bold else ARABIC_FONT
+            words = str(text).split()
+            buf = []
+            for w in words:
+                test = " ".join(buf + [w])
+                if stringWidth(ar(test), f, size) > TW - 0.5*cm and buf:
+                    _t(" ".join(buf), x=x, size=size, bold=bold); _nl(lh)
+                    buf = [w]
+                else:
+                    buf.append(w)
+            if buf:
+                _t(" ".join(buf), x=x, size=size, bold=bold); _nl(lh)
 
-            _ph("البند 3: مدة العقد")
-            _p("هذا العقد صالح لمدة ستة (06) أشهر من تاريخ التوقيع، قابلة للتجديد باتفاق الطرفين.")
-            story.append(Spacer(1, 0.6*cm))
+        def _sec(txt):
+            _nl(0.2); _chk(1.2)
+            _t(txt, bold=True, size=12); _nl(0.75)
 
-            _p(f"حرر بـ: ............................  بتاريخ: {date.today().strftime('%Y-%m-%d')}")
-            story.append(Spacer(1, 2*cm))
-            t_data = [[ar("توقيع المترشح (أو وليه)"), ar("ختم وتوقيع المدرسة")]]
-            story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
+        def _sub(txt):
+            _t(txt, bold=True); _nl(0.6)
 
-        doc.build(story)
+        def _bullet(txt, pref="•"):
+            _wrap(f"{pref}  {txt}")
+
+        # ══════════════════════════════════════════════════════════════════
+        #  الصفحة 1 — بيانات الطرفين
+        # ══════════════════════════════════════════════════════════════════
+        _t("عقد تعليم سياقة السيارات", bold=True, size=16, align="center"); _nl(1.1)
+        _t("بين  :", bold=True); _nl(0.8)
+
+        # — المدرسة —
+        _t("مالك مدرسة تعليم سياقة السيارات  :", bold=True); _nl(0.8)
+
+        acr = school.get('accreditation_number','')
+        _t(f"الاعتماد رقم  {_dots(acr,30)}                الصادر في  {'.'*30}"); _nl()
+
+        owner = school.get('name','')
+        _t(f"السيد )ة(  {_dots(owner,30)}  :  المولود )ة( في  {'.'*20}  بـ  {'.'*15}"); _nl()
+
+        _field("العنوان  :", school.get('address',''), 60)
+
+        _t(f"الممثل من طرف السيد )ة(  {'.'*28}  :  المولود )ة( في  {'.'*18}  بـ  {'.'*12}"); _nl()
+
+        _field("اسم الشركة  :", school.get('name',''), 50)
+        _field("العنوان المهني  :", school.get('address',''), 50)
+
+        commune  = school.get('address_commune','') or ""
+        wilaya_s = school.get('wilaya','') or ""
+        _t(f"ولاية  {_dots(wilaya_s,18)}  :  دائرة  {'.'*20}  :  بلدية  {_dots(commune,20)}"); _nl()
+
+        phone_s = school.get('phone','')
+        _t(f"البريد الإلكتروني  {'.'*30}            الهاتف  {_dots(phone_s,20)}"); _nl()
+
+        lic_type = cand.get('license_type','B') or 'B'
+        _field("صنف )أصناف( رخصة السياقة محل التعليم", lic_type, 30)
+        _t(f"رقم التأمين على الحوادث لفائدة المترشح )ة(  {'.'*42}  :"); _nl(0.9)
+
+        # — المترشح —
+        _t("والمترشح )ة(  :", bold=True); _nl(0.8)
+
+        cname = f"{cand.get('last_name','')} {cand.get('first_name','')}".strip()
+        bdate = cand.get('birth_date','') or ""
+        bcom  = cand.get('birth_place_commune','') or ""
+        _t(f"المولود )ة( في  {_dots(bdate,18)}          الاسم  {_dots(cand.get('first_name',''),18)}          اللقب  {_dots(cand.get('last_name',''),18)}"); _nl()
+
+        addr = cand.get('current_address','') or cand.get('address_commune','') or ""
+        _field("القاطن )ة(  :", addr, 60)
+
+        cph = cand.get('phone','')
+        _t(f"البريد الإلكتروني  {'.'*35}              الهاتف  {_dots(cph,20)}"); _nl(0.9)
+
+        _t("عند الاقتضاء، يمثله )ها( الممثل الشرعي  :", bold=False); _nl()
+        _t(f"المولود )ة( في  {'.'*20}          الاسم  {'.'*20}          اللقب  {'.'*20}"); _nl()
+        _t(f"الهاتف  {'.'*22}              العنوان  {'.'*40}"); _nl(1.0)
+
+        _t("تم الاتفاق على ما يأتي  :", bold=True, size=12); _nl(0.4)
+
+        # ══════════════════════════════════════════════════════════════════
+        #  الصفحة 2 — بنود العقد
+        # ══════════════════════════════════════════════════════════════════
+        _new_page()
+
+        # أولا — موضوع العقد
+        _sec("أولا – موضوع العقد  :")
+        _wrap("يهدف هذا العقد إلى تحديد حقوق وواجبات كل من الطرفين، يسمح للمترشح )ة( ببلوغ المستوى المطلوب ليكون مؤهلاً لاجتياز الاختبارات النظرية والتطبيقية لرخصة السياقة لصنف من الأصناف الآتية  :")
+        _nl(0.2)
+
+        # جدول الأصناف
+        all_cats = ["أ1", "أ", "ب", "ج1", "ج", "د", "و", "ب)هـ(", "ج1)هـ(", "ج)هـ(", "د)هـ("]
+        col_w = TW / len(all_cats)
+        row_h = 0.7*cm
+        tbl_x = ML*cm
+        tbl_y = (y[0] - 0.1)*cm
+        c.setFont(ARABIC_FONT, 9)
+        for i, cat in enumerate(all_cats):
+            cx = tbl_x + i * col_w
+            c.rect(cx, tbl_y - row_h, col_w, row_h)
+            c.rect(cx, tbl_y - 2*row_h, col_w, row_h)
+            c.drawCentredString(cx + col_w/2, tbl_y - row_h + 0.15*cm, ar(cat))
+            if cat.strip() == lic_type.strip():
+                c.setFillColorRGB(0.2, 0.4, 0.8)
+                c.setFont(ARABIC_FONT_BOLD, 12)
+                c.drawCentredString(cx + col_w/2, tbl_y - 2*row_h + 0.12*cm, ar("✓"))
+                c.setFillColorRGB(0, 0, 0)
+                c.setFont(ARABIC_FONT, 9)
+        y[0] -= 1.8; _nl(0.4)
+
+        # ثانيا — مدة العقد
+        _sec("ثانيا – مدة العقد  :")
+        _wrap("يبرم هذا العقد حسب مدة التكوين المطلوبة، على ألا تتجاوز اثني عشر )12( شهرا، ابتداء من تاريخ توقيعه. وعند انتهاء هذا الأجل، يجب التفاوض مجددا بشأن العقد.")
+        _wrap("يشرع في التكوين بمجرد التوقيع عليه.")
+
+        # ثالثا — التزامات المدرسة
+        _sec("ثالثا – التزامات وحقوق مدرسة تعليم السياقة  :")
+        _wrap("تتعهد مدرسة تعليم السياقة بتعليم تقنيات سياقة السيارات من خلال تزويد المترشح )ة( بالوسائل اللازمة للوصول إلى المستوى المطلوب وتقديمه في حدود أماكن الامتحان المتاحة لاختبارات رخصة السياقة.")
+        _wrap("في حالة الفشل في الامتحان وبعد موافقة المترشح )ة(، تتعهد مدرسة تعليم السياقة، من خلال تكوين تكميلي، بتقديم المترشح )ة(، ضمن نفس الشروط، في أقرب الآجال وفي حدود أماكن الامتحان التي يتم تخصيصها لها من قبل الإدارة.")
+        _nl(0.1)
+        _sub("1 – برنامج التكوين وسيره  :")
+        _wrap("تقدم مدرسة تعليم السياقة تكوينا مطابقا للبرنامج المنصوص عليه في القرار المؤرخ في 9 جمادى الثانية عام 1440 الموافق 14 فبراير سنة 2019 الذي يحدد برنامج تعليم سياقة السيارات.")
+        _wrap("يتم تحديد الرزنامة التقديرية للحصص التعليمية من قبل مدرسة تعليم السياقة بالاتفاق مع المترشح )ة(، وتسلّم نسخة منها لهذا الأخير )ة(.")
+        _wrap("يترتب على كل حصة تقييم:")
+        _bullet("تعلم مدرسة تعليم السياقة المترشح )ة( بمدى تقدمه في التكوين.", "–")
+        _bullet("تخصص ساعة واحدة من التكوين للدرس النظري.", "–")
+        _wrap("وتقسم الساعة المخصصة للسياقة في الطرق، عموما، على النحو الآتي  :")
+        _bullet("خمس )5( دقائق: تكرس لتحديد الأهداف بالاستناد إلى كتيب التعليم الذي يسلّمه المركز الوطني لرخص السياقة،")
+        _bullet("من خمس وأربعين )45( إلى خمسين )50( دقيقة: تكرس للسياقة الفعلية قصد بلوغ الأهداف المحددة وتقييم التدريب،")
+        _bullet("من خمس )5( إلى عشر )10( دقائق: لتقديم الحصيلة والتعليقات.")
+        _wrap("لا يمكن أن تتجاوز مدة السياقة العملية ساعتين )2( متتاليتين لكل مترشح )ة(.")
+        _wrap("يتم تحديد كيفيات إلغاء الحصص و/أو الامتحانات، باتفاق الطرفين.")
+        _nl(0.1)
+        _sub("2 – الوسائل البيداغوجية والتقنية  :")
+        _wrap("تسخّر مدرسة تعليم السياقة جميع الكفاءات الضرورية لكي يبلغ المترشح )ة( مستوى الأداء المطلوب، وتقدم الدروس النظرية والتطبيقية في مدرسة تعليم السياقة، حصريا بواسطة ممرنين حائزين الأصناف المدرّسة. ويجب أن تكون المركبات المستعملة مطابقة للمواصفات الواردة في القرار المؤرخ في 9 جمادى الثانية عام 1440 الموافق 14 فبراير سنة 2019 الذي يحدد دفتر شروط مدارس تعليم السياقة.")
+        _nl(0.1)
+        _sub("3 – الإجراءات الإدارية  :")
+        _wrap("تقوم مدرسة تعليم السياقة، باسم المترشح )ة( ونيابة عنه )ها(، بجميع الإجراءات اللازمة لدى الإدارة من أجل تسجيل ملف الامتحان الخاص به )ها(. ويتم إخطار المترشح من طرف مدرسة تعليم السياقة بقائمة الوثائق التي تشكل ملف الامتحان.")
+        _wrap("وفي حالة عدم احترام المترشح )ة( للشروط البيداغوجية أو رزنامة التكوين، تحتفظ مدرسة تعليم السياقة بإمكانية تأجيل تقدمه )ها( لامتحانات رخصة السياقة، شريطة إعلامه )ها( كتابيا، مع تقديم تبرير ورزنامة جديدة. وبعد امتثال المترشح )ة( لتعليمات مدرسة تعليم السياقة، يقدم لاختبارات رخصة السياقة.")
+        _wrap("يجب على مدرسة تعليم السياقة، عند دفع تكاليف التكوين، تسليم المترشح )ة( وثيقة الدفع.")
+
+        # رابعا — التزامات المترشح
+        _sec("رابعا – التزامات وحقوق المترشح )ة(  :")
+        _wrap("يلتزم المترشح )ة( باحترام النظام الداخلي للمدرسة وكل تعليمة مقدمة ذات صلة بالتكوين المقدم.")
+        _nl(0.1)
+        _sub("1 – تسديد المبالغ المستحقة  :")
+        _wrap("يتعين على المترشح )ة( تسديد المبالغ المستحقة لمدرسة تعليم السياقة طبقا لكيفيات التسديد التي تم اختيارها.")
+        _wrap("يمكن مدرسة تعليم السياقة فسخ هذا العقد عند عدم تسديد المبالغ المستحقة في الآجال المحددة.")
+
+        # خامسا — تكلفة التكوين
+        _sec("خامسا – تكلفة التكوين وكيفيات الدفع  :")
+        _sub("– تكلفة التكوين  :")
+        _wrap("تحدد تكلفة التكوين المنصوص عليها في هذا العقد حسب الصنف المدرّس، كما يأتي  :")
+        _nl(0.2)
+
+        # جدول التسعيرة
+        _chk(3.5)
+        th = ["التسعيرة الإجمالية مع كل الرسوم", "التسعيرة بالساعة مع كل الرسوم", "عدد الساعات", "الخدمات"]
+        rows = [
+            ["", "", "", "دروس نظرية"],
+            ["", "", "", "دروس تطبيقية"],
+        ]
+        cws   = [4.5*cm, 4.0*cm, 3.0*cm, 3.0*cm]
+        t_x   = ML*cm
+        rh    = 0.75*cm
+        ty    = y[0]*cm
+        c.setFont(ARABIC_FONT_BOLD, 8)
+        for ci, hdr in enumerate(th):
+            rx = t_x + sum(cws[:ci])
+            c.rect(rx, ty - rh, cws[ci], rh)
+            c.drawCentredString(rx + cws[ci]/2, ty - rh + 0.18*cm, ar(hdr))
+        y[0] -= rh/cm
+        c.setFont(ARABIC_FONT, 9)
+        for row in rows:
+            ry = y[0]*cm
+            for ci, cell in enumerate(row):
+                rx = t_x + sum(cws[:ci])
+                c.rect(rx, ry - rh, cws[ci], rh)
+                if cell:
+                    c.drawCentredString(rx + cws[ci]/2, ry - rh + 0.18*cm, ar(cell))
+            y[0] -= rh/cm
+        _nl(0.5)
+
+        total_str = f"{cand.get('total_amount', 0):,.0f}  دج" if cand.get('total_amount') else "."*30
+        _t(f"السعر الإجمالي مع كل الرسوم  :  {total_str}"); _nl(0.5)
+        _bullet("تحدد حقوق الامتحان للحصول على رخصة السياقة وحقوق الدخول إلى مضمار الامتحان طبقا للتشريع والتنظيم المعمول بهما.")
+        _nl(0.1)
+        _sub("– كيفيات الدفع  :")
+        _wrap("يتم الدفع حسب مراحل تنفيذ العقد تبعا للكيفيات المتفق عليها بين أطراف العقد.")
+
+        # سادسا — تعليق العقد وفسخه
+        _sec("سادسا – تعليق العقد وفسخه  :")
+        _wrap("يمكن تعليق هذا العقد باتفاق مشترك لمدة لا تتجاوز اثني عشر )12( شهرا. وعند انتهاء هذا الأجل، يجب التفاوض مجددا بشأنه.")
+        _wrap("يمكن أن يفسخ هذا العقد من أحد طرفيه في الحالات المتفق عليها باتفاق مشترك.")
+
+        # سابعا — طرق الطعن
+        _sec("سابعا – طرق الطعن  :")
+        _wrap("في حالة عدم حل النزاع المترتب على عدم احترام الالتزامات من طرفي العقد أو أحدهما، وديا، يمكن رفعه، في هذه الحالة، أمام المحكمة المختصة.")
+        _nl(0.3)
+        _wrap("أُعدّ هذا العقد في نسختين )2(، تسلّم إحداهما للمترشح )ة(.")
+        _nl(0.5)
+
+        # التوقيعات
+        _chk(3.0)
+        wilaya_sig = school.get('wilaya','') or (school.get('address','').split()[-1] if school.get('address') else '........')
+        _t(f"حرّر بـ  {_dots(wilaya_sig, 20)}              في  {'.'*20}"); _nl(1.8)
+
+        sig_y = y[0]*cm
+        c.setFont(ARABIC_FONT_BOLD, 11)
+        c.drawCentredString(ML*cm + 4.0*cm, sig_y + 0.4*cm, ar('"قرئ وصودق عليه"'))
+        c.drawCentredString(ML*cm + 4.0*cm, sig_y - 0.1*cm, ar("توقيع المترشح )ة( أو"))
+        c.drawCentredString(ML*cm + 4.0*cm, sig_y - 0.7*cm, ar("ممثله )ها( الشرعي"))
+
+        c.drawCentredString(MR*cm - 4.0*cm, sig_y + 0.4*cm, ar('"قرئ وصودق عليه"'))
+        c.drawCentredString(MR*cm - 4.0*cm, sig_y - 0.1*cm, ar("عن مدرسة تعليم السياقة"))
+        c.drawCentredString(MR*cm - 4.0*cm, sig_y - 0.7*cm, ar("توقيع الممثل الشرعي"))
+
+        c.save()
         self._trigger_print(path, T("doc_contract"), default_name=default_name)
 
 
