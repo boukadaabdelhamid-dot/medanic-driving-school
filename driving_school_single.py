@@ -50,6 +50,359 @@ except ImportError:
 
 
 # ============================================================================
+#  نظام الترجمة (عربي / فرنسي)
+# ============================================================================
+
+LANG = "ar"   # القيمة الافتراضية — تُحمَّل من قاعدة البيانات عند بدء التشغيل
+
+STRINGS: dict = {
+    # ── التنقل ──────────────────────────────────────────────────────────────
+    "nav_dashboard":   {"ar": "الرئيسية",          "fr": "Tableau de bord"},
+    "nav_school_info": {"ar": "معلومات المدرسة",    "fr": "Info École"},
+    "nav_candidates":  {"ar": "المترشحون",          "fr": "Candidats"},
+    "nav_instructors": {"ar": "الممرنون",           "fr": "Moniteurs"},
+    "nav_training":    {"ar": "مراحل التكوين",     "fr": "Étapes Formation"},
+    "nav_schedule":    {"ar": "الجدول الزمني",     "fr": "Planning"},
+    "nav_payments":    {"ar": "المدفوعات",          "fr": "Paiements"},
+    "nav_expenses":    {"ar": "المصاريف",           "fr": "Dépenses"},
+    "nav_reports":     {"ar": "التقارير",           "fr": "Rapports"},
+    "nav_documents":   {"ar": "طباعة الوثائق",     "fr": "Imprimer Docs"},
+    # ── أزرار شائعة ─────────────────────────────────────────────────────────
+    "btn_save":          {"ar": "حفظ",             "fr": "Enregistrer"},
+    "btn_save_info":     {"ar": "حفظ المعلومات",   "fr": "Enregistrer"},
+    "btn_reload":        {"ar": "إعادة تحميل",     "fr": "Recharger"},
+    "btn_add":           {"ar": "إضافة",           "fr": "Ajouter"},
+    "btn_edit":          {"ar": "تعديل",           "fr": "Modifier"},
+    "btn_delete":        {"ar": "حذف",             "fr": "Supprimer"},
+    "btn_cancel":        {"ar": "إلغاء",           "fr": "Annuler"},
+    "btn_search":        {"ar": "بحث",             "fr": "Rechercher"},
+    "btn_refresh":       {"ar": "تحديث",           "fr": "Actualiser"},
+    "btn_print":         {"ar": "طباعة",           "fr": "Imprimer"},
+    "btn_apply":         {"ar": "تطبيق",           "fr": "Appliquer"},
+    "btn_all_periods":   {"ar": "كل الفترات",      "fr": "Toutes périodes"},
+    "btn_close":         {"ar": "إغلاق",           "fr": "Fermer"},
+    "btn_clear":         {"ar": "مسح الحقول",      "fr": "Effacer"},
+    "btn_users":         {"ar": "👥  إدارة المستخدمين", "fr": "👥  Utilisateurs"},
+    "btn_logout":        {"ar": "⏻  تسجيل الخروج", "fr": "⏻  Déconnexion"},
+    "btn_lang_switch":   {"ar": "🌐 Français",      "fr": "🌐 عربي"},
+    # ── لوحة المعلومات ──────────────────────────────────────────────────────
+    "dash_title":        {"ar": "📊  لوحة المعلومات",           "fr": "📊  Tableau de bord"},
+    "dash_subtitle":     {"ar": "نظرة شاملة على نشاط المدرسة", "fr": "Vue d'ensemble de l'activité"},
+    "dash_candidates":   {"ar": "المترشحون",                    "fr": "Candidats"},
+    "dash_instructors":  {"ar": "الممرنون",                     "fr": "Moniteurs"},
+    "dash_payments":     {"ar": "المدفوعات (دج)",               "fr": "Paiements (DA)"},
+    "dash_expenses":     {"ar": "المصاريف (دج)",                "fr": "Dépenses (DA)"},
+    "dash_profit":       {"ar": "💎  الأرباح الصافية لسنة",    "fr": "💎  Bénéfice net année"},
+    "dash_alerts":       {"ar": "تنبيهات وإشعارات هامة",        "fr": "Alertes importantes"},
+    "dash_today_sess":   {"ar": "حصص اليوم",                    "fr": "Séances du jour"},
+    "dash_recent":       {"ar": "المترشحون المسجلون حديثاً",    "fr": "Candidats récemment inscrits"},
+    "dash_no_sessions":  {"ar": "لا توجد حصص مجدولة لهذا اليوم","fr": "Aucune séance planifiée aujourd'hui"},
+    "dash_next_sess":    {"ar": "⏭  أقرب حصة قادمة:",          "fr": "⏭  Prochaine séance:"},
+    "dash_see_details":  {"ar": "← عرض التفاصيل",              "fr": "→ Voir détails"},
+    "dash_success_rate": {"ar": "نجاح",                         "fr": "Réussite"},
+    "dash_attempts":     {"ar": "المحاولات:",                   "fr": "Tentatives:"},
+    "dash_passed_lbl":   {"ar": "ناجح:",                        "fr": "Réussi:"},
+    "dash_failed_lbl":   {"ar": "راسب:",                        "fr": "Échoué:"},
+    "dash_unpaid":       {"ar": "مترشحين لم يسددوا كامل المستحقات.", "fr": "candidats n'ont pas payé intégralement."},
+    "dash_there_are":    {"ar": "هناك",                         "fr": "Il y a"},
+    # ── معلومات المدرسة ──────────────────────────────────────────────────────
+    "school_title":    {"ar": "🏫  معلومات المدرسة",                                         "fr": "🏫  Informations École"},
+    "school_subtitle": {"ar": "بيانات المدرسة الرسمية المستعملة في الوثائق المطبوعة",        "fr": "Données officielles utilisées dans les documents imprimés"},
+    "school_basic":    {"ar": "البيانات الأساسية",                                            "fr": "Données de base"},
+    "school_name":     {"ar": "اسم المدرسة",                                                  "fr": "Nom de l'école"},
+    "school_phone":    {"ar": "رقم الهاتف",                                                   "fr": "Téléphone"},
+    "school_address":  {"ar": "العنوان",                                                      "fr": "Adresse"},
+    "school_cr":       {"ar": "رقم السجل التجاري",                                            "fr": "Registre commercial"},
+    "school_accred":   {"ar": "رقم الاعتماد",                                                 "fr": "N° accréditation"},
+    "school_wilaya":   {"ar": "الولاية",                                                      "fr": "Wilaya"},
+    "school_saved":    {"ar": "تم حفظ معلومات المدرسة بنجاح",                                "fr": "Informations enregistrées avec succès"},
+    "school_err_name": {"ar": "يرجى إدخال اسم المدرسة",                                      "fr": "Veuillez saisir le nom de l'école"},
+    # ── المترشحون ────────────────────────────────────────────────────────────
+    "cand_title":       {"ar": "🧾  إدارة المترشحين",                          "fr": "🧾  Gestion des candidats"},
+    "cand_subtitle":    {"ar": "إضافة وتعديل وحذف وعرض كل المترشحين",         "fr": "Ajouter, modifier, supprimer des candidats"},
+    "cand_new":         {"ar": "تسجيل مترشح جديد",                            "fr": "Nouveau candidat"},
+    "cand_edit":        {"ar": "تعديل المحدد",                                "fr": "Modifier"},
+    "cand_exam":        {"ar": "نتائج الامتحانات",                            "fr": "Résultats examens"},
+    "cand_card":        {"ar": "بطاقة التكوين",                               "fr": "Fiche formation"},
+    "cand_print_form":  {"ar": "طباعة الاستمارة",                             "fr": "Imprimer formulaire"},
+    "cand_delete":      {"ar": "حذف",                                         "fr": "Supprimer"},
+    "cand_hint":        {"ar": "💡  لتسجيل مترشح جديد: اضغط على زر  «➕ تسجيل مترشح جديد»  أعلاه.",
+                         "fr": "💡  Pour inscrire un candidat: cliquez sur  «➕ Nouveau candidat»  ci-dessus."},
+    "cand_search":      {"ar": "ابحث بالاسم أو اللقب أو الهاتف:",             "fr": "Rechercher par nom ou téléphone:"},
+    "cand_col_num":     {"ar": "رقم",        "fr": "N°"},
+    "cand_col_lname":   {"ar": "اللقب",      "fr": "Nom"},
+    "cand_col_fname":   {"ar": "الاسم",      "fr": "Prénom"},
+    "cand_col_nid":     {"ar": "رقم التعريف","fr": "N° identité"},
+    "cand_col_gender":  {"ar": "الجنس",      "fr": "Sexe"},
+    "cand_col_phone":   {"ar": "الهاتف",     "fr": "Téléphone"},
+    "cand_col_license": {"ar": "الرخصة",     "fr": "Permis"},
+    "cand_col_inst":    {"ar": "الممرن",     "fr": "Moniteur"},
+    "cand_col_amount":  {"ar": "المبلغ",     "fr": "Montant"},
+    "cand_col_date":    {"ar": "تاريخ التسجيل", "fr": "Date inscription"},
+    "cand_add_title":   {"ar": "تسجيل مترشح جديد", "fr": "Nouveau candidat"},
+    "cand_edit_title":  {"ar": "تعديل بيانات المترشح", "fr": "Modifier candidat"},
+    # ── الممرنون ─────────────────────────────────────────────────────────────
+    "inst_title":      {"ar": "🚗  إدارة الممرنين",               "fr": "🚗  Gestion des moniteurs"},
+    "inst_subtitle":   {"ar": "إدارة الممرنين العاملين في المدرسة","fr": "Gestion des moniteurs de l'école"},
+    "inst_add":        {"ar": "إضافة ممرن",                       "fr": "Ajouter moniteur"},
+    "inst_edit":       {"ar": "تعديل",                            "fr": "Modifier"},
+    "inst_contract":   {"ar": "عقد العمل",                        "fr": "Contrat de travail"},
+    "inst_delete":     {"ar": "حذف",                              "fr": "Supprimer"},
+    "inst_search":     {"ar": "ابحث بالاسم أو الهاتف:",           "fr": "Rechercher par nom ou téléphone:"},
+    "inst_col_num":    {"ar": "رقم",           "fr": "N°"},
+    "inst_col_lname":  {"ar": "اللقب",         "fr": "Nom"},
+    "inst_col_fname":  {"ar": "الاسم",         "fr": "Prénom"},
+    "inst_col_gender": {"ar": "الجنس",         "fr": "Sexe"},
+    "inst_col_phone":  {"ar": "الهاتف",        "fr": "Téléphone"},
+    "inst_col_cats":   {"ar": "الأصناف",       "fr": "Catégories"},
+    "inst_col_exp":    {"ar": "سنوات الخبرة",  "fr": "Années exp."},
+    "inst_added":           {"ar": "تم إضافة الممرن بنجاح",            "fr": "Moniteur ajouté avec succès"},
+    "inst_updated":         {"ar": "تم تعديل بيانات الممرن",           "fr": "Moniteur modifié avec succès"},
+    "inst_sel_first":       {"ar": "يرجى تحديد ممرن من القائمة",       "fr": "Sélectionnez un moniteur d'abord"},
+    "inst_no_cands":        {"ar": "لا يوجد مترشحون مسجلون لهذا الممرن","fr": "Aucun candidat inscrit pour ce moniteur"},
+    "inst_pick_cand":       {"ar": "اختر المترشح",                     "fr": "Choisir candidat"},
+    "inst_pick_cand_label": {"ar": "اختر المترشح لطباعة بطاقة التكوين له:", "fr": "Choisissez le candidat pour imprimer la fiche:"},
+    "inst_col_fname_lname": {"ar": "الاسم واللقب",                     "fr": "Nom et prénom"},
+    "inst_print_card":      {"ar": "طباعة البطاقة",                    "fr": "Imprimer fiche"},
+    # ── المدفوعات ────────────────────────────────────────────────────────────
+    "pay_title":       {"ar": "💰  إدارة المدفوعات",                    "fr": "💰  Gestion des paiements"},
+    "pay_subtitle":    {"ar": "تسجيل مدفوعات المترشحين ومتابعة المتبقي","fr": "Suivi des paiements des candidats"},
+    "pay_total_lbl":   {"ar": "المبلغ الإجمالي: -",                     "fr": "Montant total: -"},
+    "pay_paid_lbl":    {"ar": "المدفوع: -",                             "fr": "Payé: -"},
+    "pay_remain_lbl":  {"ar": "المتبقي: -",                             "fr": "Restant: -"},
+    "pay_history":     {"ar": "عرض سجل الدفعات (التاريخ)",              "fr": "Historique des paiements"},
+    "pay_add_section": {"ar": "إضافة دفعة",                             "fr": "Ajouter paiement"},
+    "pay_add_btn":     {"ar": "إضافة دفعة",                             "fr": "Ajouter paiement"},
+    "pay_refund":      {"ar": "استرداد",                                "fr": "Remboursement"},
+    "pay_print":       {"ar": "طباعة وصل الدفع",                        "fr": "Imprimer reçu"},
+    "pay_readonly":    {"ar": "🔒  صلاحية العرض فقط",                   "fr": "🔒  Lecture seule"},
+    "pay_date":        {"ar": "التاريخ",         "fr": "Date"},
+    "pay_amount":      {"ar": "المبلغ (دج)",     "fr": "Montant (DA)"},
+    "pay_method":      {"ar": "الوسيلة",         "fr": "Mode"},
+    "pay_note":        {"ar": "ملاحظة",          "fr": "Note"},
+    "pay_cand_col":    {"ar": "المترشح",         "fr": "Candidat"},
+    "pay_total_col":   {"ar": "الإجمالي (دج)",   "fr": "Total (DA)"},
+    "pay_paid_col":    {"ar": "المدفوع (دج)",    "fr": "Payé (DA)"},
+    "pay_remain_col":  {"ar": "المتبقي (دج)",    "fr": "Restant (DA)"},
+    "pay_search":      {"ar": "ابحث بالاسم:",    "fr": "Rechercher:"},
+    # ── المصاريف ─────────────────────────────────────────────────────────────
+    "exp_title":       {"ar": "💸  إدارة المصاريف",                       "fr": "💸  Gestion des dépenses"},
+    "exp_subtitle":    {"ar": "تسجيل ومتابعة كل المصاريف الشهرية والسنوية","fr": "Suivi de toutes les dépenses"},
+    "exp_form":        {"ar": "بيانات المصروف",                            "fr": "Données dépense"},
+    "exp_type":        {"ar": "نوع المصروف *",                             "fr": "Type dépense *"},
+    "exp_amount":      {"ar": "المبلغ (دج) *",                             "fr": "Montant (DA) *"},
+    "exp_date":        {"ar": "التاريخ *",                                 "fr": "Date *"},
+    "exp_note":        {"ar": "ملاحظة",                                    "fr": "Note"},
+    "exp_col_num":     {"ar": "رقم",              "fr": "N°"},
+    "exp_col_type":    {"ar": "نوع المصروف",      "fr": "Type"},
+    "exp_col_amount":  {"ar": "المبلغ (دج)",      "fr": "Montant (DA)"},
+    "exp_col_date":    {"ar": "التاريخ",          "fr": "Date"},
+    "exp_col_note":    {"ar": "ملاحظة",           "fr": "Note"},
+    "exp_search":      {"ar": "بحث:",             "fr": "Rechercher:"},
+    # ── التقارير ─────────────────────────────────────────────────────────────
+    "rep_title":        {"ar": "📊  التقارير والإحصائيات",              "fr": "📊  Rapports et statistiques"},
+    "rep_subtitle":     {"ar": "تقارير شهرية وسنوية مفصّلة",           "fr": "Rapports mensuels et annuels détaillés"},
+    "rep_filter_lbl":   {"ar": "🗓️  فلترة بالفترة الزمنية  (YYYY-MM-DD)","fr": "🗓️  Filtrer par période (AAAA-MM-JJ)"},
+    "rep_from":         {"ar": "من:",              "fr": "De:"},
+    "rep_to":           {"ar": "إلى:",             "fr": "À:"},
+    "rep_monthly":      {"ar": "تفصيل شهري للسنة المحددة", "fr": "Détail mensuel"},
+    "rep_col_month":    {"ar": "الشهر",            "fr": "Mois"},
+    "rep_col_pay":      {"ar": "المدفوعات (دج)",   "fr": "Paiements (DA)"},
+    "rep_col_exp":      {"ar": "المصاريف (دج)",    "fr": "Dépenses (DA)"},
+    "rep_col_profit":   {"ar": "الأرباح (دج)",     "fr": "Bénéfices (DA)"},
+    "rep_exam_stats":   {"ar": "إحصائيات نتائج الامتحانات", "fr": "Statistiques examens"},
+    "rep_chart_lbl":    {"ar": "مخطط النجاح الشهري  (🟦 نظري ناجح  |  🟩 تطبيقي ناجح  |  ◻ محاولات)",
+                         "fr": "Graphique réussite  (🟦 Théo. réussi  |  🟩 Prat. réussi  |  ◻ Tentatives)"},
+    "rep_col_nazari_t": {"ar": "نظري (محاولات)", "fr": "Théo. (tentatives)"},
+    "rep_col_nazari_p": {"ar": "نظري (ناجح)",    "fr": "Théo. (réussi)"},
+    "rep_col_tatbiqi_t":{"ar": "تطبيقي (محاولات)","fr": "Prat. (tentatives)"},
+    "rep_col_tatbiqi_p":{"ar": "تطبيقي (ناجح)",  "fr": "Prat. (réussi)"},
+    "rep_total_pay":    {"ar": "إجمالي المدفوعات", "fr": "Total paiements"},
+    "rep_total_exp":    {"ar": "إجمالي المصاريف",  "fr": "Total dépenses"},
+    "rep_net_profit":   {"ar": "صافي الربح",       "fr": "Bénéfice net"},
+    "rep_period_cand":  {"ar": "مترشحو الفترة",   "fr": "Candidats période"},
+    "rep_no_data":      {"ar": "لا توجد بيانات في هذه الفترة", "fr": "Aucune donnée pour cette période"},
+    "rep_overall_rate": {"ar": "المعدل الكلي للنجاح", "fr": "Taux de réussite global"},
+    "rep_pass_rate_of": {"ar": "نجاح",              "fr": "Réussite"},
+    # ── المترشحون (رسائل إضافية) ─────────────────────────────────────────────
+    "cand_added":       {"ar": "تم إضافة المترشح بنجاح",    "fr": "Candidat ajouté avec succès"},
+    "cand_updated":     {"ar": "تم تعديل بيانات المترشح",   "fr": "Candidat modifié avec succès"},
+    "cand_deleted":     {"ar": "تم حذف المترشح",             "fr": "Candidat supprimé"},
+    "cand_sel_first":   {"ar": "يرجى تحديد مترشح من القائمة","fr": "Sélectionnez un candidat d'abord"},
+    "cand_del_confirm": {"ar": "هذا المترشح وكل بياناته",   "fr": "ce candidat et toutes ses données"},
+    # ── المدفوعات (رسائل إضافية) ─────────────────────────────────────────────
+    "pay_err_print":    {"ar": "حدث خطأ أثناء طباعة الوصل",  "fr": "Erreur lors de l'impression du reçu"},
+    "pay_err_amount":   {"ar": "يرجى إدخال مبلغ صحيح أكبر من الصفر", "fr": "Veuillez saisir un montant valide supérieur à zéro"},
+    "pay_err_amount_num":{"ar": "المبلغ يجب أن يكون رقماً",  "fr": "Le montant doit être un nombre"},
+    "pay_refunded":     {"ar": "تم استرداد المبلغ بنجاح",    "fr": "Remboursement effectué avec succès"},
+    "pay_deleted":      {"ar": "تم حذف الدفعة",              "fr": "Paiement supprimé"},
+    "pay_sel_first":    {"ar": "يرجى تحديد دفعة من السجل",  "fr": "Sélectionnez un paiement d'abord"},
+    "pay_del_confirm":  {"ar": "هذه الدفعة",                 "fr": "ce paiement"},
+    # ── المصاريف (رسائل إضافية) ──────────────────────────────────────────────
+    "exp_err_type":     {"ar": "يرجى إدخال نوع المصروف",    "fr": "Veuillez saisir le type de dépense"},
+    "exp_err_amount":   {"ar": "يرجى إدخال مبلغ صحيح",      "fr": "Veuillez saisir un montant valide"},
+    "exp_added":        {"ar": "تم إضافة المصروف بنجاح",    "fr": "Dépense ajoutée avec succès"},
+    "exp_updated":      {"ar": "تم تعديل المصروف",           "fr": "Dépense modifiée"},
+    "exp_deleted":      {"ar": "تم حذف المصروف",             "fr": "Dépense supprimée"},
+    "exp_sel_first":    {"ar": "يرجى تحديد مصروف من القائمة","fr": "Sélectionnez une dépense d'abord"},
+    "exp_del_confirm":  {"ar": "هذا المصروف",                "fr": "cette dépense"},
+    # ── الممرنون (رسائل إضافية) ──────────────────────────────────────────────
+    "inst_del_confirm": {"ar": "هذا الممرن",                 "fr": "ce moniteur"},
+    "inst_deleted":     {"ar": "تم حذف الممرن",              "fr": "Moniteur supprimé"},
+    # ── نتائج المترشح (حوار) ─────────────────────────────────────────────────
+    "cand_exam_sel_first":  {"ar": "يرجى تحديد نتيجة من الجدول",    "fr": "Sélectionnez un résultat d'abord"},
+    "cand_exam_del_confirm":{"ar": "هذه النتيجة",                    "fr": "ce résultat"},
+    "cand_exam_deleted":    {"ar": "تم حذف النتيجة",                 "fr": "Résultat supprimé"},
+    "cand_err_name":        {"ar": "الاسم واللقب إلزاميان",          "fr": "Le nom et le prénom sont obligatoires"},
+    "cand_err_license":     {"ar": "يرجى تحديد نوع الرخصة المطلوبة","fr": "Veuillez choisir le type de permis"},
+    # ── التكوين ──────────────────────────────────────────────────────────────
+    "train_sel_first":  {"ar": "الرجاء تحديد سجل لحذفه",    "fr": "Veuillez sélectionner un enregistrement"},
+    "train_del_confirm":{"ar": "هذه النتيجة",                "fr": "ce résultat"},
+    "train_deleted":    {"ar": "تم حذف نتيجة الامتحان.",     "fr": "Résultat supprimé."},
+    # ── الجدول الزمني (رسائل إضافية) ────────────────────────────────────────
+    "sched_sel_first":  {"ar": "يرجى تحديد حصة من الجدول أولاً", "fr": "Sélectionnez une séance d'abord"},
+    "sched_del_q":      {"ar": "هل تريد حذف الحصة:",          "fr": "Voulez-vous supprimer la séance:"},
+    "sched_deleted":    {"ar": "تم حذف الحصة بنجاح",          "fr": "Séance supprimée"},
+    # ── المدفوعات (رسائل إضافية 2) ───────────────────────────────────────────
+    "pay_added_print_q":{"ar": "تم تسجيل الدفعة بنجاح!\nهل ترغب في طباعة وصل دفع الآن؟",
+                         "fr": "Paiement enregistré!\nVoulez-vous imprimer le reçu maintenant?"},
+    # ── الوثائق ──────────────────────────────────────────────────────────────
+    "doc_title":         {"ar": "🖨️  طباعة الوثائق بالعربية",                     "fr": "🖨️  Impression des documents"},
+    "doc_subtitle":      {"ar": "إنتاج كل الوثائق الرسمية بصيغة PDF بنص عربي مُنسّق","fr": "Produire tous les documents officiels en PDF"},
+    "doc_individual":    {"ar": "وثائق فردية (للمترشح المحدد)",                   "fr": "Documents individuels (candidat sélectionné)"},
+    "doc_collective":    {"ar": "وثائق جماعية",                                   "fr": "Documents collectifs"},
+    "doc_dispatch":      {"ar": "جدول إرسال",              "fr": "Tableau de convoi"},
+    "doc_exam_form":     {"ar": "استمارة الترشح الرسمية",  "fr": "Formulaire de candidature"},
+    "doc_training_card": {"ar": "بطاقة التكوين",           "fr": "Fiche de formation"},
+    "doc_cand_list":     {"ar": "قائمة المترشحين",         "fr": "Liste des candidats"},
+    "doc_inst_list":     {"ar": "قائمة الممرنين",          "fr": "Liste des moniteurs"},
+    "doc_payments_rep":  {"ar": "تقرير المدفوعات",         "fr": "Rapport paiements"},
+    "doc_expenses_rep":  {"ar": "تقرير المصاريف",          "fr": "Rapport dépenses"},
+    "doc_contract":      {"ar": "عقد العمل",               "fr": "Contrat de travail"},
+    "doc_convoy_all":    {"ar": "جدول الإرسال الكامل",     "fr": "Tableau de convoi complet"},
+    # ── الجدول الزمني ────────────────────────────────────────────────────────
+    "sched_title":    {"ar": "📅  الجدول الزمني",     "fr": "📅  Planning"},
+    "sched_subtitle": {"ar": "جدول حصص التدريب",      "fr": "Planning des séances"},
+    "sched_add":      {"ar": "إضافة حصة",             "fr": "Ajouter séance"},
+    "sched_edit":     {"ar": "تعديل",                 "fr": "Modifier"},
+    "sched_delete":   {"ar": "حذف",                   "fr": "Supprimer"},
+    "sched_col_date": {"ar": "التاريخ",               "fr": "Date"},
+    "sched_col_time": {"ar": "الوقت",                 "fr": "Heure"},
+    "sched_col_cand": {"ar": "المترشح",               "fr": "Candidat"},
+    "sched_col_inst": {"ar": "الممرن",                "fr": "Moniteur"},
+    "sched_col_type": {"ar": "النوع",                 "fr": "Type"},
+    "sched_col_dur":  {"ar": "المدة(د)",              "fr": "Durée(min)"},
+    # ── تسجيل الدخول ────────────────────────────────────────────────────────
+    "login_title":     {"ar": "تسجيل الدخول — برنامج ميدانيك", "fr": "Connexion — Meidanic"},
+    "login_app_sub":   {"ar": "إدارة مدرسة تعليم السياقة — الجزائر", "fr": "Gestion auto-école — Algérie"},
+    "login_heading":   {"ar": "تسجيل الدخول",       "fr": "Connexion"},
+    "login_username":  {"ar": "اسم المستخدم",        "fr": "Nom d'utilisateur"},
+    "login_password":  {"ar": "كلمة المرور",         "fr": "Mot de passe"},
+    "login_btn":       {"ar": "  ←  دخول",           "fr": "  →  Se connecter"},
+    "login_hint":      {"ar": "🔑  الحساب الافتراضي للمدير:  admin  /  admin123",
+                         "fr": "🔑  Compte admin par défaut:  admin  /  admin123"},
+    "login_err_empty": {"ar": "يرجى إدخال اسم المستخدم وكلمة المرور",
+                         "fr": "Veuillez saisir le nom d'utilisateur et le mot de passe"},
+    "login_err_bad":   {"ar": "❌  اسم المستخدم أو كلمة المرور غير صحيحة",
+                         "fr": "❌  Nom d'utilisateur ou mot de passe incorrect"},
+    # ── المستخدمون ───────────────────────────────────────────────────────────
+    "user_title":       {"ar": "👥  إدارة المستخدمين والصلاحيات", "fr": "👥  Gestion des utilisateurs"},
+    "user_new":         {"ar": "مستخدم جديد",         "fr": "Nouvel utilisateur"},
+    "user_edit_perms":  {"ar": "تعديل الصلاحيات",    "fr": "Modifier permissions"},
+    "user_change_pass": {"ar": "تغيير كلمة المرور",  "fr": "Changer mot de passe"},
+    "user_delete":      {"ar": "حذف المستخدم",        "fr": "Supprimer utilisateur"},
+    "user_col_user":    {"ar": "اسم المستخدم",        "fr": "Utilisateur"},
+    "user_col_name":    {"ar": "الاسم الكامل",        "fr": "Nom complet"},
+    "user_col_role":    {"ar": "الدور",               "fr": "Rôle"},
+    "user_col_perms":   {"ar": "الصلاحيات الممنوحة", "fr": "Permissions"},
+    "user_role_admin":  {"ar": "مدير",                "fr": "Administrateur"},
+    "user_role_trainer":{"ar": "ممرّن",               "fr": "Moniteur"},
+    "user_all_perms":   {"ar": "جميع الصلاحيات",     "fr": "Toutes permissions"},
+    "user_no_perms":    {"ar": "—  لا صلاحيات",      "fr": "—  Aucune permission"},
+    # aliases for UserManagementDialog (uses users_ prefix)
+    "users_title":        {"ar": "إدارة المستخدمين",                   "fr": "Gestion des utilisateurs"},
+    "users_header":       {"ar": "👥  إدارة المستخدمين والصلاحيات",    "fr": "👥  Gestion utilisateurs et permissions"},
+    "users_new":          {"ar": "مستخدم جديد",                        "fr": "Nouvel utilisateur"},
+    "users_edit":         {"ar": "تعديل الصلاحيات",                    "fr": "Modifier permissions"},
+    "users_change_pass":  {"ar": "تغيير كلمة المرور",                  "fr": "Changer mot de passe"},
+    "users_delete":       {"ar": "حذف المستخدم",                       "fr": "Supprimer utilisateur"},
+    "users_col_uname":    {"ar": "اسم المستخدم",                       "fr": "Utilisateur"},
+    "users_col_fullname": {"ar": "الاسم الكامل",                       "fr": "Nom complet"},
+    "users_col_role":     {"ar": "الدور",                              "fr": "Rôle"},
+    "users_col_perms":    {"ar": "الصلاحيات الممنوحة",                 "fr": "Permissions"},
+    "users_role_admin":   {"ar": "مدير",                               "fr": "Administrateur"},
+    "users_role_inst":    {"ar": "ممرّن",                              "fr": "Moniteur"},
+    "users_all_perms":    {"ar": "جميع الصلاحيات",                     "fr": "Toutes permissions"},
+    "users_no_perms":     {"ar": "—  لا صلاحيات",                      "fr": "—  Aucune permission"},
+    "user_fullname_f":  {"ar": "الاسم الكامل:",       "fr": "Nom complet:"},
+    "user_username_f":  {"ar": "اسم المستخدم:",      "fr": "Nom d'utilisateur:"},
+    "user_pass_f":      {"ar": "كلمة المرور:",        "fr": "Mot de passe:"},
+    "user_perms_f":     {"ar": "  الصلاحيات  ",      "fr": "  Permissions  "},
+    "user_admin_info":  {"ar": "حساب المدير يملك دائماً جميع الصلاحيات.",
+                          "fr": "Le compte admin a toujours toutes les permissions."},
+    "user_sys_admin":   {"ar": "مدير النظام",         "fr": "Admin système"},
+    "user_new_title":   {"ar": "مستخدم جديد",         "fr": "Nouvel utilisateur"},
+    "user_edit_title":  {"ar": "تعديل الصلاحيات",    "fr": "Modifier permissions"},
+    # ── رسائل عامة ──────────────────────────────────────────────────────────
+    "msg_confirm_del":   {"ar": "تأكيد الحذف",           "fr": "Confirmer la suppression"},
+    "msg_sure_del":      {"ar": "هل أنت متأكد من حذف",   "fr": "Voulez-vous vraiment supprimer"},
+    "msg_success":       {"ar": "نجاح ✓",                "fr": "Succès ✓"},
+    "msg_error":         {"ar": "خطأ ✗",                 "fr": "Erreur ✗"},
+    "msg_warning":       {"ar": "تنبيه",                 "fr": "Avertissement"},
+    "msg_info":          {"ar": "معلومة",                "fr": "Information"},
+    "msg_select_first":  {"ar": "اختر عنصراً أولاً",    "fr": "Sélectionnez un élément d'abord"},
+    "msg_no_data":       {"ar": "لا توجد بيانات",        "fr": "Aucune donnée"},
+    "msg_saved":         {"ar": "تم الحفظ بنجاح",        "fr": "Enregistré avec succès"},
+    "msg_perm_denied":   {"ar": "ليس لديك صلاحية الوصول إلى هذا القسم.",
+                          "fr": "Vous n'avez pas accès à cette section."},
+    "msg_perm_title":    {"ar": "صلاحية مرفوضة",         "fr": "Accès refusé"},
+    "msg_logout_q":      {"ar": "هل تريد تسجيل الخروج والعودة لشاشة الدخول؟",
+                          "fr": "Voulez-vous vous déconnecter?"},
+    "msg_logout_title":  {"ar": "تسجيل الخروج",          "fr": "Déconnexion"},
+    "msg_cannot_del_self":{"ar": "لا يمكنك حذف حسابك الخاص.",    "fr": "Vous ne pouvez pas supprimer votre propre compte."},
+    "msg_cannot_del_admin":{"ar": "لا يمكن حذف حساب admin.",     "fr": "Impossible de supprimer le compte admin."},
+    "msg_fail_add":      {"ar": "فشل الإضافة:",           "fr": "Échec de l'ajout:"},
+    # ── شريط الحالة ──────────────────────────────────────────────────────────
+    "bar_candidates": {"ar": "المترشحون:",         "fr": "Candidats:"},
+    "bar_instructors":{"ar": "الممرنون:",          "fr": "Moniteurs:"},
+    "bar_arabic_ok":  {"ar": "العربية ✓",          "fr": "Arabe ✓"},
+    "bar_arabic_err": {"ar": "العربية ✗",          "fr": "Arabe ✗"},
+    "bar_db":         {"ar": "قاعدة البيانات ✓",  "fr": "Base de données ✓"},
+    "bar_brand":      {"ar": "برنامج ميدانيك  |  الجزائر", "fr": "Meidanic  |  Algérie"},
+    # ── عنوان الصفحة العلوي ──────────────────────────────────────────────────
+    "topbar_home":    {"ar": "الرئيسية",      "fr": "Accueil"},
+    # ── مرحلة التكوين ────────────────────────────────────────────────────────
+    "stage_code":    {"ar": "الكود (نظري)",        "fr": "Code (théorique)"},
+    "stage_creneau": {"ar": "الكرينو (مناورات)",   "fr": "Créneau (manœuvres)"},
+    "stage_circuit": {"ar": "الطريق (سياقة)",      "fr": "Circuit (conduite)"},
+    "train_title":   {"ar": "📚  مراحل التكوين",   "fr": "📚  Étapes de formation"},
+    "train_subtitle":{"ar": "تتبع مراحل تكوين المترشحين", "fr": "Suivi des étapes de formation"},
+    "train_select":  {"ar": "اختر مترشحاً من القائمة",   "fr": "Sélectionnez un candidat"},
+    "train_no_cand": {"ar": "لا يوجد مترشحون مسجلون",    "fr": "Aucun candidat inscrit"},
+    # ── فلتر التاريخ ─────────────────────────────────────────────────────────
+    "dlg_period_title":  {"ar": "تحديد الفترة الزمنية",        "fr": "Sélectionner la période"},
+    "dlg_period_lbl":    {"ar": "تصفية التقرير بفترة زمنية",   "fr": "Filtrer le rapport par période"},
+    "dlg_period_hint":   {"ar": "(اتركهما فارغين لعرض كل البيانات)", "fr": "(Laisser vide pour toutes les données)"},
+    "dlg_from":          {"ar": "من:",  "fr": "De:"},
+    "dlg_to":            {"ar": "إلى:","fr": "À:"},
+    "dlg_date_fmt":      {"ar": "(YYYY-MM-DD)", "fr": "(AAAA-MM-JJ)"},
+    # ── شريط جانبي ──────────────────────────────────────────────────────────
+    "sidebar_subtitle":  {"ar": "إدارة مدرسة السياقة", "fr": "Gestion auto-école"},
+    "sidebar_role_admin":{"ar": "مدير النظام",          "fr": "Administrateur"},
+    "sidebar_role_train":{"ar": "ممرّن",                "fr": "Moniteur"},
+    "sidebar_user_def":  {"ar": "مستخدم",               "fr": "Utilisateur"},
+}
+
+
+def T(key: str) -> str:
+    """يُعيد النص باللغة الحالية. يرجع للعربية إن لم توجد ترجمة."""
+    entry = STRINGS.get(key)
+    if entry is None:
+        return key
+    return entry.get(LANG, entry.get("ar", key))
+
+
+# ============================================================================
 #  الإعدادات والثوابت
 # ============================================================================
 
@@ -88,6 +441,8 @@ COLOR_WHITE        = "#FFFFFF"
 
 MONTHS_AR = {"01":"يناير","02":"فبراير","03":"مارس","04":"أبريل","05":"مايو","06":"يونيو",
              "07":"يوليو","08":"أغسطس","09":"سبتمبر","10":"أكتوبر","11":"نوفمبر","12":"ديسمبر"}
+MONTHS_FR = {"01":"Janvier","02":"Février","03":"Mars","04":"Avril","05":"Mai","06":"Juin",
+             "07":"Juillet","08":"Août","09":"Septembre","10":"Octobre","11":"Novembre","12":"Décembre"}
 
 STAGE_LABELS = {"code":"الكود (نظري)", "creneau":"الكرينو (مناورات)", "circuit":"الطريق (سياقة)"}
 STAGE_ORDER  = ["code", "creneau", "circuit"]
@@ -340,6 +695,8 @@ def upgrade_db():
         school_existing = {row[1] for row in cur3.fetchall()}
         if "wilaya" not in school_existing:
             conn.execute("ALTER TABLE school_info ADD COLUMN wilaya TEXT DEFAULT ''")
+        if "language" not in school_existing:
+            conn.execute("ALTER TABLE school_info ADD COLUMN language TEXT DEFAULT 'ar'")
 
         # جدول محاولات الامتحانات (جديد)
         conn.execute("""
@@ -384,6 +741,35 @@ def upgrade_db():
         pass
     finally:
         conn.close()
+
+
+def get_language() -> str:
+    """يقرأ اللغة المحفوظة في قاعدة البيانات (ar أو fr)."""
+    try:
+        conn = get_connection()
+        row = conn.execute("SELECT language FROM school_info WHERE id=1").fetchone()
+        conn.close()
+        if row and row[0] in ("ar", "fr"):
+            return row[0]
+    except Exception:
+        pass
+    return "ar"
+
+
+def set_language(lang: str):
+    """يحفظ اللغة في قاعدة البيانات ثم يُعيد تشغيل البرنامج."""
+    global LANG
+    try:
+        conn = get_connection()
+        conn.execute("UPDATE school_info SET language=? WHERE id=1", (lang,))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+    LANG = lang
+    # إعادة تشغيل البرنامج بنفس المعاملات لتطبيق اللغة الجديدة
+    import os, sys
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 def init_db():
@@ -1610,11 +1996,11 @@ class DashboardFrame(tk.Frame):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=20)
         wrap.pack(fill="both", expand=True)
 
-        title = tk.Label(wrap, text="📊  لوحة المعلومات",
+        title = tk.Label(wrap, text=T("dash_title"),
                          font=(FONT_FAMILY, 20, "bold"),
                          bg=COLOR_BG, fg=COLOR_HEADER, anchor="e")
         title.pack(fill="x", pady=(0, 5))
-        sub = tk.Label(wrap, text="نظرة شاملة على نشاط المدرسة",
+        sub = tk.Label(wrap, text=T("dash_subtitle"),
                        font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT, anchor="e")
         sub.pack(fill="x", pady=(0, 20))
 
@@ -1636,20 +2022,20 @@ class DashboardFrame(tk.Frame):
         # صف البطاقات الإحصائية
         stats_row = tk.Frame(wrap, bg=COLOR_BG)
         stats_row.pack(fill="x", pady=(0, 20))
-        stat_card(stats_row, "المترشحون", str(len(cands)), "👥", COLOR_PRIMARY,
+        stat_card(stats_row, T("dash_candidates"), str(len(cands)), "👥", COLOR_PRIMARY,
                   command=go_cands)
-        stat_card(stats_row, "الممرنون",  str(len(instructors)), "🚗", COLOR_PURPLE,
+        stat_card(stats_row, T("dash_instructors"),  str(len(instructors)), "🚗", COLOR_PURPLE,
                   command=go_insts)
-        stat_card(stats_row, "المدفوعات (دج)", f"{total_pay:,.0f}", "💰", COLOR_SUCCESS,
+        stat_card(stats_row, T("dash_payments"), f"{total_pay:,.0f}", "💰", COLOR_SUCCESS,
                   command=go_pay)
-        stat_card(stats_row, "المصاريف (دج)", f"{total_exp:,.0f}", "💸", COLOR_DANGER,
+        stat_card(stats_row, T("dash_expenses"), f"{total_exp:,.0f}", "💸", COLOR_DANGER,
                   command=go_exp)
 
         # صف الأرباح الكبير
         profit_color = COLOR_SUCCESS if profit >= 0 else COLOR_DANGER
         pf = tk.Frame(wrap, bg=profit_color, padx=24, pady=20)
         pf.pack(fill="x", pady=(0, 20))
-        tk.Label(pf, text=f"💎  الأرباح الصافية لسنة {y}",
+        tk.Label(pf, text=f"{T('dash_profit')} {y}",
                  font=(FONT_FAMILY, 14, "bold"),
                  bg=profit_color, fg="white", anchor="e").pack(side="right")
         tk.Label(pf, text= f"{profit:,.0f} دج",
@@ -1789,30 +2175,30 @@ class SchoolInfoFrame(tk.Frame):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=30, pady=20)
         wrap.pack(fill="both", expand=True)
 
-        tk.Label(wrap, text="🏫  معلومات المدرسة",
+        tk.Label(wrap, text=T("school_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
-        tk.Label(wrap, text="بيانات المدرسة الرسمية المستعملة في الوثائق المطبوعة",
+        tk.Label(wrap, text=T("school_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(fill="x", pady=(0, 20))
 
         outer, card = make_card(wrap, padding=30)
         outer.pack(fill="both", expand=True, padx=80)
 
-        section_title(card, "البيانات الأساسية", icon="📋")
+        section_title(card, T("school_basic"), icon="📋")
 
         # إعادة ترتيب الحقول لجعل المعلومات الأساسية (العنوان والهاتف) في الأعلى
         fields = [
-            ("اسم المدرسة", "name"), ("رقم الهاتف", "phone"),
-            ("العنوان", "address"), ("رقم السجل التجاري", "commercial_register"),
-            ("رقم الاعتماد", "accreditation_number"), ("NIF", "nif"),
+            (T("school_name"), "name"), (T("school_phone"), "phone"),
+            (T("school_address"), "address"), (T("school_cr"), "commercial_register"),
+            (T("school_accred"), "accreditation_number"), ("NIF", "nif"),
             ("NIS", "nis"), ("N° Article", "article_number")
         ]
         bf = tk.Frame(card, bg=COLOR_CARD)
         bf.pack(side="bottom", fill="x", pady=(20, 0))
-        ModernButton(bf, "حفظ المعلومات", self._save,
+        ModernButton(bf, T("btn_save_info"), self._save,
                      icon="💾", color=COLOR_SUCCESS).pack(side="right", padx=5)
-        ModernButton(bf, "إعادة تحميل", self._load,
+        ModernButton(bf, T("btn_reload"), self._load,
                      icon="🔄", color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
 
         grid = tk.Frame(card, bg=COLOR_CARD)
@@ -1827,7 +2213,7 @@ class SchoolInfoFrame(tk.Frame):
         f_name = tk.Frame(grid, bg=COLOR_CARD)
         f_name.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
         grid.columnconfigure(0, weight=1)
-        make_label(f_name, "اسم المدرسة", font=FONT_BOLD).pack(anchor="e")
+        make_label(f_name, T("school_name"), font=FONT_BOLD).pack(anchor="e")
         v_name = tk.StringVar()
         self.vars["name"] = v_name
         make_entry(f_name, v_name, width=32).pack(fill="x", ipady=4, pady=(2, 0))
@@ -1835,7 +2221,7 @@ class SchoolInfoFrame(tk.Frame):
         f_phone = tk.Frame(grid, bg=COLOR_CARD)
         f_phone.grid(row=0, column=1, sticky="ew", padx=10, pady=5)
         grid.columnconfigure(1, weight=1)
-        make_label(f_phone, "رقم الهاتف", font=FONT_BOLD).pack(anchor="e")
+        make_label(f_phone, T("school_phone"), font=FONT_BOLD).pack(anchor="e")
         v_phone = tk.StringVar()
         self.vars["phone"] = v_phone
         make_entry(f_phone, v_phone, width=32).pack(fill="x", ipady=4, pady=(2, 0))
@@ -1843,14 +2229,14 @@ class SchoolInfoFrame(tk.Frame):
         # 2. الصف الثاني: العنوان + الولاية
         f_addr = tk.Frame(grid, bg=COLOR_CARD)
         f_addr.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
-        make_label(f_addr, "العنوان", font=FONT_BOLD).pack(anchor="e")
+        make_label(f_addr, T("school_address"), font=FONT_BOLD).pack(anchor="e")
         v_addr = tk.StringVar()
         self.vars["address"] = v_addr
         make_entry(f_addr, v_addr, width=32).pack(fill="x", ipady=4, pady=(2, 0))
 
         f_wilaya = tk.Frame(grid, bg=COLOR_CARD)
         f_wilaya.grid(row=1, column=1, sticky="ew", padx=10, pady=5)
-        make_label(f_wilaya, "الولاية", font=FONT_BOLD).pack(anchor="e")
+        make_label(f_wilaya, T("school_wilaya"), font=FONT_BOLD).pack(anchor="e")
         v_wilaya = tk.StringVar()
         self.vars["wilaya"] = v_wilaya
         cb_wilaya = ttk.Combobox(f_wilaya, textvariable=v_wilaya,
@@ -1859,7 +2245,7 @@ class SchoolInfoFrame(tk.Frame):
         
         # 3. بقية الحقول (CR, Accreditation, NIF, NIS, Article)
         other_fields = [
-            ("رقم السجل التجاري", "commercial_register"), ("رقم الاعتماد", "accreditation_number"),
+            (T("school_cr"), "commercial_register"), (T("school_accred"), "accreditation_number"),
             ("NIF", "nif"), ("NIS", "nis"),
             ("N° Article", "article_number")
         ]
@@ -1882,10 +2268,10 @@ class SchoolInfoFrame(tk.Frame):
 
     def _save(self):
         if not self.vars["name"].get().strip():
-            show_error("يرجى إدخال اسم المدرسة")
+            show_error(T("school_err_name"))
             return
         SchoolInfoDB.update({k: v.get().strip() for k, v in self.vars.items()})
-        show_info("تم حفظ معلومات المدرسة بنجاح")
+        show_info(T("school_saved"))
 
 
 # ============================================================================
@@ -1899,7 +2285,7 @@ class CandidateDialog(tk.Toplevel):
         self.candidate = candidate
         self.vars = {}
         self.born_abroad_var = tk.IntVar(value=0)
-        self.title("تعديل بيانات المترشح" if candidate else "تسجيل مترشح جديد")
+        self.title(T("cand_edit_title") if candidate else T("cand_add_title"))
         self.geometry("980x720")
         self.minsize(880, 640)
         self.resizable(True, True)
@@ -2254,12 +2640,12 @@ class CandidateDialog(tk.Toplevel):
             return
         sel = self._exam_tree.selection()
         if not sel:
-            show_error("يرجى تحديد نتيجة من الجدول"); return
+            show_error(T("cand_exam_sel_first")); return
         rid = self._exam_tree.item(sel[0])['values'][0]
-        if confirm_delete("هذه النتيجة"):
+        if confirm_delete(T("cand_exam_del_confirm")):
             ExamResultDB.delete(rid)
             self._load_exam_results()
-            show_info("تم حذف النتيجة")
+            show_info(T("cand_exam_deleted"))
 
     def _save(self):
         try:
@@ -2293,9 +2679,9 @@ class CandidateDialog(tk.Toplevel):
             d["initial_payment"] = initial
 
         if not d["first_name"] or not d["last_name"]:
-            show_error("الاسم واللقب إلزاميان"); return
+            show_error(T("cand_err_name")); return
         if not d["license_type"]:
-            show_error("يرجى تحديد نوع الرخصة المطلوبة"); return
+            show_error(T("cand_err_license")); return
         if d["is_born_abroad"] and not (d["embassy"] or d["consulate"]):
             if not messagebox.askyesno("تأكيد",
                 "حدّدت أن المترشح مولود بالخارج لكن لم تُدخل السفارة/القنصلية.\nهل تريد المتابعة؟"):
@@ -2411,35 +2797,35 @@ class CandidatesFrame(tk.Frame):
         head = tk.Frame(wrap, bg=COLOR_BG)
         head.pack(fill="x", pady=(0, 15))
         right_head = tk.Frame(head, bg=COLOR_BG); right_head.pack(side="right")
-        tk.Label(right_head, text="🧾  إدارة المترشحين",
+        tk.Label(right_head, text=T("cand_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(anchor="e")
-        tk.Label(right_head, text="إضافة وتعديل وحذف وعرض كل المترشحين",
+        tk.Label(right_head, text=T("cand_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(anchor="e")
 
         left_head = tk.Frame(head, bg=COLOR_BG); left_head.pack(side="left")
         _can_edit = UserDB.has_perm(CURRENT_USER, "edit_candidates")
         if _can_edit:
-            ModernButton(left_head, "تسجيل مترشح جديد", self._add_dialog,
+            ModernButton(left_head, T("cand_new"), self._add_dialog,
                          icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
-            ModernButton(left_head, "تعديل المحدد", self._edit_dialog,
+            ModernButton(left_head, T("cand_edit"), self._edit_dialog,
                          icon="✏️", color=COLOR_PRIMARY).pack(side="right", padx=4)
-        ModernButton(left_head, "نتائج الامتحانات", self._open_exam_results,
+        ModernButton(left_head, T("cand_exam"), self._open_exam_results,
                      icon="📊", color=COLOR_PURPLE).pack(side="right", padx=4)
-        ModernButton(left_head, "بطاقة التكوين", self._print_training_card,
+        ModernButton(left_head, T("cand_card"), self._print_training_card,
                      icon="📋", color=COLOR_ACCENT).pack(side="right", padx=4)
-        ModernButton(left_head, "طباعة الاستمارة", self._print_application_form,
+        ModernButton(left_head, T("cand_print_form"), self._print_application_form,
                      icon="📄", color="#0369a1").pack(side="right", padx=4)
         if _can_edit:
-            ModernButton(left_head, "حذف", self._delete,
+            ModernButton(left_head, T("cand_delete"), self._delete,
                          icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
 
         # تنبيه إرشادي بارز
         hint = tk.Frame(wrap, bg=COLOR_PRIMARY_LIGHT, padx=15, pady=10)
         hint.pack(fill="x", pady=(0, 10))
         tk.Label(hint,
-                 text="💡  لتسجيل مترشح جديد: اضغط على زر  «➕ تسجيل مترشح جديد»  أعلاه — ستفتح نافذة تحتوي على 3 تبويبات (البيانات الشخصية + الميلاد والعنوان + التسجيل).",
+                 text=T("cand_hint"),
                  font=FONT_BOLD, bg=COLOR_PRIMARY_LIGHT,
                  fg=COLOR_PRIMARY_DARK, anchor="e",
                  wraplength=1200, justify="right").pack(anchor="e")
@@ -2453,7 +2839,7 @@ class CandidatesFrame(tk.Frame):
         self.search_var.trace("w", lambda *a: self._load_list())
         e = make_entry(search_card, self.search_var, width=40)
         e.pack(side="right", fill="x", expand=True, ipady=6)
-        tk.Label(search_card, text="ابحث بالاسم أو اللقب أو الهاتف:",
+        tk.Label(search_card, text=T("cand_search"),
                  font=FONT_BOLD, bg=COLOR_CARD,
                  fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
 
@@ -2462,8 +2848,9 @@ class CandidatesFrame(tk.Frame):
         table_outer.pack(fill="both", expand=True)
         cols = ("id", "last_name", "first_name", "national_id", "gender", "phone",
                 "license_type", "instructor_name", "total_amount", "registration_date")
-        heads = ("رقم", "اللقب", "الاسم", "رقم التعريف", "الجنس", "الهاتف",
-                 "الرخصة", "الممرن", "المبلغ", "تاريخ التسجيل")
+        heads = (T("cand_col_num"), T("cand_col_lname"), T("cand_col_fname"),
+                 T("cand_col_nid"), T("cand_col_gender"), T("cand_col_phone"),
+                 T("cand_col_license"), T("cand_col_inst"), T("cand_col_amount"), T("cand_col_date"))
         widths = (50, 110, 110, 130, 70, 110, 80, 140, 100, 110)
         self.tree = create_treeview(table_card, cols, heads, widths, height=18)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -2492,11 +2879,11 @@ class CandidatesFrame(tk.Frame):
         if init_pay > 0 and cid:
             PaymentDB.add({"candidate_id": cid, "date": str(date.today()), "amount": init_pay, "payment_method": "نقدي", "notes": "الدفعة الأولى عند التسجيل"})
         self._load_list()
-        show_info("تم إضافة المترشح بنجاح")
+        show_info(T("cand_added"))
 
     def _edit_dialog(self):
         if not self.selected_id:
-            show_error("يرجى تحديد مترشح من القائمة")
+            show_error(T("cand_sel_first"))
             return
         cand = CandidateDB.get(self.selected_id)
         if cand:
@@ -2505,22 +2892,22 @@ class CandidatesFrame(tk.Frame):
     def _do_update(self, data):
         CandidateDB.update(self.selected_id, data)
         self._load_list()
-        show_info("تم تعديل بيانات المترشح")
+        show_info(T("cand_updated"))
 
     def _delete(self):
         if not self.selected_id:
-            show_error("يرجى تحديد مترشح من القائمة")
+            show_error(T("cand_sel_first"))
             return
-        if confirm_delete("هذا المترشح وكل بياناته (التكوين والمدفوعات)"):
+        if confirm_delete(T("cand_del_confirm")):
             CandidateDB.delete(self.selected_id)
             self.selected_id = None
             self._load_list()
-            show_info("تم حذف المترشح")
+            show_info(T("cand_deleted"))
 
     def _open_exam_results(self):
         """فتح نافذة تعديل المترشح مع الانتقال مباشرة لتبويب نتائج الامتحانات."""
         if not self.selected_id:
-            show_error("يرجى تحديد مترشح من القائمة"); return
+            show_error(T("cand_sel_first")); return
         cand = CandidateDB.get(self.selected_id)
         if cand:
             dlg = CandidateDialog(self, on_save=lambda d: self._do_update(d), candidate=cand)
@@ -2540,7 +2927,7 @@ class CandidatesFrame(tk.Frame):
 
     def _print_training_card(self):
         if not self.selected_id:
-            show_error("يرجى تحديد مترشح من القائمة أولاً"); return
+            show_error(T("cand_sel_first")); return
         temp_doc = DocumentsFrame(self)
         temp_doc.selected_candidate_id = self.selected_id
         temp_doc._doc_training_card()
@@ -2548,7 +2935,7 @@ class CandidatesFrame(tk.Frame):
 
     def _print_application_form(self):
         if not self.selected_id:
-            show_error("يرجى تحديد مترشح من القائمة أولاً"); return
+            show_error(T("cand_sel_first")); return
         temp_doc = DocumentsFrame(self)
         temp_doc.selected_candidate_id = self.selected_id
         temp_doc._doc_exam_form()
@@ -2689,20 +3076,20 @@ class InstructorsFrame(tk.Frame):
         head = tk.Frame(wrap, bg=COLOR_BG)
         head.pack(fill="x", pady=(0, 15))
         rh = tk.Frame(head, bg=COLOR_BG); rh.pack(side="right")
-        tk.Label(rh, text="🚗  إدارة الممرنين",
+        tk.Label(rh, text=T("inst_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(anchor="e")
-        tk.Label(rh, text="إدارة الممرنين العاملين في المدرسة",
+        tk.Label(rh, text=T("inst_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(anchor="e")
         lh = tk.Frame(head, bg=COLOR_BG); lh.pack(side="left")
-        ModernButton(lh, "إضافة ممرن", self._add_dialog,
+        ModernButton(lh, T("inst_add"), self._add_dialog,
                      icon="➕", color=COLOR_SUCCESS).pack(side="right", padx=4)
-        ModernButton(lh, "تعديل", self._edit_dialog,
+        ModernButton(lh, T("inst_edit"), self._edit_dialog,
                      icon="✏️", color=COLOR_PURPLE).pack(side="right", padx=4)
-        ModernButton(lh, "عقد العمل", self._print_contract,
+        ModernButton(lh, T("inst_contract"), self._print_contract,
                      icon="📜", color=COLOR_PRIMARY).pack(side="right", padx=4)
-        ModernButton(lh, "حذف", self._delete,
+        ModernButton(lh, T("inst_delete"), self._delete,
                      icon="🗑️", color=COLOR_DANGER).pack(side="right", padx=4)
 
         sco, sc = make_card(wrap, padding=15); sco.pack(fill="x", pady=(0, 10))
@@ -2712,13 +3099,14 @@ class InstructorsFrame(tk.Frame):
         self.search_var.trace("w", lambda *a: self._load_list())
         make_entry(sc, self.search_var, width=40).pack(side="right", fill="x",
                                                        expand=True, ipady=6)
-        tk.Label(sc, text="ابحث بالاسم أو الهاتف:", font=FONT_BOLD,
+        tk.Label(sc, text=T("inst_search"), font=FONT_BOLD,
                  bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
 
         to, tc = make_card(wrap, padding=10); to.pack(fill="both", expand=True)
         self.tree = create_treeview(tc,
             ("id","last_name","first_name","gender","phone","categories","experience_years"),
-            ("رقم","اللقب","الاسم","الجنس","الهاتف","الأصناف","سنوات الخبرة"),
+            (T("inst_col_num"),T("inst_col_lname"),T("inst_col_fname"),T("inst_col_gender"),
+             T("inst_col_phone"),T("inst_col_cats"),T("inst_col_exp")),
             (50,140,140,80,130,120,130), height=18)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.tree.bind("<Double-1>", lambda e: self._edit_dialog())
@@ -2739,22 +3127,22 @@ class InstructorsFrame(tk.Frame):
 
     def _do_add(self, data):
         InstructorDB.add(data); self._load_list()
-        show_info("تم إضافة الممرن بنجاح")
+        show_info(T("inst_added"))
 
     def _edit_dialog(self):
         if not self.selected_id:
-            show_error("يرجى تحديد ممرن من القائمة"); return
+            show_error(T("inst_sel_first")); return
         ins = InstructorDB.get(self.selected_id)
         if ins:
             InstructorDialog(self, on_save=self._do_update, instructor=ins)
 
     def _do_update(self, data):
         InstructorDB.update(self.selected_id, data); self._load_list()
-        show_info("تم تعديل بيانات الممرن")
+        show_info(T("inst_updated"))
 
     def _print_training_card(self):
         if not self.selected_id:
-            show_error("يرجى تحديد ممرن من القائمة أولاً"); return
+            show_error(T("inst_sel_first")); return
         
         # جلب المترشحين التابعين لهذا الممرن
         conn = get_connection()
@@ -2762,18 +3150,18 @@ class InstructorsFrame(tk.Frame):
         conn.close()
         
         if not rows:
-            show_error("لا يوجد مترشحون مسجلون لهذا الممرن"); return
+            show_error(T("inst_no_cands")); return
             
         # نافذة اختيار المترشح
         win = tk.Toplevel(self)
-        win.title("اختر المترشح")
+        win.title(T("inst_pick_cand"))
         win.geometry("450x500")
         win.configure(bg=COLOR_BG)
         win.transient(self); win.grab_set()
         
-        tk.Label(win, text="اختر المترشح لطباعة بطاقة التكوين له:", font=FONT_BOLD, bg=COLOR_BG).pack(pady=10)
+        tk.Label(win, text=T("inst_pick_cand_label"), font=FONT_BOLD, bg=COLOR_BG).pack(pady=10)
         
-        tree = create_treeview(win, ("id","name"), ("رقم","الاسم واللقب"), (50,300), height=15)
+        tree = create_treeview(win, ("id","name"), (T("cand_col_num"),T("inst_col_fname_lname")), (50,300), height=15)
         for r in rows:
             tree.insert("", "end", values=(r['id'], f"{r['last_name']} {r['first_name']}"))
         
@@ -2795,11 +3183,11 @@ class InstructorsFrame(tk.Frame):
             temp_doc._doc_training_card()
             win.destroy()
 
-        ModernButton(win, "طباعة البطاقة", do_print, color=COLOR_PRIMARY).pack(pady=15)
+        ModernButton(win, T("inst_print_card"), do_print, color=COLOR_PRIMARY).pack(pady=15)
 
     def _print_contract(self):
         if not self.selected_id:
-            show_error("يرجى تحديد ممرن من القائمة أولاً"); return
+            show_error(T("inst_sel_first")); return
         
         ins = InstructorDB.get(self.selected_id)
         school = SchoolInfoDB.get()
@@ -3064,12 +3452,12 @@ class InstructorsFrame(tk.Frame):
 
     def _delete(self):
         if not self.selected_id:
-            show_error("يرجى تحديد ممرن من القائمة"); return
-        if confirm_delete("هذا الممرن"):
+            show_error(T("inst_sel_first")); return
+        if confirm_delete(T("inst_del_confirm")):
             InstructorDB.delete(self.selected_id)
             self.selected_id = None
             self._load_list()
-            show_info("تم حذف الممرن")
+            show_info(T("inst_deleted"))
 
 
 # ============================================================================
@@ -3474,14 +3862,14 @@ class TrainingFrame(tk.Frame):
     def _delete_exam_attempt(self, cid, tree, on_delete):
         sel = tree.selection()
         if not sel:
-            show_error("الرجاء تحديد سجل لحذفه")
+            show_error(T("train_sel_first"))
             return
         attempt_id = tree.item(sel[0])['values'][0]
-        if not confirm_delete("هذه النتيجة"):
+        if not confirm_delete(T("train_del_confirm")):
             return
         ExamAttemptsDB.delete(attempt_id)
         on_delete()
-        show_info("تم حذف نتيجة الامتحان.")
+        show_info(T("train_deleted"))
 
     def _quick_pass(self):
         active = self._get_active_stage()
@@ -3553,9 +3941,9 @@ class PaymentsFrame(tk.Frame):
     def _build(self):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=10, pady=5)
         wrap.pack(fill="both", expand=True)
-        tk.Label(wrap, text="💰  إدارة المدفوعات", font=(FONT_FAMILY, 20, "bold"),
+        tk.Label(wrap, text=T("pay_title"), font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
-        tk.Label(wrap, text="تسجيل مدفوعات المترشحين ومتابعة المتبقي", font=FONT_MAIN,
+        tk.Label(wrap, text=T("pay_subtitle"), font=FONT_MAIN,
                  bg=COLOR_BG, fg=COLOR_TEXT_LIGHT, anchor="e").pack(fill="x", pady=(0, 10))
 
         # حاوية رئيسية تنقسم ليمين ويسار
@@ -3572,25 +3960,25 @@ class PaymentsFrame(tk.Frame):
         
         row_sm1 = tk.Frame(sm, bg=COLOR_PRIMARY)
         row_sm1.pack(fill="x")
-        self.lbl_total = tk.Label(row_sm1, text="المبلغ الإجمالي: -", font=FONT_BOLD, bg=COLOR_PRIMARY, fg="white")
+        self.lbl_total = tk.Label(row_sm1, text=T("pay_total_lbl"), font=FONT_BOLD, bg=COLOR_PRIMARY, fg="white")
         self.lbl_total.pack(anchor="center")
         
         row_sm2 = tk.Frame(sm, bg=COLOR_PRIMARY)
         row_sm2.pack(fill="x", pady=(2, 0))
-        self.lbl_paid = tk.Label(row_sm2, text="المدفوع: -", font=FONT_BOLD, bg=COLOR_PRIMARY, fg="#a7f3d0")
+        self.lbl_paid = tk.Label(row_sm2, text=T("pay_paid_lbl"), font=FONT_BOLD, bg=COLOR_PRIMARY, fg="#a7f3d0")
         self.lbl_paid.pack(side="right", expand=True)
-        self.lbl_remaining = tk.Label(row_sm2, text="المتبقي: -", font=(FONT_FAMILY, 12, "bold"), bg=COLOR_PRIMARY, fg=COLOR_ACCENT)
+        self.lbl_remaining = tk.Label(row_sm2, text=T("pay_remain_lbl"), font=(FONT_FAMILY, 12, "bold"), bg=COLOR_PRIMARY, fg=COLOR_ACCENT)
         self.lbl_remaining.pack(side="left", expand=True)
 
         fo, fc = make_card(right); fo.pack(fill="x", pady=(0, 5))
         
         # نقل زر السجل ليكون في الأعلى للوصول السريع وملاحظة واضحة
-        ModernButton(fc, "عرض سجل الدفعات (التاريخ)", self._show_history_window, icon="📜", color=COLOR_PRIMARY).pack(fill="x", pady=(0, 10), ipady=2)
+        ModernButton(fc, T("pay_history"), self._show_history_window, icon="📜", color=COLOR_PRIMARY).pack(fill="x", pady=(0, 10), ipady=2)
         
-        section_title(fc, "إضافة دفعة", icon="➕")
+        section_title(fc, T("pay_add_section"), icon="➕")
         
-        fields = [("التاريخ", "date", "entry"), ("المبلغ (دج)", "amount", "entry"),
-                  ("الوسيلة", "payment_method", "combo", PAYMENT_METHOD_OPTIONS), ("ملاحظة", "notes", "entry")]
+        fields = [(T("pay_date"), "date", "entry"), (T("pay_amount"), "amount", "entry"),
+                  (T("pay_method"), "payment_method", "combo", PAYMENT_METHOD_OPTIONS), (T("pay_note"), "notes", "entry")]
         
         for fi in fields:
             row = tk.Frame(fc, bg=COLOR_CARD); row.pack(fill="x", pady=2)
@@ -3610,14 +3998,14 @@ class PaymentsFrame(tk.Frame):
         row1 = tk.Frame(bf, bg=COLOR_CARD); row1.pack(fill="x")
         _can_pay = UserDB.has_perm(CURRENT_USER, "add_payments")
         if _can_pay:
-            ModernButton(row1, "إضافة دفعة", self._add, icon="💾", color=COLOR_SUCCESS).pack(side="right", fill="x", expand=True, padx=(0, 2), ipady=2)
-            ModernButton(row1, "استرداد", self._refund, icon="↩️", color=COLOR_WARNING).pack(side="left", fill="x", expand=True, padx=(2, 0), ipady=2)
+            ModernButton(row1, T("pay_add_btn"), self._add, icon="💾", color=COLOR_SUCCESS).pack(side="right", fill="x", expand=True, padx=(0, 2), ipady=2)
+            ModernButton(row1, T("pay_refund"), self._refund, icon="↩️", color=COLOR_WARNING).pack(side="left", fill="x", expand=True, padx=(2, 0), ipady=2)
         else:
-            tk.Label(row1, text="🔒  صلاحية العرض فقط",
+            tk.Label(row1, text=T("pay_readonly"),
                      font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT,
                      anchor="e").pack(fill="x", pady=4)
         
-        ModernButton(bf, "طباعة وصل الدفع", self._print_receipt, icon="🖨️", color=COLOR_PURPLE).pack(fill="x", pady=(4, 0), ipady=2)
+        ModernButton(bf, T("pay_print"), self._print_receipt, icon="🖨️", color=COLOR_PURPLE).pack(fill="x", pady=(4, 0), ipady=2)
 
         # يسار: البحث + قائمة المترشحين
         left = tk.Frame(main_container, bg=COLOR_BG)
@@ -3705,14 +4093,14 @@ class PaymentsFrame(tk.Frame):
 
     def _add(self):
         if not self.selected_candidate_id:
-            show_error("يرجى تحديد مترشح من القائمة أولاً"); return
+            show_error(T("cand_sel_first")); return
         try:
             amt_str = self.vars["amount"].get().replace(",", ".").replace(" ", "")
             amt = float(amt_str or 0)
             if amt <= 0:
-                show_error("يرجى إدخال مبلغ صحيح أكبر من الصفر"); return
+                show_error(T("pay_err_amount")); return
         except ValueError:
-            show_error("المبلغ يجب أن يكون رقماً (تأكد من عدم وجود مسافات غير ضرورية)"); return
+            show_error(T("pay_err_amount_num")); return
         PaymentDB.add({"candidate_id": self.selected_candidate_id,
                        "date": self.vars["date"].get().strip() or str(date.today()),
                        "amount": amt,
@@ -3721,12 +4109,12 @@ class PaymentsFrame(tk.Frame):
         self.vars["amount"].set(""); self.vars["notes"].set("")
         self._refresh_candidate_ui()
         
-        if messagebox.askyesno("نجاح", "تم تسجيل الدفعة بنجاح!\nهل ترغب في طباعة وصل دفع الآن؟"):
+        if messagebox.askyesno(T("msg_success"), T("pay_added_print_q")):
             self._print_receipt()
 
     def _print_receipt(self):
         if not self.selected_candidate_id:
-            show_error("يرجى تحديد مترشح من القائمة أولاً"); return
+            show_error(T("cand_sel_first")); return
             
         cand = CandidateDB.get(self.selected_candidate_id)
         if not cand: return
@@ -3846,18 +4234,18 @@ class PaymentsFrame(tk.Frame):
             except Exception:
                 os.startfile(path)
         except Exception as e:
-            show_error(f"حدث خطأ أثناء طباعة الوصل:\n{e}")
+            show_error(f"{T('pay_err_print')}\n{e}")
 
     def _refund(self):
         if not self.selected_candidate_id:
-            show_error("يرجى تحديد مترشح من القائمة أولاً"); return
+            show_error(T("cand_sel_first")); return
         try:
             amt_str = self.vars["amount"].get().replace(",", ".").replace(" ", "")
             amt = float(amt_str or 0)
             if amt <= 0:
-                show_error("يرجى إدخال مبلغ صحيح أكبر من الصفر"); return
+                show_error(T("pay_err_amount")); return
         except ValueError:
-            show_error("المبلغ يجب أن يكون رقماً (تأكد من عدم وجود مسافات غير ضرورية)"); return
+            show_error(T("pay_err_amount_num")); return
         notes = self.vars["notes"].get().strip()
         notes = f"استرداد مبلغ: {notes}" if notes else "استرداد مبلغ"
         PaymentDB.add({"candidate_id": self.selected_candidate_id,
@@ -3867,16 +4255,16 @@ class PaymentsFrame(tk.Frame):
                        "notes": notes})
         self.vars["amount"].set(""); self.vars["notes"].set("")
         self._refresh_candidate_ui()
-        show_info("تم استرداد المبلغ بنجاح")
+        show_info(T("pay_refunded"))
 
     def _delete(self):
         if not self.selected_payment_id:
-            show_error("يرجى تحديد دفعة من السجل"); return
-        if confirm_delete("هذه الدفعة"):
+            show_error(T("pay_sel_first")); return
+        if confirm_delete(T("pay_del_confirm")):
             PaymentDB.delete(self.selected_payment_id)
             self.selected_payment_id = None
             self._refresh_candidate_ui()
-            show_info("تم حذف الدفعة")
+            show_info(T("pay_deleted"))
 
 
 # ============================================================================
@@ -3893,10 +4281,10 @@ class ExpensesFrame(tk.Frame):
     def _build(self):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
         wrap.pack(fill="both", expand=True)
-        tk.Label(wrap, text="💸  إدارة المصاريف",
+        tk.Label(wrap, text=T("exp_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
-        tk.Label(wrap, text="تسجيل ومتابعة كل المصاريف الشهرية والسنوية",
+        tk.Label(wrap, text=T("exp_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(fill="x", pady=(0, 15))
 
@@ -3906,12 +4294,12 @@ class ExpensesFrame(tk.Frame):
         right = tk.Frame(bottom, bg=COLOR_BG, width=340); right.pack(side="right", fill="y")
         right.pack_propagate(False)
         fo, fc = make_card(right); fo.pack(fill="both", expand=True, padx=(10, 0))
-        section_title(fc, "بيانات المصروف", icon="💸")
+        section_title(fc, T("exp_form"), icon="💸")
 
-        fields = [("نوع المصروف *", "expense_type", "combo", EXPENSE_TYPES),
-                  ("المبلغ (دج) *", "amount", "entry"),
-                  ("التاريخ *", "date", "entry"),
-                  ("ملاحظة", "notes", "entry")]
+        fields = [(T("exp_type"), "expense_type", "combo", EXPENSE_TYPES),
+                  (T("exp_amount"), "amount", "entry"),
+                  (T("exp_date"), "date", "entry"),
+                  (T("exp_note"), "notes", "entry")]
         for fi in fields:
             row = tk.Frame(fc, bg=COLOR_CARD); row.pack(fill="x", pady=8)
             make_label(row, fi[0], font=FONT_BOLD).pack(anchor="e")
@@ -3924,13 +4312,13 @@ class ExpensesFrame(tk.Frame):
         self.vars["date"].set(str(date.today()))
 
         bf = tk.Frame(fc, bg=COLOR_CARD); bf.pack(fill="x", pady=(15, 0))
-        ModernButton(bf, "إضافة", self._add, icon="➕",
+        ModernButton(bf, T("btn_add"), self._add, icon="➕",
                      color=COLOR_SUCCESS).pack(fill="x", pady=3)
-        ModernButton(bf, "تعديل", self._update, icon="✏️",
+        ModernButton(bf, T("btn_edit"), self._update, icon="✏️",
                      color=COLOR_PRIMARY).pack(fill="x", pady=3)
-        ModernButton(bf, "حذف", self._delete, icon="🗑️",
+        ModernButton(bf, T("btn_delete"), self._delete, icon="🗑️",
                      color=COLOR_DANGER).pack(fill="x", pady=3)
-        ModernButton(bf, "مسح الحقول", self._clear, icon="🔄",
+        ModernButton(bf, T("btn_clear"), self._clear, icon="🔄",
                      color=COLOR_TEXT_LIGHT).pack(fill="x", pady=3)
 
         # يسار: جدول
@@ -3943,12 +4331,12 @@ class ExpensesFrame(tk.Frame):
         self.search_var.trace("w", lambda *a: self._load_list())
         make_entry(sb, self.search_var, width=30).pack(side="right", fill="x",
                                                        expand=True, ipady=5)
-        tk.Label(sb, text="بحث:", font=FONT_BOLD, bg=COLOR_CARD,
+        tk.Label(sb, text=T("exp_search"), font=FONT_BOLD, bg=COLOR_CARD,
                  fg=COLOR_TEXT, anchor="e").pack(side="right", padx=10)
 
         self.tree = create_treeview(lc,
             ("id","expense_type","amount","date","notes"),
-            ("رقم","نوع المصروف","المبلغ (دج)","التاريخ","ملاحظة"),
+            (T("exp_col_num"),T("exp_col_type"),T("exp_col_amount"),T("exp_col_date"),T("exp_col_note")),
             (50,180,140,130,260), height=15)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -3982,26 +4370,26 @@ class ExpensesFrame(tk.Frame):
     def _add(self):
         d = self._data()
         if not d["expense_type"]:
-            show_error("يرجى إدخال نوع المصروف"); return
+            show_error(T("exp_err_type")); return
         if d["amount"] <= 0:
-            show_error("يرجى إدخال مبلغ صحيح"); return
+            show_error(T("exp_err_amount")); return
         ExpenseDB.add(d); self._clear(); self._load_list()
-        show_info("تم إضافة المصروف بنجاح")
+        show_info(T("exp_added"))
 
     def _update(self):
         if not self.selected_id:
-            show_error("يرجى تحديد مصروف من القائمة"); return
+            show_error(T("exp_sel_first")); return
         ExpenseDB.update(self.selected_id, self._data())
         self._load_list()
-        show_info("تم تعديل المصروف")
+        show_info(T("exp_updated"))
 
     def _delete(self):
         if not self.selected_id:
-            show_error("يرجى تحديد مصروف من القائمة"); return
-        if confirm_delete("هذا المصروف"):
+            show_error(T("exp_sel_first")); return
+        if confirm_delete(T("exp_del_confirm")):
             ExpenseDB.delete(self.selected_id)
             self._clear(); self._load_list()
-            show_info("تم حذف المصروف")
+            show_info(T("exp_deleted"))
 
     def _clear(self):
         self.selected_id = None
@@ -4022,10 +4410,10 @@ class ReportsFrame(tk.Frame):
     def _build(self):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
         wrap.pack(fill="both", expand=True)
-        tk.Label(wrap, text="📊  التقارير والإحصائيات",
+        tk.Label(wrap, text=T("rep_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
-        tk.Label(wrap, text="تقارير شهرية وسنوية مفصّلة",
+        tk.Label(wrap, text=T("rep_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(fill="x", pady=(0, 15))
 
@@ -4034,22 +4422,22 @@ class ReportsFrame(tk.Frame):
         today_str     = date.today().strftime('%Y-%m-%d')
         year_start    = date.today().strftime('%Y') + '-01-01'
 
-        ModernButton(fc, "تطبيق", self._refresh, icon="📈",
+        ModernButton(fc, T("btn_apply"), self._refresh, icon="📈",
                      color=COLOR_PRIMARY).pack(side="right", padx=5)
-        ModernButton(fc, "كل الفترات", self._reset_filter, icon="🗓️",
+        ModernButton(fc, T("btn_all_periods"), self._reset_filter, icon="🗓️",
                      color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
 
-        tk.Label(fc, text="إلى:", font=FONT_BOLD,
+        tk.Label(fc, text=T("rep_to"), font=FONT_BOLD,
                  bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=(15, 3))
         self.date_to_var = tk.StringVar(value=today_str)
         make_entry(fc, self.date_to_var, width=13).pack(side="right", padx=3, ipady=4)
 
-        tk.Label(fc, text="من:", font=FONT_BOLD,
+        tk.Label(fc, text=T("rep_from"), font=FONT_BOLD,
                  bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(side="right", padx=(15, 3))
         self.date_from_var = tk.StringVar(value=year_start)
         make_entry(fc, self.date_from_var, width=13).pack(side="right", padx=3, ipady=4)
 
-        tk.Label(fc, text="🗓️  فلترة بالفترة الزمنية  (YYYY-MM-DD)",
+        tk.Label(fc, text=T("rep_filter_lbl"),
                  font=FONT_SMALL, bg=COLOR_CARD,
                  fg=COLOR_TEXT_LIGHT, anchor="e").pack(side="right", padx=10)
 
@@ -4058,21 +4446,21 @@ class ReportsFrame(tk.Frame):
 
         # تفصيل شهري
         mo, mc = make_card(wrap, padding=10); mo.pack(fill="x", pady=(0, 12))
-        section_title(mc, "تفصيل شهري للسنة المحددة", icon="📅")
+        section_title(mc, T("rep_monthly"), icon="📅")
         self.monthly_tree = create_treeview(mc,
             ("month","payments","expenses","profit"),
-            ("الشهر","المدفوعات (دج)","المصاريف (دج)","الأرباح (دج)"),
+            (T("rep_col_month"),T("rep_col_pay"),T("rep_col_exp"),T("rep_col_profit")),
             (140,180,180,180), height=8)
 
         # إحصائيات الامتحانات
         eo, ec = make_card(wrap, padding=10); eo.pack(fill="both", expand=True)
-        section_title(ec, "إحصائيات نتائج الامتحانات", icon="🎓")
+        section_title(ec, T("rep_exam_stats"), icon="🎓")
         self._exam_stats_row = tk.Frame(ec, bg=COLOR_CARD)
         self._exam_stats_row.pack(fill="x", pady=(0, 8))
 
         # -- مخطط شريطي شهري --
         chart_lbl = tk.Label(ec,
-            text="مخطط النجاح الشهري  (🟦 نظري ناجح  |  🟩 تطبيقي ناجح  |  ◻ محاولات)",
+            text=T("rep_chart_lbl"),
             font=FONT_SMALL, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT, anchor="e")
         chart_lbl.pack(anchor="e", pady=(0, 4))
         self._exam_chart = tk.Canvas(ec, bg=COLOR_CARD, height=160,
@@ -4082,7 +4470,7 @@ class ReportsFrame(tk.Frame):
         # -- جدول تفصيلي --
         self._exam_monthly_tree = create_treeview(ec,
             ("month", "nazari_total", "nazari_pass", "tatbiqi_total", "tatbiqi_pass"),
-            ("الشهر", "نظري (محاولات)", "نظري (ناجح)", "تطبيقي (محاولات)", "تطبيقي (ناجح)"),
+            (T("rep_col_month"),T("rep_col_nazari_t"),T("rep_col_nazari_p"),T("rep_col_tatbiqi_t"),T("rep_col_tatbiqi_p")),
             (120, 140, 120, 160, 130), height=5)
 
         self._refresh()
@@ -4129,15 +4517,15 @@ class ReportsFrame(tk.Frame):
         go_exp  = (lambda: nav(7)) if nav else None
         go_rep  = (lambda: nav(8)) if nav else None
 
-        stat_card(self.stats_row, "إجمالي المدفوعات", f"{tp:,.0f}",   "💰",
+        stat_card(self.stats_row, T("rep_total_pay"), f"{tp:,.0f}",   "💰",
                   COLOR_SUCCESS, command=go_pay)
-        stat_card(self.stats_row, "إجمالي المصاريف",  f"{te:,.0f}",   "💸",
+        stat_card(self.stats_row, T("rep_total_exp"),  f"{te:,.0f}",   "💸",
                   COLOR_DANGER,  command=go_exp)
-        stat_card(self.stats_row, "صافي الأرباح",     f"{prof:,.0f}", "💎",
+        stat_card(self.stats_row, T("rep_net_profit"),     f"{prof:,.0f}", "💎",
                   COLOR_PRIMARY if prof >= 0 else COLOR_DANGER, command=go_rep)
-        stat_card(self.stats_row, "مترشحو الفترة",
+        stat_card(self.stats_row, T("rep_period_cand"),
                   str(CandidateDB.count_in_range(d_from, d_to)), "👥", COLOR_INFO)
-        stat_card(self.stats_row, "الممرنون",  str(ni), "🚗", COLOR_PURPLE)
+        stat_card(self.stats_row, T("dash_instructors"),  str(ni), "🚗", COLOR_PURPLE)
 
         # ── التفصيل الشهري للفترة المحددة ────────────────────────────────
         ap = {r['month']: r['total'] for r in PaymentDB.get_monthly_breakdown_range(d_from, d_to)}
@@ -4148,10 +4536,10 @@ class ReportsFrame(tk.Frame):
         for ym in all_months:
             p = ap.get(ym, 0); e = ae.get(ym, 0)
             parts = ym.split('-')
-            month_lbl = MONTHS_AR.get(parts[1], parts[1]) + '  ' + parts[0]
+            month_lbl = (MONTHS_FR if LANG == "fr" else MONTHS_AR).get(parts[1], parts[1]) + '  ' + parts[0]
             rows.append((month_lbl, f"{p:,.0f}", f"{e:,.0f}", f"{p - e:,.0f}"))
         if not rows:
-            rows = [("لا توجد بيانات في هذه الفترة", "—", "—", "—")]
+            rows = [(T("rep_no_data"), "—", "—", "—")]
         insert_zebra(self.monthly_tree, rows)
 
         # نقر مزدوج على صف التفصيل الشهري → ينتقل للمدفوعات
@@ -4172,7 +4560,7 @@ class ReportsFrame(tk.Frame):
 
         overall_color = COLOR_SUCCESS if overall_pct >= 50 else (
             COLOR_WARNING if total_all == 0 else COLOR_DANGER)
-        stat_card(self._exam_stats_row, "المعدل الكلي للنجاح",
+        stat_card(self._exam_stats_row, T("rep_overall_rate"),
                   f"{overall_pct}%", "🎓", overall_color)
 
         for r in pass_data:
@@ -4181,7 +4569,7 @@ class ReportsFrame(tk.Frame):
             color  = COLOR_SUCCESS if pct >= 50 else (
                 COLOR_WARNING if total == 0 else COLOR_DANGER)
             stat_card(self._exam_stats_row,
-                      f"نجاح {r['exam_type']}",
+                      f"{T('rep_pass_rate_of')} {r['exam_type']}",
                       f"{pct}%  ({passed}/{total})",
                       "📝", color)
 
@@ -4197,7 +4585,7 @@ class ReportsFrame(tk.Frame):
         exam_rows = []
         for ym in all_exam_months:
             parts     = ym.split('-')
-            month_lbl = MONTHS_AR.get(parts[1], parts[1]) + '  ' + parts[0]
+            month_lbl = (MONTHS_FR if LANG == "fr" else MONTHS_AR).get(parts[1], parts[1]) + '  ' + parts[0]
             naz = em[ym].get("نظري",   {"total": 0, "passed": 0})
             tat = em[ym].get("تطبيقي", {"total": 0, "passed": 0})
             exam_rows.append((
@@ -4790,23 +5178,22 @@ class ScheduleFrame(tk.Frame):
 
     def _edit(self):
         if not self.selected_id:
-            show_error("يرجى تحديد حصة من الجدول أولاً"); return
+            show_error(T("sched_sel_first")); return
         SessionDialog(self, session_id=self.selected_id, on_save=self._load)
 
     def _delete(self):
         if not self.selected_id:
-            show_error("يرجى تحديد حصة من الجدول أولاً"); return
+            show_error(T("sched_sel_first")); return
         s = SessionDB.get(self.selected_id)
         if not s:
             return
-        msg = (f"هل تريد حذف الحصة:\n"
-               f"التاريخ: {s['session_date']}  الوقت: {s['session_time']}\n"
-               f"هل أنت متأكد؟")
-        if messagebox.askyesno("تأكيد الحذف", msg):
+        msg = (f"{T('sched_del_q')}\n"
+               f"{T('sched_col_date')}: {s['session_date']}  {T('sched_col_time')}: {s['session_time']}\n")
+        if messagebox.askyesno(T("msg_confirm_del"), msg):
             SessionDB.delete(self.selected_id)
             self.selected_id = None
             self._load()
-            show_info("تم حذف الحصة بنجاح")
+            show_info(T("sched_deleted"))
 
 
 # ============================================================================
@@ -4823,10 +5210,10 @@ class DocumentsFrame(tk.Frame):
         wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
         wrap.pack(fill="both", expand=True)
 
-        tk.Label(wrap, text="🖨️  طباعة الوثائق بالعربية",
+        tk.Label(wrap, text=T("doc_title"),
                  font=(FONT_FAMILY, 20, "bold"),
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 5))
-        tk.Label(wrap, text="إنتاج كل الوثائق الرسمية بصيغة PDF بنص عربي مُنسّق",
+        tk.Label(wrap, text=T("doc_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
                  anchor="e").pack(fill="x", pady=(0, 15))
 
@@ -4889,25 +5276,25 @@ class DocumentsFrame(tk.Frame):
 
         rc = docs_inner  # الآن rc هو الإطار الداخلي القابل للتمرير
 
-        section_title(rc, "وثائق فردية (للمترشح المحدد)", icon="📄")
+        section_title(rc, T("doc_individual"), icon="📄")
         docs_individual = [
-            ("جدول إرسال", "📋", self._doc_dispatch_table),
-            ("استمارة الترشح الرسمية", "📄", self._doc_exam_form),
-            ("عقد التكوين", "📜", self._doc_contract),
-            ("شهادة إدارية", "🏛️", self._doc_certificate),
-            ("وصل دفع", "🧾", self._doc_payment_receipt),
+            (T("doc_dispatch"),      "📋", self._doc_dispatch_table),
+            (T("doc_exam_form"),     "📄", self._doc_exam_form),
+            ("عقد التكوين",          "📜", self._doc_contract),
+            ("شهادة إدارية",         "🏛️", self._doc_certificate),
+            ("وصل دفع",              "🧾", self._doc_payment_receipt),
         ]
         for label, icon, cmd in docs_individual:
             ModernButton(rc, label, cmd, icon=icon, color=COLOR_PRIMARY).pack(fill="x", pady=2)
 
         tk.Frame(rc, bg=COLOR_BORDER, height=2).pack(fill="x", pady=8)
 
-        section_title(rc, "وثائق جماعية", icon="📊")
+        section_title(rc, T("doc_collective"), icon="📊")
         docs_group = [
-            ("قائمة كل المترشحين", "📑", self._doc_candidates_list),
-            ("قائمة الممرنين", "👥", self._doc_instructors_list),
-            ("تقرير المصاريف", "💸", self._doc_expenses_report),
-            ("تقرير المدفوعات", "💰", self._doc_payments_report),
+            (T("doc_cand_list"),      "📑", self._doc_candidates_list),
+            (T("doc_inst_list"),      "👥", self._doc_instructors_list),
+            (T("doc_expenses_rep"),   "💸", self._doc_expenses_report),
+            (T("doc_payments_rep"),   "💰", self._doc_payments_report),
         ]
         for label, icon, cmd in docs_group:
             ModernButton(rc, label, cmd, icon=icon, color=COLOR_PURPLE).pack(fill="x", pady=3)
@@ -5034,7 +5421,7 @@ class DocumentsFrame(tk.Frame):
 
     def _get_candidate(self):
         if not self.selected_candidate_id:
-            show_error("يرجى تحديد مترشح من القائمة أولاً"); return None
+            show_error(T("cand_sel_first")); return None
         return CandidateDB.get(self.selected_candidate_id)
 
     def _ask_save(self, default_name):
@@ -6698,7 +7085,7 @@ class LoginWindow:
         upgrade_db()
 
         self.root = tk.Tk()
-        self.root.title("تسجيل الدخول — برنامج ميدانيك")
+        self.root.title(T("login_title"))
         self.root.geometry("460x560")
         self.root.resizable(False, False)
         self.root.configure(bg=COLOR_SIDEBAR)
@@ -6721,16 +7108,16 @@ class LoginWindow:
                  bg=COLOR_SIDEBAR, fg=COLOR_ACCENT).pack()
         tk.Label(head, text="ميدانيك", font=(FONT_FAMILY, 22, "bold"),
                  bg=COLOR_SIDEBAR, fg="white").pack(pady=(4, 0))
-        tk.Label(head, text="إدارة مدرسة تعليم السياقة — الجزائر",
+        tk.Label(head, text=T("login_app_sub"),
                  font=(FONT_FAMILY, 9), bg=COLOR_SIDEBAR, fg="#94a3b8").pack(pady=(2, 0))
 
         card = tk.Frame(self.root, bg=COLOR_CARD, padx=34, pady=28)
         card.pack(fill="x", padx=24, pady=12)
 
-        tk.Label(card, text="تسجيل الدخول", font=(FONT_FAMILY, 14, "bold"),
+        tk.Label(card, text=T("login_heading"), font=(FONT_FAMILY, 14, "bold"),
                  bg=COLOR_CARD, fg=COLOR_HEADER, anchor="e").pack(fill="x", pady=(0, 18))
 
-        tk.Label(card, text="اسم المستخدم", font=FONT_BOLD,
+        tk.Label(card, text=T("login_username"), font=FONT_BOLD,
                  bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
         self._v_user = tk.StringVar()
         self._e_user = tk.Entry(card, textvariable=self._v_user,
@@ -6741,7 +7128,7 @@ class LoginWindow:
                                 justify="right")
         self._e_user.pack(fill="x", ipady=10, pady=(4, 14))
 
-        tk.Label(card, text="كلمة المرور", font=FONT_BOLD,
+        tk.Label(card, text=T("login_password"), font=FONT_BOLD,
                  bg=COLOR_CARD, fg=COLOR_TEXT, anchor="e").pack(fill="x")
         self._v_pass = tk.StringVar()
         self._e_pass = tk.Entry(card, textvariable=self._v_pass,
@@ -6755,7 +7142,7 @@ class LoginWindow:
 
         btn_frame = tk.Frame(card, bg=COLOR_PRIMARY, cursor="hand2")
         btn_frame.pack(fill="x")
-        self._login_lbl = tk.Label(btn_frame, text="  ←  دخول",
+        self._login_lbl = tk.Label(btn_frame, text=T("login_btn"),
                                    font=(FONT_FAMILY, 13, "bold"),
                                    bg=COLOR_PRIMARY, fg="white", pady=12)
         self._login_lbl.pack(fill="x")
@@ -6773,7 +7160,7 @@ class LoginWindow:
 
         hint = tk.Frame(self.root, bg=COLOR_SIDEBAR, padx=24, pady=8)
         hint.pack(fill="x")
-        tk.Label(hint, text="🔑  الحساب الافتراضي للمدير:  admin  /  admin123",
+        tk.Label(hint, text=T("login_hint"),
                  font=FONT_TINY, bg=COLOR_SIDEBAR, fg="#64748b",
                  anchor="e").pack(fill="x")
 
@@ -6785,11 +7172,11 @@ class LoginWindow:
         username = self._v_user.get().strip()
         password = self._v_pass.get()
         if not username or not password:
-            self._err_lbl.configure(text="يرجى إدخال اسم المستخدم وكلمة المرور")
+            self._err_lbl.configure(text=T("login_err_empty"))
             return
         user = UserDB.authenticate(username, password)
         if user is None:
-            self._err_lbl.configure(text="❌  اسم المستخدم أو كلمة المرور غير صحيحة")
+            self._err_lbl.configure(text=T("login_err_bad"))
             self._e_pass.delete(0, "end")
             self._e_pass.focus()
             return
@@ -6806,7 +7193,7 @@ class UserManagementDialog(tk.Toplevel):
 
     def __init__(self, parent, current_user_id=None):
         super().__init__(parent)
-        self.title("إدارة المستخدمين")
+        self.title(T("users_title"))
         self.geometry("860x600")
         self.resizable(True, True)
         self.configure(bg=COLOR_BG)
@@ -6819,18 +7206,18 @@ class UserManagementDialog(tk.Toplevel):
     def _build(self):
         hdr = tk.Frame(self, bg=COLOR_PRIMARY, padx=20, pady=14)
         hdr.pack(fill="x")
-        tk.Label(hdr, text="👥  إدارة المستخدمين والصلاحيات",
+        tk.Label(hdr, text=T("users_header"),
                  font=FONT_TITLE, bg=COLOR_PRIMARY, fg="white").pack(anchor="e")
 
         bar = tk.Frame(self, bg=COLOR_BG, padx=16, pady=10)
         bar.pack(fill="x")
-        ModernButton(bar, "مستخدم جديد", self._add_user,
+        ModernButton(bar, T("users_new"), self._add_user,
                      color=COLOR_SUCCESS, icon="➕").pack(side="right", padx=(0, 8))
-        ModernButton(bar, "تعديل الصلاحيات", self._edit_user,
+        ModernButton(bar, T("users_edit"), self._edit_user,
                      color=COLOR_PRIMARY, icon="✏️").pack(side="right", padx=(0, 8))
-        ModernButton(bar, "تغيير كلمة المرور", self._change_pass,
+        ModernButton(bar, T("users_change_pass"), self._change_pass,
                      color=COLOR_WARNING, icon="🔑").pack(side="right", padx=(0, 8))
-        ModernButton(bar, "حذف المستخدم", self._delete_user,
+        ModernButton(bar, T("users_delete"), self._delete_user,
                      color=COLOR_DANGER, icon="🗑").pack(side="right", padx=(0, 8))
 
         tree_f = tk.Frame(self, bg=COLOR_BG, padx=16, pady=4)
@@ -6839,9 +7226,9 @@ class UserManagementDialog(tk.Toplevel):
         cols = ("id", "username", "full_name", "role", "perms")
         self._tree = ttk.Treeview(tree_f, columns=cols, show="headings",
                                   style="Modern.Treeview", selectmode="browse")
-        hdrs = {"id": ("ID", 40), "username": ("اسم المستخدم", 120),
-                "full_name": ("الاسم الكامل", 160), "role": ("الدور", 90),
-                "perms": ("الصلاحيات الممنوحة", 380)}
+        hdrs = {"id": ("ID", 40), "username": (T("users_col_uname"), 120),
+                "full_name": (T("users_col_fullname"), 160), "role": (T("users_col_role"), 90),
+                "perms": (T("users_col_perms"), 380)}
         for c, (h, w) in hdrs.items():
             self._tree.heading(c, text=h, anchor="e")
             self._tree.column(c, width=w, anchor="e", minwidth=40)
@@ -6856,13 +7243,13 @@ class UserManagementDialog(tk.Toplevel):
         for row in self._tree.get_children():
             self._tree.delete(row)
         for u in UserDB.get_all():
-            role_lbl = "مدير" if u["role"] == "admin" else "ممرّن"
+            role_lbl = T("users_role_admin") if u["role"] == "admin" else T("users_role_inst")
             if u["role"] == "admin":
-                perms_str = "جميع الصلاحيات"
+                perms_str = T("users_all_perms")
             else:
                 granted = [PERMISSION_LABELS[k]
                            for k in PERMISSION_KEYS if u["permissions"].get(k)]
-                perms_str = " | ".join(granted) if granted else "—  لا صلاحيات"
+                perms_str = " | ".join(granted) if granted else T("users_no_perms")
             self._tree.insert("", "end", iid=str(u["id"]),
                               values=(u["id"], u["username"],
                                       u.get("full_name") or "—",
@@ -7252,7 +7639,7 @@ class DrivingSchoolApp:
         tk.Label(logo_area, text="ميدانيك",
                  font=(FONT_FAMILY, 17, "bold"),
                  bg=COLOR_HEADER, fg="white").pack()
-        tk.Label(logo_area, text="إدارة مدرسة السياقة",
+        tk.Label(logo_area, text=T("sidebar_subtitle"),
                  font=(FONT_FAMILY, 9),
                  bg=COLOR_HEADER, fg="#94a3b8").pack(pady=(2, 0))
 
@@ -7264,16 +7651,16 @@ class DrivingSchoolApp:
         nav_container.pack(fill="both", expand=True)
 
         nav_defs = [
-            ("🏠", "الرئيسية"),
-            ("🏫", "معلومات المدرسة"),
-            ("🧾", "المترشحون"),
-            ("🚗", "الممرنون"),
-            ("📚", "مراحل التكوين"),
-            ("📅", "الجدول الزمني"),
-            ("💰", "المدفوعات"),
-            ("💸", "المصاريف"),
-            ("📊", "التقارير"),
-            ("🖨️", "طباعة الوثائق"),
+            ("🏠", T("nav_dashboard")),
+            ("🏫", T("nav_school_info")),
+            ("🧾", T("nav_candidates")),
+            ("🚗", T("nav_instructors")),
+            ("📚", T("nav_training")),
+            ("📅", T("nav_schedule")),
+            ("💰", T("nav_payments")),
+            ("💸", T("nav_expenses")),
+            ("📊", T("nav_reports")),
+            ("🖨️", T("nav_documents")),
         ]
         is_admin = (self._current_user.get("role") == "admin")
         self._nav_refs = []
@@ -7299,7 +7686,7 @@ class DrivingSchoolApp:
         if is_admin:
             users_btn = tk.Frame(sb, bg=COLOR_PURPLE, cursor="hand2", padx=10, pady=6)
             users_btn.pack(fill="x", padx=8, pady=(0, 4))
-            tk.Label(users_btn, text="👥  إدارة المستخدمين",
+            tk.Label(users_btn, text=T("btn_users"),
                      font=(FONT_FAMILY, 9, "bold"),
                      bg=COLOR_PURPLE, fg="white").pack()
             def _open_users(e=None):
@@ -7331,8 +7718,8 @@ class DrivingSchoolApp:
         ubox = tk.Frame(user_row, bg=COLOR_HEADER)
         ubox.pack(side="left", padx=(8, 0))
         display_name = (self._current_user.get("full_name")
-                        or self._current_user.get("username", "مستخدم"))
-        role_label   = "مدير النظام" if is_admin else "ممرّن"
+                        or self._current_user.get("username", T("sidebar_user_def")))
+        role_label   = T("sidebar_role_admin") if is_admin else T("sidebar_role_train")
         tk.Label(ubox, text=display_name,
                  font=(FONT_FAMILY, 10, "bold"),
                  bg=COLOR_HEADER, fg="white", anchor="w").pack(anchor="w")
@@ -7340,15 +7727,35 @@ class DrivingSchoolApp:
                  font=(FONT_FAMILY, 8),
                  bg=COLOR_HEADER, fg="#64748b", anchor="w").pack(anchor="w")
 
+        # زر تبديل اللغة
+        new_lang = "fr" if LANG == "ar" else "ar"
+        lang_btn = tk.Frame(bot, bg="#0369a1", cursor="hand2")
+        lang_btn.pack(fill="x", pady=(4, 0))
+        tk.Label(lang_btn, text=T("btn_lang_switch"),
+                 font=(FONT_FAMILY, 9, "bold"),
+                 bg="#0369a1", fg="white", pady=5, anchor="center").pack(fill="x")
+        def _do_lang(e=None, _nl=new_lang):
+            set_language(_nl)
+        lang_btn.bind("<Button-1>", _do_lang)
+        for ch in lang_btn.winfo_children():
+            ch.bind("<Button-1>", _do_lang)
+        def _lang_hover(e):
+            lang_btn.configure(bg="#0284c7")
+            for ch in lang_btn.winfo_children(): ch.configure(bg="#0284c7")
+        def _lang_leave(e):
+            lang_btn.configure(bg="#0369a1")
+            for ch in lang_btn.winfo_children(): ch.configure(bg="#0369a1")
+        lang_btn.bind("<Enter>", _lang_hover)
+        lang_btn.bind("<Leave>", _lang_leave)
+
         # زر تسجيل الخروج
         logout_btn = tk.Frame(bot, bg="#ef4444", cursor="hand2")
         logout_btn.pack(fill="x", pady=(4, 0))
-        tk.Label(logout_btn, text="  ⏻  تسجيل الخروج",
+        tk.Label(logout_btn, text=T("btn_logout"),
                  font=(FONT_FAMILY, 10, "bold"),
                  bg="#ef4444", fg="white", pady=7, anchor="center").pack(fill="x")
         def _do_logout(e=None):
-            if messagebox.askyesno("تسجيل الخروج",
-                                   "هل تريد تسجيل الخروج والعودة لشاشة الدخول؟"):
+            if messagebox.askyesno(T("msg_logout_title"), T("msg_logout_q")):
                 self.root.destroy()
                 LoginWindow()
         logout_btn.bind("<Button-1>", _do_logout)
@@ -7422,8 +7829,8 @@ class DrivingSchoolApp:
             return
         if perm_key and not is_admin:
             if not self._current_user.get("permissions", {}).get(perm_key, False):
-                messagebox.showwarning("صلاحية مرفوضة",
-                                       "ليس لديك صلاحية الوصول إلى هذا القسم.",
+                messagebox.showwarning(T("msg_perm_title"),
+                                       T("msg_perm_denied"),
                                        parent=self.root)
                 return
 
@@ -7467,7 +7874,7 @@ class DrivingSchoolApp:
         # يمين: عنوان الصفحة
         right_bar = tk.Frame(inner, bg=COLOR_CARD)
         right_bar.pack(side="right")
-        self._topbar_title = tk.Label(right_bar, text="الرئيسية",
+        self._topbar_title = tk.Label(right_bar, text=T("topbar_home"),
                                        font=(FONT_FAMILY, 17, "bold"),
                                        bg=COLOR_CARD, fg=COLOR_HEADER, anchor="e")
         self._topbar_title.pack(side="right")
@@ -7499,16 +7906,16 @@ class DrivingSchoolApp:
     # ──────────────────────────────────────────────────────────
     def _build_frames(self):
         nav_defs = [
-            ("الرئيسية",          DashboardFrame),
-            ("معلومات المدرسة",   SchoolInfoFrame),
-            ("المترشحون",         CandidatesFrame),
-            ("الممرنون",          InstructorsFrame),
-            ("مراحل التكوين",     TrainingFrame),
-            ("الجدول الزمني",     ScheduleFrame),
-            ("المدفوعات",         PaymentsFrame),
-            ("المصاريف",          ExpensesFrame),
-            ("التقارير",          ReportsFrame),
-            ("طباعة الوثائق",    DocumentsFrame),
+            (T("nav_dashboard"),   DashboardFrame),
+            (T("nav_school_info"), SchoolInfoFrame),
+            (T("nav_candidates"),  CandidatesFrame),
+            (T("nav_instructors"), InstructorsFrame),
+            (T("nav_training"),    TrainingFrame),
+            (T("nav_schedule"),    ScheduleFrame),
+            (T("nav_payments"),    PaymentsFrame),
+            (T("nav_expenses"),    ExpensesFrame),
+            (T("nav_reports"),     ReportsFrame),
+            (T("nav_documents"),   DocumentsFrame),
         ]
         # يحتاج DashboardFrame وReportsFrame لـ callback للتنقل
         navigate_aware = (DashboardFrame, ReportsFrame)
@@ -7527,16 +7934,34 @@ class DrivingSchoolApp:
         bar.pack(fill="x", side="bottom")
         nc = len(CandidateDB.get_all())
         ni = len(InstructorDB.get_all())
-        ar_s  = "العربية ✓" if HAS_ARABIC_LIBS  else "العربية ✗"
-        pdf_s = "PDF ✓"     if HAS_REPORTLAB    else "PDF ✗"
+        ar_s  = T("bar_arabic_ok") if HAS_ARABIC_LIBS  else T("bar_arabic_err")
+        pdf_s = "PDF ✓"            if HAS_REPORTLAB    else "PDF ✗"
         tk.Label(bar,
-                 text=f"المترشحون: {nc}   |   الممرنون: {ni}   |   {pdf_s}   |   {ar_s}   |   قاعدة البيانات ✓",
+                 text=f"{T('bar_candidates')} {nc}   |   {T('bar_instructors')} {ni}   |   {pdf_s}   |   {ar_s}   |   {T('bar_db')}",
                  font=FONT_SMALL, bg=COLOR_HEADER, fg="white").pack(side="right")
-        tk.Label(bar, text="v2.0  |  برنامج ميدانيك  |  الجزائر",
+        tk.Label(bar, text=f"v2.0  |  {T('bar_brand')}",
                  font=FONT_SMALL, bg=COLOR_HEADER, fg="#94a3b8").pack(side="left")
 
     pass  # placeholder — الأساليب القديمة أُزيلت
 
 
 if __name__ == "__main__":
+    # تحميل اللغة المحفوظة قبل إنشاء أي نافذة
+    import os as _os, sys as _sys
+    # نضمن أن init_db وupgrade_db تعملان قبل قراءة اللغة
+    _tmp_conn = get_connection()
+    _tmp_conn.executescript("""
+        CREATE TABLE IF NOT EXISTS school_info (
+            id INTEGER PRIMARY KEY CHECK(id = 1),
+            name TEXT DEFAULT '', commercial_register TEXT DEFAULT '',
+            accreditation_number TEXT DEFAULT '', nif TEXT DEFAULT '',
+            nis TEXT DEFAULT '', article_number TEXT DEFAULT '',
+            address TEXT DEFAULT '', phone TEXT DEFAULT ''
+        );
+        INSERT OR IGNORE INTO school_info (id) VALUES (1);
+    """)
+    _tmp_conn.commit()
+    _tmp_conn.close()
+    upgrade_db()
+    LANG = get_language()
     LoginWindow()
