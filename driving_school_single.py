@@ -3843,7 +3843,7 @@ class InstructorsFrame(tk.Frame):
 
         # 5. الخاتمة والتوقيعات
         y -= 1.5
-        wilaya = school.get('wilaya', '').strip() or (school.get('address', '').split(' ')[-1] if school.get('address') else '........')
+        wilaya = school.get('wilaya', '').strip() or '........'
         sig_date = ins.get('contract_signing_date','') or "...................."
         draw_text(12.0, y, f"حرر بـ: {wilaya}              في: {sig_date}", size=12)
 
@@ -6282,7 +6282,7 @@ class DocumentsFrame(tk.Frame):
                                       "Délégation Nationale à la Sécurité Routière"),
                   ARABIC_FONT_BOLD, 12, "center")
         
-        wilaya = school.get('wilaya', '').strip() or (school.get('address', '').split(' ')[-1] if school.get('address') else '........')
+        wilaya = school.get('wilaya', '').strip() or '........'
         draw_text(19.5, 26.3,
                   _pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية : {wilaya}",
                          f"Délégation de Wilaya à la Sécurité Routière - Wilaya de : {wilaya}"),
@@ -6554,7 +6554,7 @@ class DocumentsFrame(tk.Frame):
                   ARABIC_FONT_BOLD, 11 if is_fr else 12, "center")
         
         school_w = SchoolInfoDB.get()
-        school_wilaya = school_w.get('wilaya', '').strip() or (school_w.get('address', '').split(' ')[-1] if school_w.get('address') else '........')
+        school_wilaya = school_w.get('wilaya', '').strip() or '........'
         y_head = 27.8
         draw_text(20.0, y_head,
                   _pdf_t(f"ولاية {school_wilaya}", f"Wilaya de {school_wilaya}"),
@@ -6953,7 +6953,7 @@ class DocumentsFrame(tk.Frame):
 
         # التوقيعات
         _chk(3.0)
-        wilaya_sig = school.get('wilaya','') or (school.get('address','').split()[-1] if school.get('address') else '........')
+        wilaya_sig = school.get('wilaya','').strip() or '........'
         _t(f"حرّر بـ  {_dots(wilaya_sig, 20)}              في  {'.'*20}"); _nl(1.8)
 
         sig_y = y[0]*cm
@@ -7156,7 +7156,7 @@ class DocumentsFrame(tk.Frame):
 
         school = SchoolInfoDB.get()
         addr = school.get('address', '')
-        default_wilaya = school.get('wilaya', '').strip() or (addr.split()[-1] if addr else "")
+        default_wilaya = school.get('wilaya', '').strip()
 
         # =========================================================
         #  نافذة الإعداد الحوارية
@@ -7717,7 +7717,7 @@ class DocumentsFrame(tk.Frame):
         lbl_entry(rc_frame, T("examlist_exam_center"), "exam_center", "")
         lbl_entry(rc_frame, T("examlist_doc_ref"), "doc_ref", "")
         lbl_combobox(rc_frame, T("examlist_wilaya"), "wilaya",
-                     school.get('wilaya', '').strip() or (school.get('address','').split()[-1] if school.get('address') else ""),
+                     school.get('wilaya', '').strip(),
                      ALGERIA_WILAYAS)
 
         tk.Frame(rc_frame, bg=COLOR_BORDER, height=1).pack(fill="x", pady=10)
