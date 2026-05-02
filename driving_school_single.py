@@ -3755,11 +3755,8 @@ class InstructorsFrame(tk.Frame):
 
         default_name = (f"contrat_moniteur_{ins.get('last_name','')}.pdf" if LANG == "fr"
                         else f"عقد_الممرن_{ins.get('last_name','')}.pdf")
-        path = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")],
-            initialfile=default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/inst_contract_{int(_dtt.now().timestamp())}.pdf"
 
         c = canvas.Canvas(path, pagesize=A4)
         
@@ -3858,10 +3855,10 @@ class InstructorsFrame(tk.Frame):
         draw_text(5.5, y-0.6, "المركبات ذات المحرك", ARABIC_FONT_BOLD, 12, "center")
 
         c.save()
-        self._trigger_print(path, T("doc_contract"))
+        self._trigger_print(path, T("doc_contract"), default_name=default_name)
 
-    def _trigger_print(self, path, title=None):
-        """يعرض نافذة اختيار الطابعة ثم يرسل الملف للطباعة."""
+    def _trigger_print(self, path, title=None, default_name=None):
+        """يعرض حوار الطابعة أولاً ثم حوار الحفظ ثم يرسل للطابعة."""
         if title is None:
             title = T("print_doc_lbl")
         printers = self._get_printers()
@@ -3898,9 +3895,21 @@ class InstructorsFrame(tk.Frame):
         btn_frame = tk.Frame(dlg, bg=COLOR_BG)
         btn_frame.pack(fill="x", padx=20, pady=10)
 
-        result = {"action": None}
+        result = {"action": None, "path": path}
 
         def do_print():
+            import shutil
+            dn = default_name or (title + ".pdf")
+            save_path = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")],
+                initialfile=dn)
+            if save_path:
+                try:
+                    shutil.copy2(path, save_path)
+                    result["path"] = save_path
+                except Exception:
+                    result["path"] = path
             result["action"] = "print"
             dlg.destroy()
 
@@ -3929,17 +3938,17 @@ class InstructorsFrame(tk.Frame):
 
         if result["action"] == "print":
             selected = printer_var.get()
-            self._send_to_printer(path, selected, title)
+            self._send_to_printer(result["path"], selected, title)
         elif result["action"] == "open":
             try:
-                os.startfile(path)
+                os.startfile(result["path"])
             except Exception:
                 try:
                     import subprocess, sys
                     if sys.platform == "darwin":
-                        subprocess.run(["open", path])
+                        subprocess.run(["open", result["path"]])
                     else:
-                        subprocess.run(["xdg-open", path])
+                        subprocess.run(["xdg-open", result["path"]])
                 except Exception as e:
                     show_error(f"{T('print_open_err')} {e}")
 
@@ -4694,12 +4703,8 @@ class PaymentsFrame(tk.Frame):
 
         default_name = (f"recu_paiement_{cand.get('last_name','')}.html" if LANG == "fr"
                         else f"وصل_دفع_{cand.get('last_name','')}.html")
-        import os
-        path = filedialog.asksaveasfilename(
-            defaultextension=".html",
-            filetypes=[("HTML Files", "*.html"), ("All Files", "*.*")],
-            initialfile=default_name)
-        if not path: return
+        import os, tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/receipt_{int(_dtt.now().timestamp())}.html"
 
         # إنشاء صفحة HTML للوصل لكي تفتح في المتصفح وتطبع تلقائياً
         school_name = school.get('name', 'مدرسة تعليم السياقة')
@@ -4822,6 +4827,16 @@ class PaymentsFrame(tk.Frame):
                 os.startfile(path, 'print')
             except Exception:
                 os.startfile(path)
+            import shutil
+            if messagebox.askyesno(T("msg_save_copy_title") if "msg_save_copy_title" in _TRANSLATIONS.get(LANG,{}) else "حفظ",
+                                   T("msg_save_copy_q") if "msg_save_copy_q" in _TRANSLATIONS.get(LANG,{}) else "هل تريد حفظ نسخة من الوصل؟"):
+                sp = filedialog.asksaveasfilename(
+                    defaultextension=".html",
+                    filetypes=[("HTML Files", "*.html"), ("All Files", "*.*")],
+                    initialfile=default_name)
+                if sp:
+                    try: shutil.copy2(path, sp)
+                    except Exception: pass
         except Exception as e:
             show_error(f"{T('pay_err_print')}\n{e}")
 
@@ -6039,8 +6054,8 @@ class DocumentsFrame(tk.Frame):
         defaults.update(kwargs)
         return SimpleDocTemplate(path, **defaults)
 
-    def _trigger_print(self, path, title=None):
-        """يعرض نافذة اختيار الطابعة ثم يرسل الملف للطباعة."""
+    def _trigger_print(self, path, title=None, default_name=None):
+        """يعرض حوار الطابعة أولاً ثم حوار الحفظ ثم يرسل للطابعة."""
         if title is None:
             title = T("print_doc_lbl")
         printers = self._get_printers()
@@ -6077,9 +6092,21 @@ class DocumentsFrame(tk.Frame):
         btn_frame = tk.Frame(dlg, bg=COLOR_BG)
         btn_frame.pack(fill="x", padx=20, pady=10)
 
-        result = {"action": None}
+        result = {"action": None, "path": path}
 
         def do_print():
+            import shutil
+            dn = default_name or (title + ".pdf")
+            save_path = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")],
+                initialfile=dn)
+            if save_path:
+                try:
+                    shutil.copy2(path, save_path)
+                    result["path"] = save_path
+                except Exception:
+                    result["path"] = path
             result["action"] = "print"
             dlg.destroy()
 
@@ -6108,17 +6135,17 @@ class DocumentsFrame(tk.Frame):
 
         if result["action"] == "print":
             selected = printer_var.get()
-            self._send_to_printer(path, selected, title)
+            self._send_to_printer(result["path"], selected, title)
         elif result["action"] == "open":
             try:
-                os.startfile(path)
+                os.startfile(result["path"])
             except Exception:
                 try:
                     import subprocess, sys
                     if sys.platform == "darwin":
-                        subprocess.run(["open", path])
+                        subprocess.run(["open", result["path"]])
                     else:
-                        subprocess.run(["xdg-open", path])
+                        subprocess.run(["xdg-open", result["path"]])
                 except Exception as e:
                     show_error(f"{T('print_open_err')} {e}")
 
@@ -6209,9 +6236,9 @@ class DocumentsFrame(tk.Frame):
 
         default_name = (f"formulaire_examen_{cand['last_name']}.pdf" if LANG == "fr"
                         else f"استمارة_امتحان_{cand['last_name']}.pdf")
-        path = self._ask_save(default_name)
-        if not path: return
-        
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/exam_form_{int(_dtt.now().timestamp())}.pdf"
+
         school = SchoolInfoDB.get()
         c = canvas.Canvas(path, pagesize=A4)
         is_fr = LANG == "fr"
@@ -6478,7 +6505,7 @@ class DocumentsFrame(tk.Frame):
         draw_text(19.5, yt_f, "و", ARABIC_FONT, 9, "center")
 
         c.save()
-        self._trigger_print(path, T("doc_enroll_form"))
+        self._trigger_print(path, T("doc_enroll_form"), default_name=default_name)
 
     def _doc_training_card(self):
         if not self._check(): return
@@ -6487,8 +6514,8 @@ class DocumentsFrame(tk.Frame):
 
         default_name = (f"fiche_formation_{cand['last_name']}.pdf" if LANG == "fr"
                         else f"بطاقة_تكوين_{cand['last_name']}.pdf")
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/training_card_{int(_dtt.now().timestamp())}.pdf"
 
         school = SchoolInfoDB.get()
         from reportlab.pdfgen import canvas
@@ -6670,7 +6697,7 @@ class DocumentsFrame(tk.Frame):
                   ARABIC_FONT_BOLD, 11)
         
         c.save()
-        self._trigger_print(path, T("doc_training_card"))
+        self._trigger_print(path, T("doc_training_card"), default_name=default_name)
 
     def _doc_contract(self):
         if not self._check(): return
@@ -6678,8 +6705,8 @@ class DocumentsFrame(tk.Frame):
         if not cand: return
         default_name = (f"contrat_formation_{cand['last_name']}.pdf" if LANG == "fr"
                         else f"عقد_تكوين_{cand['last_name']}.pdf")
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/contract_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
         doc = self._make_doc(path); s = _pdf_styles(); story = []
 
@@ -6741,7 +6768,7 @@ class DocumentsFrame(tk.Frame):
             story.append(Table(t_data, colWidths=[8*cm, 8*cm]))
 
         doc.build(story)
-        self._trigger_print(path, T("doc_contract"))
+        self._trigger_print(path, T("doc_contract"), default_name=default_name)
 
 
 
@@ -6751,8 +6778,8 @@ class DocumentsFrame(tk.Frame):
         if not cand: return
         default_name = (f"attestation_administrative_{cand['last_name']}.pdf" if LANG == "fr"
                         else f"شهادة_إدارية_{cand['last_name']}.pdf")
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/certificate_{int(_dtt.now().timestamp())}.pdf"
 
         school = SchoolInfoDB.get()
         from reportlab.pdfgen import canvas as rl_canvas
@@ -6855,7 +6882,7 @@ class DocumentsFrame(tk.Frame):
         txt_right(_pdf_t(f"حُرّر بتاريخ:  {today_str}", f"Fait le :  {today_str}"), 7.5, size=10)
 
         c.save()
-        self._trigger_print(path, T("doc_admin_cert"))
+        self._trigger_print(path, T("doc_admin_cert"), default_name=default_name)
 
     def _doc_payment_receipt(self):
         if not self._check(): return
@@ -6863,8 +6890,8 @@ class DocumentsFrame(tk.Frame):
         if not cand: return
         default_name = (f"recu_paiement_{cand['last_name']}.pdf" if LANG == "fr"
                         else f"وصل_دفع_{cand['last_name']}.pdf")
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/payment_receipt_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
         payments = PaymentDB.get_by_candidate(cand['id'])
         total_paid = sum(p['amount'] for p in payments)
@@ -6917,7 +6944,7 @@ class DocumentsFrame(tk.Frame):
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph(ar("ختم وتوقيع المسؤول: ___________________"), s["right"]))
         doc.build(story)
-        self._trigger_print(path, T("doc_payment_receipt"))
+        self._trigger_print(path, T("doc_payment_receipt"), default_name=default_name)
 
     def _doc_dispatch_table(self):
         """نافذة اختيار متعدد للمترشحين ثم توليد PDF جدول الإرسال."""
@@ -7165,20 +7192,16 @@ class DocumentsFrame(tk.Frame):
             date_slug = settings['dispatch_date'].replace('/','_')
             default_dispatch = (f"tableau_envoi_{date_slug}.pdf" if LANG == "fr"
                                 else f"جدول_الإرسال_{date_slug}.pdf")
-            path = filedialog.asksaveasfilename(
-                defaultextension=".pdf",
-                filetypes=[("PDF Files", "*.pdf")],
-                initialfile=default_dispatch,
-                parent=dlg)
-            if not path:
-                return
+            import tempfile as _tf; from datetime import datetime as _dtt
+            path = _tf.gettempdir() + f"/dispatch_{int(_dtt.now().timestamp())}.pdf"
             dlg.destroy()
-            self._generate_dispatch_table_pdf(path, selected_cands, settings)
+            self._generate_dispatch_table_pdf(path, selected_cands, settings,
+                                              default_name=default_dispatch)
 
         ModernButton(bf, T("dispatch_gen_pdf"), do_generate,
                      icon="📄", color=COLOR_PRIMARY).pack(side=S(), padx=5)
 
-    def _generate_dispatch_table_pdf(self, path, cands, settings, direct_print=False):
+    def _generate_dispatch_table_pdf(self, path, cands, settings, direct_print=False, default_name=None):
         """يُنتج PDF جدول إرسال يضم قائمة المترشحين المحددين."""
         school = SchoolInfoDB.get()
         wilaya = settings.get("wilaya", ".........")
@@ -7251,7 +7274,7 @@ class DocumentsFrame(tk.Frame):
         story.append(Paragraph("___________________________", s["center"]))
 
         doc.build(story)
-        self._trigger_print(path, T("doc_dispatch"))
+        self._trigger_print(path, T("doc_dispatch"), default_name=default_name)
 
     # --- وثائق جماعية ---------------------------------------------------------
 
@@ -7261,8 +7284,8 @@ class DocumentsFrame(tk.Frame):
         if dr is None: return
         d_from, d_to = dr
         default_name = "liste_candidats.pdf" if LANG == "fr" else "قائمة_المترشحين.pdf"
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/candidates_list_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
         cands = CandidateDB.get_by_date_range(d_from, d_to)
         if LANG == "fr":
@@ -7298,13 +7321,13 @@ class DocumentsFrame(tk.Frame):
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph(ar(f"المجموع: {len(cands)} مترشح"), s["h2"]))
         doc.build(story)
-        self._trigger_print(path, T("doc_cand_list"))
+        self._trigger_print(path, T("doc_cand_list"), default_name=default_name)
 
     def _doc_instructors_list(self):
         if not self._check(): return
         default_name = "liste_moniteurs.pdf" if LANG == "fr" else "قائمة_الممرنين.pdf"
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/instructors_list_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
         instructors = InstructorDB.get_all()
         doc = self._make_doc(path); s = _pdf_styles(); story = []
@@ -7329,7 +7352,7 @@ class DocumentsFrame(tk.Frame):
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph(ar(f"المجموع: {len(instructors)} ممرن"), s["h2"]))
         doc.build(story)
-        self._trigger_print(path, T("doc_inst_list"))
+        self._trigger_print(path, T("doc_inst_list"), default_name=default_name)
 
     def _doc_expenses_report(self):
         if not self._check(): return
@@ -7337,8 +7360,8 @@ class DocumentsFrame(tk.Frame):
         if dr is None: return
         d_from, d_to = dr
         default_name = "rapport_depenses.pdf" if LANG == "fr" else "تقرير_المصاريف.pdf"
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/expenses_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
         expenses = ExpenseDB.get_all_in_range(d_from, d_to)
         if LANG == "fr":
@@ -7374,7 +7397,7 @@ class DocumentsFrame(tk.Frame):
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph(ar(f"المجموع الكلي للمصاريف: {total:,.0f} دج"), s["h2"]))
         doc.build(story)
-        self._trigger_print(path, T("doc_expenses"))
+        self._trigger_print(path, T("doc_expenses"), default_name=default_name)
 
     def _doc_payments_report(self):
         if not self._check(): return
@@ -7382,8 +7405,8 @@ class DocumentsFrame(tk.Frame):
         if dr is None: return
         d_from, d_to = dr
         default_name = "rapport_paiements.pdf" if LANG == "fr" else "تقرير_المدفوعات.pdf"
-        path = self._ask_save(default_name)
-        if not path: return
+        import tempfile as _tf; from datetime import datetime as _dtt
+        path = _tf.gettempdir() + f"/payments_{int(_dtt.now().timestamp())}.pdf"
         school = SchoolInfoDB.get()
         paid_map = PaymentDB.get_paid_per_candidate_in_range(d_from, d_to)
         if LANG == "fr":
@@ -7433,7 +7456,7 @@ class DocumentsFrame(tk.Frame):
                        ["المبلغ الإجمالي المتفق عليه", f"{total_global:,.0f} دج"]]
             story.append(_styled_table(summary, [9*cm, 8*cm]))
         doc.build(story)
-        self._trigger_print(path, T("doc_payments_report"))
+        self._trigger_print(path, T("doc_payments_report"), default_name=default_name)
 
 
     def _doc_exam_candidates_list(self):
@@ -7647,24 +7670,21 @@ class DocumentsFrame(tk.Frame):
             default_exam_file = (f"liste_candidats_examen_{exam_date.replace('/','_')}.pdf"
                                  if LANG == "fr" else
                                  f"قائمة_المترشحين_{exam_date.replace('/','_')}.pdf")
-            path = filedialog.asksaveasfilename(
-                defaultextension=".pdf",
-                filetypes=[("PDF Files", "*.pdf")],
-                initialfile=default_exam_file,
-                parent=dlg)
-            if not path:
-                return
+            import tempfile as _tf; from datetime import datetime as _dtt
+            path = _tf.gettempdir() + f"/exam_list_{int(_dtt.now().timestamp())}.pdf"
 
             dlg.destroy()
             self._generate_exam_list_pdf(
                 path, selected_cands, school, exam_date,
-                exam_center, doc_ref, wilaya_val, stage_type)
+                exam_center, doc_ref, wilaya_val, stage_type,
+                default_name=default_exam_file)
 
         ModernButton(bf, T("examlist_gen_pdf"), do_generate,
                      icon="📄", color="#0369a1").pack(side=S(), padx=5)
 
     def _generate_exam_list_pdf(self, path, cands, school, exam_date,
-                                 exam_center, doc_ref, wilaya_val, stage_type):
+                                 exam_center, doc_ref, wilaya_val, stage_type,
+                                 default_name=None):
         """يولّد PDF قائمة المترشحين للامتحان مطابق للنموذج الرسمي."""
         from reportlab.pdfgen import canvas as rl_canvas
         from reportlab.lib.pagesizes import A4
@@ -7917,7 +7937,8 @@ class DocumentsFrame(tk.Frame):
 
         c.save()
         self._trigger_print(path, _pdf_t("قائمة المترشحين للامتحان",
-                                         "Liste des candidats à l'examen"))
+                                         "Liste des candidats à l'examen"),
+                            default_name=default_name)
 
 
 # ============================================================================
