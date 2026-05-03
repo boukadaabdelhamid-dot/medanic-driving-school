@@ -24,3 +24,9 @@ id = "XhObtBj1tgG1xca4bUrFD"
 uri = "file://medanic_full_package.zip"
 type = "unspecified"
 title = "ميدانيك — الحزمة الكاملة (أيقونة + EXE + اختصار سطح المكتب)"
+
+[[outputs]]
+id = "7OVGychaUbVyxjMlSltFS"
+uri = "file://medanic_simple.zip"
+type = "unspecified"
+title = "ميدانيك — النسخة المبسّطة (بدون EXE)"
