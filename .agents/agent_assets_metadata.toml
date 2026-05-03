@@ -30,3 +30,9 @@ id = "7OVGychaUbVyxjMlSltFS"
 uri = "file://medanic_simple.zip"
 type = "unspecified"
 title = "ميدانيك — نسخة التشخيص"
+
+[[outputs]]
+id = "AbQL8-MdKk3YSV6MizoZg"
+uri = "file://backup_scripts.zip"
+type = "unspecified"
+title = "سكربتات النسخ الاحتياطي"
