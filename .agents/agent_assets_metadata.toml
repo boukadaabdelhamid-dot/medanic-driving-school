@@ -42,3 +42,9 @@ id = "lkHANNUrs5zO7hrh8JR9C"
 uri = "file://Medanic_Transfer_Guide.pdf"
 type = "pdf"
 title = "دليل النسخ والنقل — PDF"
+
+[[outputs]]
+id = "0LtDQ40gWnFRvuXmPNlox"
+uri = "file://build_exe_kit.zip"
+type = "unspecified"
+title = "حزمة بناء EXE للتوزيع التجاري"
