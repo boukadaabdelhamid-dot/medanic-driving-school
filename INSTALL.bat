@@ -1,69 +1,68 @@
 @echo off
-chcp 65001 >nul
-title تثبيت برنامج ميدانيك
+title Medanic Installer
 color 0A
 cls
 
 echo.
-echo  ════════════════════════════════════════════════════
-echo            تثبيت برنامج ميدانيك على جهازك
-echo  ════════════════════════════════════════════════════
+echo  ====================================================
+echo            Medanic Driving School - Installer
+echo  ====================================================
 echo.
+echo  Current folder: %~dp0
+echo.
+pause
 
-REM ── 1. التحقق من Python ─────────────────────────────────
-echo  [1/3] التحقق من Python...
-python --version >nul 2>&1
+echo.
+echo  [1/3] Checking Python...
+python --version
 if errorlevel 1 (
-    color 0C
     echo.
-    echo  ❌ Python غير مثبّت على جهازك
-    echo.
-    echo  حمّله من: https://www.python.org/downloads/
-    echo  ⚠ مهم: ضع علامة على "Add Python to PATH" عند التثبيت
+    echo  ERROR: Python is NOT installed
+    echo  Download from: https://www.python.org/downloads/
+    echo  IMPORTANT: Check "Add Python to PATH" when installing
     echo.
     pause
     exit /b 1
 )
-echo      ✔ Python جاهز
+echo       OK
 echo.
+pause
 
-REM ── 2. تثبيت المكتبات المطلوبة ──────────────────────────
-echo  [2/3] تثبيت المكتبات (دقيقة واحدة)...
-pip install --quiet reportlab arabic-reshaper python-bidi pillow >nul 2>&1
-echo      ✔ المكتبات جاهزة
 echo.
+echo  [2/3] Installing required libraries (1 minute)...
+pip install reportlab arabic-reshaper python-bidi pillow
+if errorlevel 1 (
+    echo.
+    echo  ERROR: Failed to install libraries
+    echo.
+    pause
+    exit /b 1
+)
+echo       OK
+echo.
+pause
 
-REM ── 3. إنشاء اختصار سطح المكتب ───────────────────────────
-echo  [3/3] إنشاء اختصار سطح المكتب...
+echo.
+echo  [3/3] Creating Desktop shortcut...
 
 set "APP_DIR=%~dp0"
 set "APP_DIR=%APP_DIR:~0,-1%"
 
-powershell -NoProfile -Command ^
-    "$ws = New-Object -ComObject WScript.Shell;" ^
-    "$desk = [Environment]::GetFolderPath('Desktop');" ^
-    "$lnk = $ws.CreateShortcut(\"$desk\برنامج ميدانيك.lnk\");" ^
-    "$lnk.TargetPath = 'pythonw.exe';" ^
-    "$lnk.Arguments = '\"%APP_DIR%\driving_school_single.py\"';" ^
-    "$lnk.WorkingDirectory = '%APP_DIR%';" ^
-    "$lnk.IconLocation = '%APP_DIR%\medanic_icon.ico';" ^
-    "$lnk.Description = 'برنامج ميدانيك - إدارة مدرسة تعليم السياقة';" ^
-    "$lnk.Save();"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $lnk = $ws.CreateShortcut(\"$desk\Medanic.lnk\"); $lnk.TargetPath = 'pythonw.exe'; $lnk.Arguments = '\"%APP_DIR%\driving_school_single.py\"'; $lnk.WorkingDirectory = '%APP_DIR%'; $lnk.IconLocation = '%APP_DIR%\medanic_icon.ico'; $lnk.Save()"
 
 if errorlevel 1 (
-    color 0C
-    echo  ❌ فشل إنشاء الاختصار
+    echo  ERROR: Failed to create shortcut
     pause
     exit /b 1
 )
-echo      ✔ تم إنشاء اختصار "برنامج ميدانيك" على سطح المكتب
-echo.
 
-echo  ════════════════════════════════════════════════════
-echo                    ✔  تم التثبيت بنجاح
-echo  ════════════════════════════════════════════════════
+echo       OK
 echo.
-echo   ابحث عن أيقونة "برنامج ميدانيك" على سطح المكتب
-echo   وانقر عليها مرتين لفتح البرنامج
+echo  ====================================================
+echo                 INSTALLATION COMPLETE
+echo  ====================================================
+echo.
+echo   A "Medanic" icon was created on your Desktop
+echo   Double-click it to open the program
 echo.
 pause
