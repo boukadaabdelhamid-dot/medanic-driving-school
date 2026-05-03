@@ -38,10 +38,12 @@ def draw_header(c, page_num, total, title):
 
 def draw_footer(c):
     c.setFillColor(GOLD)
-    c.rect(0, 0, W, 0.6*cm, fill=1, stroke=0)
-    c.setFillColor(white)
-    c.setFont("DejaVu-Bold", 9)
-    c.drawCentredString(W/2, 0.2*cm, ar("ميدانيك © 2026 - سري - للبائع فقط"))
+    c.rect(0, 0, W, 0.9*cm, fill=1, stroke=0)
+    c.setFillColor(DARK)
+    c.setFont("DejaVu-Bold", 10)
+    c.drawCentredString(W/2, 0.5*cm, ar("هاتف البائع:  +213 540 77 28 07"))
+    c.setFont("DejaVu", 8)
+    c.drawCentredString(W/2, 0.15*cm, ar("ميدانيك © 2026 - سري - للبائع فقط"))
 
 def section(c, y, num, txt, color=BLUE):
     c.setFillColor(color)

@@ -44,8 +44,11 @@ def draw_header(c, page_num):
 
 def draw_footer(c):
     c.setFillColor(GRAY)
+    c.setFont("AR", 9)
+    c.drawCentredString(PAGE_W / 2, 1.3 * cm,
+                        ar("للدعم والتفعيل — اتصل بنا:  +213 540 77 28 07"))
     c.setFont("AR", 8)
-    c.drawCentredString(PAGE_W / 2, 1.0 * cm,
+    c.drawCentredString(PAGE_W / 2, 0.8 * cm,
                         ar("ميدانيك © 2026 — جميع الحقوق محفوظة"))
 
 
