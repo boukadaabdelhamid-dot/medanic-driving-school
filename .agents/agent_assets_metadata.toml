@@ -48,3 +48,9 @@ id = "0LtDQ40gWnFRvuXmPNlox"
 uri = "file://build_exe_kit.zip"
 type = "unspecified"
 title = "حزمة بناء EXE للتوزيع التجاري"
+
+[[outputs]]
+id = "nlbFmETKc51SM_F7jBfDc"
+uri = "file://Medanic_Seller_Guide.pdf"
+type = "pdf"
+title = "دليل البائع الرسمي - ميدانيك"
