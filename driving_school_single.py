@@ -9269,4 +9269,19 @@ if __name__ == "__main__":
     _tmp_conn.close()
     upgrade_db()
     LANG = get_language()
+
+    # ── فحص الترخيص قبل فتح البرنامج ─────────────────────────────────
+    try:
+        from license_guard import check_license
+        import tkinter as _tk_lic
+        _lic_root = _tk_lic.Tk()
+        _lic_root.withdraw()          # نخفي النافذة المؤقتة
+        _lic_ok = check_license(_lic_root)
+        _lic_root.destroy()
+        if not _lic_ok:
+            raise SystemExit("البرنامج غير مفعّل.")
+    except ImportError:
+        pass   # ملف license_guard.py غير موجود → يعمل بدون حماية
+    # ──────────────────────────────────────────────────────────────────
+
     LoginWindow()
