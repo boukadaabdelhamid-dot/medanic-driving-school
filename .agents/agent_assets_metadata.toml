@@ -18,3 +18,9 @@ id = "A56KnB1qxHZydaV8R1yrf"
 uri = "file://medanic_protected.zip"
 type = "unspecified"
 title = "ميدانيك — النسخة المحمية الكاملة"
+
+[[outputs]]
+id = "XhObtBj1tgG1xca4bUrFD"
+uri = "file://medanic_full_package.zip"
+type = "unspecified"
+title = "ميدانيك — الحزمة الكاملة (أيقونة + EXE + اختصار سطح المكتب)"

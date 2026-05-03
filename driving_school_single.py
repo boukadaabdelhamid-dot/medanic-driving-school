@@ -1164,6 +1164,25 @@ def _fr_val(text):
 #  قاعدة البيانات SQLite
 # ============================================================================
 
+def _set_app_icon(root):
+    """يُطبّق أيقونة البرنامج على نافذة Tk (يدعم EXE وملفات .py)."""
+    try:
+        import sys, os
+        base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        ico = os.path.join(base, "medanic_icon.ico")
+        if os.path.exists(ico):
+            root.iconbitmap(ico)
+            return
+        png = os.path.join(base, "medanic_logo.png")
+        if os.path.exists(png):
+            from tkinter import PhotoImage
+            img = PhotoImage(file=png)
+            root.iconphoto(True, img)
+            root._icon_ref = img  # نحتفظ بمرجع
+    except Exception:
+        pass
+
+
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -8317,6 +8336,7 @@ class LoginWindow:
 
         self.root = tk.Tk()
         self.root.title(T("login_title"))
+        _set_app_icon(self.root)
         self.root.geometry("460x560")
         self.root.resizable(False, False)
         self.root.configure(bg=COLOR_SIDEBAR)
@@ -8736,6 +8756,7 @@ class DrivingSchoolApp:
         CURRENT_USER = current_user
         self.root = tk.Tk()
         self.root.title(T("app_title"))
+        _set_app_icon(self.root)
         self.root.geometry("1280x800")
         self.root.minsize(1000, 650)
         self.root.configure(bg="#f1f5f9")

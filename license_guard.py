@@ -138,6 +138,15 @@ class _ActivationDialog(tk.Toplevel):
         self.title("تفعيل البرنامج — ميدانيك")
         self.configure(bg=self.COLOR_BG)
         self.geometry("520x400")
+        # أيقونة البرنامج
+        try:
+            import sys, os
+            base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+            ico = os.path.join(base, "medanic_icon.ico")
+            if os.path.exists(ico):
+                self.iconbitmap(ico)
+        except Exception:
+            pass
 
         # ── رأس ──────────────────────────────────────────────────────────
         hdr = tk.Frame(self, bg=self.COLOR_PRI, pady=18)
