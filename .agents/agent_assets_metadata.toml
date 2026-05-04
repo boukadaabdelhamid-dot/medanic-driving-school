@@ -60,3 +60,9 @@ id = "Lou5dzcGzR5X_OQop5-VR"
 uri = "file://fix_dll_kit.zip"
 type = "unspecified"
 title = "حزمة حل مشكلة DLL (FIX_WIN7.bat + دليل العميل)"
+
+[[outputs]]
+id = "3p6lLupKHjnOKGETTBwKk"
+uri = "file://patch_db_fix.zip"
+type = "unspecified"
+title = "إصلاح حفظ البيانات - PATCH_DB_FIX"
