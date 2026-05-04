@@ -240,6 +240,7 @@ y = info_box(c, y, "🆘 الدعم الفني", [
     "خصّص رقم WhatsApp للعملاء فقط",
     "وقت الاستجابة المقترح: خلال 24 ساعة",
     "إذا أراد العميل تثبيت على جهاز جديد → ولّد له مفتاحاً جديداً",
+    "إذا ظهر خطأ DLL → اطلب منه تشغيل ملف: FIX_WIN7.bat",
 ], bg=colors.HexColor("#fce7f3"), border=colors.HexColor("#db2777"))
 
 # خلاصة
@@ -251,6 +252,59 @@ c.setFont("AR-B", 14)
 c.drawCentredString(PAGE_W / 2, y - 0.8 * cm, ar("✓  انتهى — هذه كل العملية"))
 c.setFont("AR", 11)
 c.drawCentredString(PAGE_W / 2, y - 1.5 * cm, ar("7 ملفات → ZIP → نقل → INSTALL → HWID → مفتاح → تفعيل"))
+
+draw_footer(c)
+c.showPage()
+
+# ═══════════════════ الصفحة 4 — حل مشكلة DLL ═══════════════════
+draw_header(c, 4)
+y = PAGE_H - 3.0 * cm
+
+c.setFillColor(colors.HexColor("#dc2626"))
+c.rect(0, y - 0.5*cm, PAGE_W, 2.2*cm, fill=1, stroke=0)
+c.setFillColor(colors.white)
+c.setFont("AR-B", 16)
+c.drawRightString(RIGHT, y + 1.2*cm, ar("⚠  حل مشكلة: البرنامج لا يفتح — خطأ DLL"))
+c.setFont("AR", 11)
+c.drawRightString(RIGHT, y + 0.5*cm, ar("Erreur système — api-ms-win-core-path-l1-1-0.dll"))
+y -= 1.5*cm
+
+# وصف المشكلة
+y = info_box(c, y, "ما هي المشكلة؟", [
+    "تظهر رسالة: 'Impossible de démarrer le programme car il manque",
+    "api-ms-win-core-path-l1-1-0.dll'",
+    "السبب: جهاز العميل يعمل على Windows 7 أو Windows 10 قديم",
+    "بدون تحديثات مايكروسوفت المطلوبة",
+], bg=RED_BG, border=colors.HexColor("#dc2626"))
+
+# الحل الأول
+y = step_box(c, y, 1, "الحل السريع — تشغيل FIX_WIN7.bat (يحتاج إنترنت)", [
+    "1. ابحث عن ملف  FIX_WIN7.bat  داخل مجلد Medanic",
+    "2. انقر يمين عليه ← Exécuter en tant qu'administrateur",
+    "3. اضغط Exécuter عند رسالة الأمان",
+    "4. انتظر دقيقتين حتى ينتهي التحميل والتثبيت",
+    "5. أغلق النافذة وافتح برنامج Medanic مجدداً",
+], bg=GREEN_BG, badge=colors.HexColor("#16a34a"))
+
+# الحل الثاني
+y = step_box(c, y, 2, "الحل البديل — تحديث Windows يدوياً", [
+    "1. اذهب إلى: Démarrer ← Paramètres ← Windows Update",
+    "2. اضغط: Rechercher des mises à jour",
+    "3. ثبّت جميع التحديثات المتاحة وأعد تشغيل الجهاز",
+    "4. بعد التحديث افتح Medanic مجدداً",
+], bg=colors.HexColor("#dbeafe"), badge=ACCENT)
+
+# تحذير
+y -= 0.3*cm
+c.setFillColor(colors.HexColor("#fef3c7"))
+c.setStrokeColor(colors.HexColor("#d97706"))
+c.setLineWidth(1.5)
+c.roundRect(MARGIN, y - 1.8*cm, PAGE_W - 2*MARGIN, 1.8*cm, 8, fill=1, stroke=1)
+c.setFillColor(colors.HexColor("#92400e"))
+c.setFont("AR-B", 11)
+c.drawRightString(RIGHT - 0.3*cm, y - 0.6*cm, ar("إذا لم تنجح الحلول — تواصل معنا:"))
+c.setFont("AR-B", 13)
+c.drawCentredString(PAGE_W / 2, y - 1.3*cm, "WhatsApp:  +213 540 77 28 07")
 
 draw_footer(c)
 c.save()

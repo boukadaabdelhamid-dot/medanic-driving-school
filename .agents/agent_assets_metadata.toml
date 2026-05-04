@@ -41,7 +41,7 @@ title = "سكربتات النسخ الاحتياطي"
 id = "lkHANNUrs5zO7hrh8JR9C"
 uri = "file://Medanic_Transfer_Guide.pdf"
 type = "pdf"
-title = "دليل العميل - Tel/WhatsApp"
+title = "دليل العميل (4 صفحات - يشمل حل مشكلة DLL)"
 
 [[outputs]]
 id = "0LtDQ40gWnFRvuXmPNlox"
@@ -54,3 +54,9 @@ id = "nlbFmETKc51SM_F7jBfDc"
 uri = "file://Medanic_Seller_Guide.pdf"
 type = "pdf"
 title = "دليل البائع - Tel/WhatsApp"
+
+[[outputs]]
+id = "Lou5dzcGzR5X_OQop5-VR"
+uri = "file://fix_dll_kit.zip"
+type = "unspecified"
+title = "حزمة حل مشكلة DLL (FIX_WIN7.bat + دليل العميل)"
