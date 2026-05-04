@@ -837,7 +837,11 @@ def So() -> str:
 #  الإعدادات والثوابت
 # ============================================================================
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "driving_school.db")
+if getattr(sys, 'frozen', False):
+    _BASE_DIR = os.path.dirname(sys.executable)
+else:
+    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(_BASE_DIR, "driving_school.db")
 
 # ----- الخطوط -----
 FONT_FAMILY = "Tahoma"
