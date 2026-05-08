@@ -2938,11 +2938,25 @@ class CandidateDialog(tk.Toplevel):
         self._make_field(gf, T("cdlg_f_file_num"),  "file_number", row=0, col=0)
         self._make_field(gf, T("cdlg_f_file_date"), "file_date",   row=0, col=1)
 
-        # -- قسم: المعلومات الشخصية --
+        # -- قسم: المعلومات الشخصية (scrollable) --
         section_title(tab1, T("cdlg_sec_personal"), icon="📝")
-        g1 = tk.Frame(tab1, bg=COLOR_CARD)
-        g1.pack(fill="both", expand=True)
+        _sc_outer = tk.Frame(tab1, bg=COLOR_CARD)
+        _sc_outer.pack(fill="both", expand=True)
+        _sc_canvas = tk.Canvas(_sc_outer, bg=COLOR_CARD, highlightthickness=0)
+        _sc_bar = ttk.Scrollbar(_sc_outer, orient="vertical", command=_sc_canvas.yview)
+        _sc_canvas.configure(yscrollcommand=_sc_bar.set)
+        _sc_bar.pack(side="right", fill="y")
+        _sc_canvas.pack(side="left", fill="both", expand=True)
+        g1 = tk.Frame(_sc_canvas, bg=COLOR_CARD)
         g1.columnconfigure(0, weight=1); g1.columnconfigure(1, weight=1)
+        _sc_win = _sc_canvas.create_window((0, 0), window=g1, anchor="nw")
+        def _on_g1_cfg(e): _sc_canvas.configure(scrollregion=_sc_canvas.bbox("all"))
+        def _on_cv_cfg(e):  _sc_canvas.itemconfig(_sc_win, width=e.width)
+        def _on_mw(e):      _sc_canvas.yview_scroll(int(-1*(e.delta/120)), "units")
+        g1.bind("<Configure>", _on_g1_cfg)
+        _sc_canvas.bind("<Configure>", _on_cv_cfg)
+        _sc_canvas.bind("<Enter>", lambda e: _sc_canvas.bind_all("<MouseWheel>", _on_mw))
+        _sc_canvas.bind("<Leave>", lambda e: _sc_canvas.unbind_all("<MouseWheel>"))
 
         personal = [
             (T("cdlg_f_lastname"),     "last_name",     "entry", None),
