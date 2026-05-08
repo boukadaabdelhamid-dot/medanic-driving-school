@@ -66,3 +66,9 @@ id = "3p6lLupKHjnOKGETTBwKk"
 uri = "file://patch_db_fix.zip"
 type = "unspecified"
 title = "إصلاح حفظ البيانات - PATCH_DB_FIX"
+
+[[outputs]]
+id = "X6Jr9uKQMlsZUNBHVzBvP"
+uri = "file://Medanic_Update.zip"
+type = "unspecified"
+title = "Medanic_Update.zip — كل الملفات المطلوبة للبناء"
