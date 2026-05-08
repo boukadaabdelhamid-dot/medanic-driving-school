@@ -297,7 +297,7 @@ STRINGS: dict = {
     "doc_err_no_cands":  {"ar": "لا يوجد مترشحون في القاعدة",       "fr": "Aucun candidat dans la base"},
     "doc_err_sel_one":   {"ar": "يرجى تحديد مترشح واحد على الأقل", "fr": "Sélectionnez au moins un candidat"},
     # ── إدارة المستخدمين (رسائل إضافية) ──────────────────────────────────────
-    "users_err_del_admin":{"ar": "لا يمكن حذف حساب admin.",         "fr": "Impossible de supprimer le compte admin."},
+    "users_err_del_admin":{"ar": "لا يمكن حذف حساب midanic.",         "fr": "Impossible de supprimer le compte midanic."},
     "users_err_del_self": {"ar": "لا يمكنك حذف حسابك الخاص.",       "fr": "Vous ne pouvez pas supprimer votre propre compte."},
     # ── حوار المترشح (tabs / sections / fields / buttons) ────────────────────
     "cdlg_title_add":    {"ar": "➕  تسجيل مترشح جديد",        "fr": "➕  Nouveau candidat"},
@@ -627,8 +627,8 @@ STRINGS: dict = {
     "login_username":  {"ar": "اسم المستخدم",        "fr": "Nom d'utilisateur"},
     "login_password":  {"ar": "كلمة المرور",         "fr": "Mot de passe"},
     "login_btn":       {"ar": "  ←  دخول",           "fr": "  →  Se connecter"},
-    "login_hint":      {"ar": "🔑  الحساب الافتراضي للمدير:  admin  /  admin123",
-                         "fr": "🔑  Compte admin par défaut:  admin  /  admin123"},
+    "login_hint":      {"ar": "🔑  الحساب الافتراضي للمدير:  midanic  /  admin123",
+                         "fr": "🔑  Compte admin par défaut:  midanic  /  admin123"},
     "login_err_empty": {"ar": "يرجى إدخال اسم المستخدم وكلمة المرور",
                          "fr": "Veuillez saisir le nom d'utilisateur et le mot de passe"},
     "login_err_bad":   {"ar": "❌  اسم المستخدم أو كلمة المرور غير صحيحة",
@@ -768,7 +768,7 @@ STRINGS: dict = {
                           "fr": "Voulez-vous vous déconnecter?"},
     "msg_logout_title":  {"ar": "تسجيل الخروج",          "fr": "Déconnexion"},
     "msg_cannot_del_self":{"ar": "لا يمكنك حذف حسابك الخاص.",    "fr": "Vous ne pouvez pas supprimer votre propre compte."},
-    "msg_cannot_del_admin":{"ar": "لا يمكن حذف حساب admin.",     "fr": "Impossible de supprimer le compte admin."},
+    "msg_cannot_del_admin":{"ar": "لا يمكن حذف حساب midanic.",     "fr": "Impossible de supprimer le compte midanic."},
     "msg_fail_add":      {"ar": "فشل الإضافة:",           "fr": "Échec de l'ajout:"},
     # ── شريط الحالة ──────────────────────────────────────────────────────────
     "bar_candidates": {"ar": "المترشحون:",         "fr": "Candidats:"},
@@ -1291,13 +1291,13 @@ def upgrade_db():
 
         # إنشاء حساب المدير الافتراضي إن لم يوجد
         existing_admin = conn.execute(
-            "SELECT id FROM users WHERE username='admin'"
+            "SELECT id FROM users WHERE username='midanic'"
         ).fetchone()
         if not existing_admin:
             admin_hash = hashlib.sha256(b"admin123").hexdigest()
             conn.execute(
                 """INSERT INTO users (username, password_hash, role, full_name, permissions)
-                   VALUES ('admin', ?, 'admin', 'مدير النظام', '{}')""",
+                   VALUES ('midanic', ?, 'admin', 'مدير النظام', '{}')""",
                 (admin_hash,)
             )
 
@@ -2863,8 +2863,8 @@ class CandidateDialog(tk.Toplevel):
         self.vars = {}
         self.born_abroad_var = tk.IntVar(value=0)
         self.title(T("cand_edit_title") if candidate else T("cand_add_title"))
-        self.geometry("980x720")
-        self.minsize(880, 640)
+        self.geometry("980x680")
+        self.minsize(880, 580)
         self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.transient(parent)
@@ -8716,7 +8716,7 @@ class UserManagementDialog(tk.Toplevel):
         if u["id"] == self._current_uid:
             messagebox.showwarning(T("msg_warning"), T("users_err_del_self"), parent=self)
             return
-        if u.get("username") == "admin":
+        if u.get("username") == "midanic":
             messagebox.showwarning(T("msg_warning"), T("users_err_del_admin"), parent=self)
             return
         if not messagebox.askyesno(T("msg_confirm_del"),
@@ -8910,7 +8910,7 @@ class DrivingSchoolApp:
         seed_demo_data()
         # حساب افتراضي إن لم يُمرَّر
         if current_user is None:
-            current_user = {"id": 0, "username": "admin",
+            current_user = {"id": 0, "username": "midanic",
                             "full_name": "مدير النظام", "role": "admin",
                             "permissions": {}}
         self._current_user = current_user
@@ -9430,6 +9430,8 @@ class DrivingSchoolApp:
                  font=FONT_SMALL, bg=COLOR_HEADER, fg="white").pack(side="right")
         tk.Label(bar, text=f"v2.0  |  {T('bar_brand')}",
                  font=FONT_SMALL, bg=COLOR_HEADER, fg="#94a3b8").pack(side="left")
+        tk.Label(bar, text="📞 +213540772807   |   WhatsApp +213540772807   |   ✉ contact@midanic.com",
+                 font=FONT_SMALL, bg=COLOR_HEADER, fg="#94a3b8").pack(side="left", padx=(20, 0))
 
     pass  # placeholder — الأساليب القديمة أُزيلت
 
