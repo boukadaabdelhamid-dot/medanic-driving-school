@@ -6659,19 +6659,12 @@ class DocumentsFrame(tk.Frame):
             # Fill row data if candidate has this category
             pinfo = prev_data.get(cn, {})
             if pinfo:
-                c.saveState()
-                c.setFillColorRGB(0.9, 1.0, 0.9)
-                c.rect(0.3*cm, (yt-0.32)*cm, 20.1*cm, rh*cm, fill=1, stroke=0)
-                c.restoreState()
                 num_v  = pinfo.get('num','')
                 date_v = pinfo.get('date','')
                 org_v  = pinfo.get('org','')
-                if num_v:
-                    draw_text(15.25, yt, num_v,  "Helvetica", 8, "center")
-                if date_v:
-                    draw_text(12.75, yt, date_v, "Helvetica", 8, "center")
-                if org_v:
-                    draw_text(4.25,  yt, org_v,  ARABIC_FONT, 8, "center")
+                draw_text(15.25, yt, num_v,  "Helvetica-Bold", 8, "center")
+                draw_text(12.75, yt, date_v, "Helvetica-Bold", 8, "center")
+                draw_text(4.25,  yt, org_v,  ARABIC_FONT_BOLD, 8, "center")
 
         yt_merged = y_tab - 2*rh - 8.5*rh + 0.12
         draw_text(18.5, yt_merged, "E", "Helvetica-Bold", 11, "center")
