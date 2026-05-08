@@ -3062,18 +3062,80 @@ class CandidateDialog(tk.Toplevel):
             self._make_field(g3, T("cdlg_f_init_pay"),
                              "initial_payment", "entry", row=1, col=0)
 
-        # -- الأصناف المتحصل عليها من قبل --
+        # -- الأصناف المتحصل عليها من قبل (جدول منظم) --
         section_title(tab3, T("cdlg_sec_prev_lic"), icon="📋")
-        prev_note = tk.Frame(tab3, bg="#fffbeb", padx=10, pady=6)
-        prev_note.pack(fill="x", pady=(0, 6))
-        tk.Label(prev_note,
-                 text=T("cdlg_f_prev_hint"),
-                 font=FONT_SMALL, bg="#fffbeb", fg="#92400e", anchor=A()).pack(anchor=A())
-        prev_cell = tk.Frame(tab3, bg=COLOR_CARD)
-        prev_cell.pack(fill="x", padx=10, pady=2)
-        make_label(prev_cell, T("cdlg_f_prev_lic"), font=FONT_BOLD).pack(anchor=A())
-        v_prev = tk.StringVar(); self.vars["previous_licenses"] = v_prev
-        make_entry(prev_cell, v_prev, width=60).pack(fill="x", ipady=4, pady=(2, 0))
+        # Dummy var so text_keys loop won't crash (real data from Treeview)
+        self.vars["previous_licenses"] = tk.StringVar()
+
+        PREV_CATS = ["A1","A","B","D","C1","C","BE","C1E","CE","DE","F"]
+
+        prev_frame = tk.Frame(tab3, bg=COLOR_CARD, padx=10, pady=8)
+        prev_frame.pack(fill="both", expand=True, padx=10, pady=4)
+
+        # Input row
+        inp_row = tk.Frame(prev_frame, bg=COLOR_CARD)
+        inp_row.pack(fill="x", pady=(0, 6))
+
+        tk.Label(inp_row, text=_pdf_t("الصنف","Cat."),
+                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
+        v_pcat = tk.StringVar(value="B")
+        make_combo(inp_row, v_pcat, PREV_CATS, width=6).pack(side=S(), padx=(0,10))
+
+        tk.Label(inp_row, text=_pdf_t("رقم الرخصة","N° Permis"),
+                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
+        v_pnum = tk.StringVar()
+        make_entry(inp_row, v_pnum, width=14).pack(side=S(), padx=(0,10))
+
+        tk.Label(inp_row, text=_pdf_t("تاريخ الإصدار","Date"),
+                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
+        v_pdate = tk.StringVar()
+        make_entry(inp_row, v_pdate, width=12).pack(side=S(), padx=(0,10))
+
+        tk.Label(inp_row, text=_pdf_t("هيئة الإصدار","Organisme"),
+                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
+        v_porg = tk.StringVar()
+        make_entry(inp_row, v_porg, width=18).pack(side=S(), padx=(0,10))
+
+        # Treeview for previous licenses
+        cols = ("cat","num","date","org")
+        hdrs = (_pdf_t("الصنف","Cat."), _pdf_t("الرقم","N°"),
+                _pdf_t("التاريخ","Date"), _pdf_t("هيئة الإصدار","Organisme"))
+        widths = (60, 120, 100, 200)
+        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD)
+        tree_f.pack(fill="both", expand=True)
+        self._prev_tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=6)
+        for c, h, w in zip(cols, hdrs, widths):
+            self._prev_tree.heading(c, text=h)
+            self._prev_tree.column(c, width=w, anchor="center")
+        sb = ttk.Scrollbar(tree_f, orient="vertical", command=self._prev_tree.yview)
+        self._prev_tree.configure(yscrollcommand=sb.set)
+        self._prev_tree.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+
+        def _prev_add():
+            cat  = v_pcat.get().strip()
+            num  = v_pnum.get().strip()
+            date = v_pdate.get().strip()
+            org  = v_porg.get().strip()
+            if not cat: return
+            # Remove duplicate category
+            for item in self._prev_tree.get_children():
+                if self._prev_tree.item(item)["values"][0] == cat:
+                    self._prev_tree.delete(item)
+            self._prev_tree.insert("", "end", values=(cat, num, date, org))
+            v_pnum.set(""); v_pdate.set(""); v_porg.set("")
+
+        def _prev_del():
+            sel = self._prev_tree.selection()
+            for item in sel:
+                self._prev_tree.delete(item)
+
+        btn_row = tk.Frame(prev_frame, bg=COLOR_CARD)
+        btn_row.pack(fill="x", pady=(6,0))
+        ModernButton(btn_row, _pdf_t("إضافة","Ajouter"), _prev_add,
+                     icon="➕", color=COLOR_SUCCESS).pack(side=S(), padx=4)
+        ModernButton(btn_row, _pdf_t("حذف","Supprimer"), _prev_del,
+                     icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
 
         # ══════════════════════════════════════════════
         # التبويب 4: نتائج الامتحانات (تعديل فقط)
@@ -3143,7 +3205,9 @@ class CandidateDialog(tk.Toplevel):
 
     def _fill(self, c):
         for k, v in self.vars.items():
-            if k == "instructor_name":
+            if k == "previous_licenses":
+                continue  # filled separately via Treeview
+            elif k == "instructor_name":
                 inst = InstructorDB.get(c.get("instructor_id")) if c.get("instructor_id") else None
                 v.set(f"{inst['last_name']} {inst['first_name']}" if inst else "")
             elif k == "gender":
@@ -3153,6 +3217,21 @@ class CandidateDialog(tk.Toplevel):
             else:
                 v.set(str(c.get(k, "")) if c.get(k) is not None else "")
         self.born_abroad_var.set(int(c.get("is_born_abroad") or 0))
+        # Fill previous licenses Treeview
+        for item in self._prev_tree.get_children():
+            self._prev_tree.delete(item)
+        raw = c.get("previous_licenses", "") or ""
+        for entry in raw.split(","):
+            entry = entry.strip()
+            if not entry:
+                continue
+            parts = entry.split("|")
+            cat  = parts[0].strip() if len(parts) > 0 else ""
+            num  = parts[1].strip() if len(parts) > 1 else ""
+            date = parts[2].strip() if len(parts) > 2 else ""
+            org  = parts[3].strip() if len(parts) > 3 else ""
+            if cat:
+                self._prev_tree.insert("", "end", values=(cat, num, date, org))
 
     # ── نتائج الامتحانات ──────────────────────────────────────────────────────
     def _load_exam_results(self):
@@ -3247,12 +3326,24 @@ class CandidateDialog(tk.Toplevel):
 
         instr = self.instructor_map.get(self.vars["instructor_name"].get())
 
-        text_keys = ["first_name", "last_name", "birth_date", "birth_place_commune",
+        text_keys = ["first_name", "last_name", "last_name_fr", "first_name_fr",
+                     "birth_date", "birth_place_commune",
                      "birth_place_wilaya", "father_name", "mother_name", "phone",
-                     "disability", "previous_licenses", "national_id",
+                     "disability", "national_id",
                      "second_nationality", "current_address", "embassy", "consulate",
                      "file_number", "file_date", "address_commune", "address_wilaya"]
         d = {k: self.vars[k].get().strip() for k in text_keys}
+        # Collect previous licenses from Treeview
+        prev_entries = []
+        for item in self._prev_tree.get_children():
+            vals = self._prev_tree.item(item)["values"]
+            cat  = str(vals[0]) if len(vals) > 0 else ''
+            num  = str(vals[1]) if len(vals) > 1 else ''
+            date = str(vals[2]) if len(vals) > 2 else ''
+            org  = str(vals[3]) if len(vals) > 3 else ''
+            if cat:
+                prev_entries.append(f"{cat}|{num}|{date}|{org}")
+        d["previous_licenses"] = ", ".join(prev_entries)
         d["blood_type"]     = self.vars["blood_type"].get()
         d["license_type"]   = self.vars["license_type"].get()
         d["gender"]         = to_ar_gender(self.vars["gender"].get())
