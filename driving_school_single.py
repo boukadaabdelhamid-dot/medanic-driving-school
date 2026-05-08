@@ -3150,7 +3150,8 @@ class CandidateDialog(tk.Toplevel):
                      icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
 
         # الجدول (يُحزَم أخيراً ليأخذ المساحة المتبقية)
-        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD)
+        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD, height=130)
+        tree_f.pack_propagate(False)
         tree_f.pack(fill="both", expand=True)
         self._prev_tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=5)
         for col_id, h, w in zip(cols, hdrs, widths):
@@ -8577,6 +8578,13 @@ class LoginWindow:
         tk.Label(hint, text=T("login_hint"),
                  font=FONT_TINY, bg=COLOR_SIDEBAR, fg="#64748b",
                  anchor=A()).pack(fill="x")
+
+        contact = tk.Frame(self.root, bg=COLOR_SIDEBAR, padx=24, pady=6)
+        contact.pack(fill="x")
+        tk.Label(contact,
+                 text="📞 +213540772807   |   WhatsApp +213540772807   |   ✉ contact@midanic.com",
+                 font=FONT_TINY, bg=COLOR_SIDEBAR, fg="#64748b",
+                 anchor="center").pack(fill="x")
 
         self._e_user.bind("<Return>", lambda e: self._e_pass.focus())
         self._e_pass.bind("<Return>", lambda e: self._do_login())
