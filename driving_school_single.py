@@ -1134,6 +1134,12 @@ def _pdf_t(ar_text, fr_text):
     """Return Arabic or French text based on current language."""
     return fr_text if LANG == "fr" else ar_text
 
+def _no_wnum(w):
+    """إزالة الرقم الولائي عند الطباعة: '29 - معسكر' → 'معسكر'"""
+    if w and ' - ' in w:
+        return w.split(' - ', 1)[1].strip()
+    return w or ""
+
 
 _A4_W_CM = 21.0  # A4 width in cm (used for LTR/RTL mirroring in canvas-based docs)
 
@@ -2882,7 +2888,7 @@ class CandidateDialog(tk.Toplevel):
         return [""] + list(self.instructor_map.keys())[:-1]
 
     def _make_field(self, parent, label, key, kind="entry", values=None,
-                    width=28, row=0, col=0, colspan=1):
+                    width=28, row=0, col=0, colspan=1, combo_state="readonly"):
         cell = tk.Frame(parent, bg=COLOR_CARD)
         cell.grid(row=row, column=col, columnspan=colspan,
                   sticky="ew", padx=10, pady=5)
@@ -2890,7 +2896,7 @@ class CandidateDialog(tk.Toplevel):
         v = tk.StringVar()
         self.vars[key] = v
         if kind == "combo":
-            w = make_combo(cell, v, values or [], width=width)
+            w = make_combo(cell, v, values or [], width=width, state=combo_state)
         else:
             w = make_entry(cell, v, width=width + 2)
         w.pack(fill="x", ipady=4, pady=(2, 0))
@@ -3006,10 +3012,10 @@ class CandidateDialog(tk.Toplevel):
                          "birth_country", "entry", row=0, col=1)
         _, self._birth_commune_w, _ = self._make_field(
             g2, T("cdlg_f_bcommune"),
-            "birth_place_commune", "combo", [], row=1, col=0)
+            "birth_place_commune", "combo", [], row=1, col=0, combo_state="normal")
         _, _birth_wilaya_w, _ = self._make_field(
             g2, T("cdlg_f_bwilaya"),
-            "birth_place_wilaya", "combo", ALGERIA_WILAYAS, row=1, col=1)
+            "birth_place_wilaya", "combo", ALGERIA_WILAYAS, row=1, col=1, combo_state="normal")
         self.vars["birth_place_wilaya"].trace_add(
             "write", lambda *_: self._on_wilaya_change("birth_place_wilaya",
                                                        "birth_place_commune",
@@ -3028,9 +3034,9 @@ class CandidateDialog(tk.Toplevel):
         g_addr.columnconfigure(0, weight=1); g_addr.columnconfigure(1, weight=1)
         _, self._addr_commune_w, _ = self._make_field(
             g_addr, T("cdlg_f_acommune"),
-            "address_commune", "combo", [], row=0, col=0)
+            "address_commune", "combo", [], row=0, col=0, combo_state="normal")
         self._make_field(g_addr, T("cdlg_f_awilaya"),
-                         "address_wilaya",  "combo", ALGERIA_WILAYAS, row=0, col=1)
+                         "address_wilaya", "combo", ALGERIA_WILAYAS, row=0, col=1, combo_state="normal")
         self.vars["address_wilaya"].trace_add(
             "write", lambda *_: self._on_wilaya_change("address_wilaya",
                                                        "address_commune",
@@ -3147,7 +3153,7 @@ class CandidateDialog(tk.Toplevel):
         communes = ALGERIA_COMMUNES.get(wilaya_val, [])
         commune_widget["values"] = communes
         current = self.vars[commune_key].get()
-        if current not in communes:
+        if current not in communes and current == "":
             self.vars[commune_key].set("")
 
     def _toggle_abroad_fields(self):
@@ -4047,7 +4053,7 @@ class InstructorsFrame(tk.Frame):
 
         # 5. الخاتمة والتوقيعات
         y -= 1.5
-        wilaya = school.get('wilaya', '').strip() or '........'
+        wilaya = _no_wnum(school.get('wilaya', '').strip()) or '........'
         sig_date = ins.get('contract_signing_date','') or "...................."
         draw_text(12.0, y, f"حرر بـ: {wilaya}              في: {sig_date}", size=12)
 
@@ -6488,7 +6494,7 @@ class DocumentsFrame(tk.Frame):
                                       "Ministère de l'Intérieur, des Collectivités Locales et des Transports"),
                   ARABIC_FONT_BOLD, 9 if is_fr else 12, "center")
 
-        wilaya = school.get('wilaya', '').strip() or '........'
+        wilaya = _no_wnum(school.get('wilaya', '').strip()) or '........'
         draw_text(10.5, 27.1,
                   _pdf_t(f"المندوبية الوطنية للأمن في الطرق ولاية : {wilaya}",
                          f"Délégation Nationale à la Sécurité Routière - Wilaya de : {wilaya}"),
@@ -6589,7 +6595,7 @@ class DocumentsFrame(tk.Frame):
         draw_text(13.5, 14.2, _pdf_t("بلدية :", "Commune :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(11.0, 14.2, cand.get('birth_place_commune',''), ARABIC_FONT_BOLD, 10, "right")
         draw_text(7.5, 14.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
-        draw_text(5.0, 14.2, cand.get('birth_place_wilaya',''), ARABIC_FONT_BOLD, 10, "right")
+        draw_text(5.0, 14.2, _no_wnum(cand.get('birth_place_wilaya','')), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 14.2, 17.5, 14.2)
         
         # Parents / الوالدان
@@ -6610,7 +6616,7 @@ class DocumentsFrame(tk.Frame):
         draw_text(11.0, 12.2, cand.get('address_commune',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(8.0, 12.2, 11.2, 12.2)
         draw_text(7.5, 12.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
-        draw_text(6.0, 12.2, cand.get('address_wilaya',''), ARABIC_FONT_BOLD, 10, "right")
+        draw_text(6.0, 12.2, _no_wnum(cand.get('address_wilaya','')), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 12.2, 6.0, 12.2)
         
         # Marital status / الحالة العائلية
@@ -6791,7 +6797,7 @@ class DocumentsFrame(tk.Frame):
                   ARABIC_FONT_BOLD, 11 if is_fr else 12, "center")
         
         school_w = SchoolInfoDB.get()
-        school_wilaya = school_w.get('wilaya', '').strip() or '........'
+        school_wilaya = _no_wnum(school_w.get('wilaya', '').strip()) or '........'
         y_head = 27.8
         draw_text(20.0, y_head,
                   _pdf_t(f"ولاية {school_wilaya}", f"Wilaya de {school_wilaya}"),
@@ -7036,7 +7042,7 @@ class DocumentsFrame(tk.Frame):
         _field("العنوان المهني  :", school.get('address',''), 50)
 
         commune  = school.get('address_commune','') or ""
-        wilaya_s = school.get('wilaya','') or ""
+        wilaya_s = _no_wnum(school.get('wilaya','')) or ""
         _t(f"ولاية  {_dots(wilaya_s,18)}  :  دائرة  {'.'*20}  :  بلدية  {_dots(commune,20)}"); _nl()
 
         phone_s = school.get('phone','')
@@ -7190,7 +7196,7 @@ class DocumentsFrame(tk.Frame):
 
         # التوقيعات
         _chk(3.0)
-        wilaya_sig = school.get('wilaya','').strip() or '........'
+        wilaya_sig = _no_wnum(school.get('wilaya','').strip()) or '........'
         _t(f"حرّر بـ  {_dots(wilaya_sig, 20)}              في  {'.'*20}"); _nl(1.8)
 
         sig_y = y[0]*cm
@@ -7255,7 +7261,7 @@ class DocumentsFrame(tk.Frame):
         txt_center(_pdf_t("المندوبية الوطنية للأمن في الطرق",
                           "Délégation Nationale à la Sécurité Routière"),
                    26.7, size=11)
-        wilaya_school = school.get('wilaya', '').strip() or school.get('address', '')
+        wilaya_school = _no_wnum(school.get('wilaya', '').strip()) or _no_wnum(school.get('address', ''))
         txt_center(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_school}",
                           f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {wilaya_school}"),
                    25.9, size=10 if is_fr else 11)
