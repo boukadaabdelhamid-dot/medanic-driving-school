@@ -3149,10 +3149,10 @@ class CandidateDialog(tk.Toplevel):
         ModernButton(btn_row, _pdf_t("حذف المحدد","Supprimer"), _prev_del,
                      icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
 
-        # الجدول (يُحزَم أخيراً ليأخذ المساحة المتبقية)
-        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD, height=130)
+        # الجدول — ارتفاع ثابت مضمون بغض النظر عن حجم الشاشة
+        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD, height=140)
         tree_f.pack_propagate(False)
-        tree_f.pack(fill="both", expand=True)
+        tree_f.pack(fill="x", pady=(2, 0))
         self._prev_tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=5)
         for col_id, h, w in zip(cols, hdrs, widths):
             self._prev_tree.heading(col_id, text=h)
