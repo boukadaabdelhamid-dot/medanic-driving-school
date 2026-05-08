@@ -6303,57 +6303,58 @@ class DocumentsFrame(tk.Frame):
         draw_text(10.5, 28.5, _pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
                                       "République Algérienne Démocratique et Populaire"),
                   ARABIC_FONT_BOLD, 13 if is_fr else 14, "center")
-        draw_text(10.5, 27.8, _pdf_t("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
-                                      "Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire"),
+        draw_text(10.5, 27.8, _pdf_t("وزارة الداخلية و الجماعات المحلية و النقل",
+                                      "Ministère de l'Intérieur, des Collectivités Locales et des Transports"),
                   ARABIC_FONT_BOLD, 9 if is_fr else 12, "center")
-        draw_text(10.5, 27.1, _pdf_t("المندوبية الوطنية للأمن في الطرق",
-                                      "Délégation Nationale à la Sécurité Routière"),
-                  ARABIC_FONT_BOLD, 12, "center")
-        
+
         wilaya = school.get('wilaya', '').strip() or '........'
-        draw_text(19.5, 26.3,
-                  _pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية : {wilaya}",
-                         f"Délégation de Wilaya à la Sécurité Routière - Wilaya de : {wilaya}"),
-                  ARABIC_FONT_BOLD, 10 if is_fr else 12, "right")
+        draw_text(10.5, 27.1,
+                  _pdf_t(f"المندوبية الوطنية للأمن في الطرق ولاية : {wilaya}",
+                         f"Délégation Nationale à la Sécurité Routière - Wilaya de : {wilaya}"),
+                  ARABIC_FONT_BOLD, 10 if is_fr else 12, "center")
         
         # 2. Photo box / مربع الصورة
         c.setLineWidth(1.2)
-        draw_rect(1.5, 24.0, 3.5, 4.5)
-        draw_text(3.25, 26.2, _pdf_t("الصورة", "Photo"), ARABIC_FONT, 14, "center")
-        
+        draw_rect(1.5, 25.2, 3.8, 3.2)
+        draw_text(3.4, 26.7, _pdf_t("الصورة", "Photo"), ARABIC_FONT, 13, "center")
+
+        # File date & number UNDER photo / التاريخ ورقم الملف تحت الصورة
+        c.setLineWidth(1.0)
+        draw_rect(1.5, 24.1, 3.8, 0.9)
+        draw_text(5.1, 24.45, _pdf_t("تاريخ إيداع الملف", "Date de dépôt :"),
+                  ARABIC_FONT_BOLD, 9, "right")
+        draw_text(3.4, 24.35, cand.get('file_date', '') or "", "Helvetica-Bold", 9, "center")
+
+        draw_rect(1.5, 23.0, 3.8, 0.9)
+        draw_text(5.1, 23.35, _pdf_t("رقم الملف", "N° du dossier :"),
+                  ARABIC_FONT_BOLD, 9, "right")
+        draw_text(3.4, 23.25, cand.get('file_number', '') or "", "Helvetica-Bold", 9, "center")
+
         # Main title / العنوان الرئيسي
-        c.setFont(ARABIC_FONT_BOLD, 16 if is_fr else 20)
-        c.drawCentredString(10.5 * cm, 25.5 * cm,
-                            _pdf_t(ar("إستمارة الترشح لاجتياز امتحانات رخصة السياقة"),
+        c.setFont(ARABIC_FONT_BOLD, 15 if is_fr else 18)
+        c.drawCentredString(10.5 * cm, 25.8 * cm,
+                            _pdf_t(ar("إستمارة الترشح للاجتياز إمتحانات رخصة السياقة"),
                                    "Formulaire de candidature aux examens du permis de conduire"))
-        
+        c.setLineWidth(0.8)
+        c.line(2.5 * cm, 25.6 * cm, 18.5 * cm, 25.6 * cm)
+
         # Category / الصنف المطلوب
-        draw_text(11.0, 24.5, _pdf_t("الصنف المطلوب :", "Catégorie demandée :"),
-                  ARABIC_FONT_BOLD, 14, "right")
-        draw_rect(7.0, 24.2, 1.2, 0.8)
-        c.setFont("Helvetica-Bold", 16)
-        c.drawCentredString(7.6 * cm, 24.4 * cm, cand.get('license_type','B'))
-        
+        lic = cand.get('license_type', 'B') or 'B'
+        draw_text(14.0, 24.9, _pdf_t(f"الصنف المطلوب : ........{lic}",
+                                      f"Catégorie demandée : ........{lic}"),
+                  ARABIC_FONT_BOLD, 13, "right")
+        c.setLineWidth(0.8)
+        c.line(6.0 * cm, 24.75 * cm, 13.5 * cm, 24.75 * cm)
+
         # School stamp box / مربع ختم المدرسة
         c.setLineWidth(1.5)
-        draw_rect(12.5, 20.8, 7.5, 3.2)
-        draw_text(16.25, 23.2, _pdf_t("ختم مدرسة تعليم السياقة", "Cachet de l'auto-école"),
+        draw_rect(6.5, 21.5, 7.5, 3.0)
+        draw_text(10.25, 23.7, _pdf_t("ختم مدرسة تعليم السياقة", "Cachet de l'auto-école"),
                   ARABIC_FONT_BOLD, 11, "center")
-        draw_text(16.25, 21.2,
-                  _pdf_t("في حالة مترشح حر يوضع ختم المندوبية الولائية للأمن في الطرق",
+        draw_text(10.25, 21.8,
+                  _pdf_t("في حالة مرشح حر يوضع ختم المندوبية الولائية للأمن الطرق",
                          "Pour candidat libre: cachet de la délégation de wilaya"),
                   ARABIC_FONT, 7 if is_fr else 8, "center")
-        
-        # File date & number / التاريخ ورقم الملف
-        c.setLineWidth(1.0)
-        draw_rect(5.0, 22.4, 4.5, 1.0)
-        draw_text(12.0, 22.8, _pdf_t("تاريخ إيداع الملف", "Date de dépôt du dossier"),
-                  ARABIC_FONT, 11, "right")
-        draw_text(7.25, 22.75, cand.get('file_date', '') or "", "Helvetica-Bold", 11, "center")
-        
-        draw_rect(5.0, 21.0, 4.5, 1.0)
-        draw_text(12.0, 21.4, _pdf_t("رقم الملف", "N° du dossier"), ARABIC_FONT, 11, "right")
-        draw_text(7.25, 21.35, cand.get('file_number', '') or "", "Helvetica-Bold", 11, "center")
         
         # Separator / خط فاصل
         c.setLineWidth(2.5)
@@ -6383,21 +6384,14 @@ class DocumentsFrame(tk.Frame):
         draw_text(20.0, 17.2, _pdf_t("اللقب :", "Nom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(16.5, 17.2, cand.get('last_name',''), ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(13.0, 17.2, 17.5, 17.2)
-        draw_text(1.5, 17.2, f"Nom:  {cand.get('last_name','')}", ARABIC_FONT, 10, "left")
-        
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(1.5 * cm, 17.2 * cm, f"Nom : {cand.get('last_name','')}")
+
         draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prénom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(16.5, 16.2, cand.get('first_name',''), ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(13.0, 16.2, 17.5, 16.2)
-        draw_text(1.5, 16.2, f"Prénom:  {cand.get('first_name','')}", ARABIC_FONT, 10, "left")
-        
-        # Gender / الجنس
-        draw_text(20.0, 15.2, _pdf_t("الجنس :", "Sexe :"), ARABIC_FONT_BOLD, 11, "right")
-        draw_text(18.0, 15.2, _pdf_t("ذكر", "Masculin"), ARABIC_FONT_BOLD, 11, "right")
-        draw_rect(16.8, 15.2, 0.4, 0.4)
-        if cand.get("gender") == "ذكر": draw_text(17.0, 15.35, "X", "Helvetica-Bold", 12, "center")
-        draw_text(15.5, 15.2, _pdf_t("أنثى", "Féminin"), ARABIC_FONT_BOLD, 11, "right")
-        draw_rect(14.3, 15.2, 0.4, 0.4)
-        if cand.get("gender") == "أنثى": draw_text(14.5, 15.35, "X", "Helvetica-Bold", 12, "center")
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(1.5 * cm, 16.2 * cm, f"Prenom : {cand.get('first_name','')}")
         
         # Birth date & place / تاريخ ومكان الميلاد
         draw_text(20.0, 14.2, _pdf_t("تاريخ و مكان الميلاد :", "Date et lieu de naissance :"),
@@ -6424,8 +6418,10 @@ class DocumentsFrame(tk.Frame):
         draw_text(18.5, 12.2, cand.get('current_address',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(13.0, 12.2, 18.5, 12.2)
         draw_text(12.5, 12.2, _pdf_t("بلدية :", "Commune :"), ARABIC_FONT_BOLD, 10, "right")
+        draw_text(11.0, 12.2, cand.get('address_commune',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(8.0, 12.2, 11.2, 12.2)
         draw_text(7.5, 12.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
+        draw_text(6.0, 12.2, cand.get('address_wilaya',''), ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 12.2, 6.0, 12.2)
         
         # Marital status / الحالة العائلية
@@ -6515,7 +6511,20 @@ class DocumentsFrame(tk.Frame):
         cats_new = [("A1","أ1"),("A","أ2"),("B","ب"),("D","د"),("C1","ج1"),("C","ج"),
                     ("BE","ب(هـ)"),("C1E","ج1(هـ)"),("CE","ج(هـ)"),("DE","د(هـ)"),("F","و")]
         cats_old = [("A1","أ1"),("A2","أ2"),("B","ب"),("D","د"),("C1","ج1"),("C2","ج2")]
-        
+
+        # Parse previous_licenses — format: "B|A00520567|20.03.13|بلدية مسكر" (comma-separated entries)
+        prev_data = {}
+        prev_raw = cand.get('previous_licenses', '') or ''
+        for entry in prev_raw.split(','):
+            parts = [p.strip() for p in entry.split('|')]
+            if parts and parts[0]:
+                cat_key = parts[0].upper()
+                prev_data[cat_key] = {
+                    'num':  parts[1] if len(parts) > 1 else '',
+                    'date': parts[2] if len(parts) > 2 else '',
+                    'org':  parts[3] if len(parts) > 3 else '',
+                }
+
         for i, (cn, co) in enumerate(cats_new):
             yt = y_tab - 2*rh - (i+1)*rh + 0.12
             draw_text(16.5, yt, cn, "Helvetica", 9, "center")
@@ -6523,11 +6532,17 @@ class DocumentsFrame(tk.Frame):
             if i < 6:
                 draw_text(18.5, yt, cats_old[i][0], "Helvetica", 9, "center")
                 draw_text(19.5, yt, cats_old[i][1], ARABIC_FONT, 9, "center")
-        
+            # Fill row data if candidate has this category
+            pinfo = prev_data.get(cn, {})
+            if pinfo:
+                draw_text(15.25, yt, pinfo.get('num',''), "Helvetica", 8, "center")
+                draw_text(12.75, yt, pinfo.get('date',''), "Helvetica", 8, "center")
+                draw_text(4.25,  yt, pinfo.get('org',''), ARABIC_FONT, 8, "center")
+
         yt_merged = y_tab - 2*rh - 8.5*rh + 0.12
         draw_text(18.5, yt_merged, "E", "Helvetica-Bold", 11, "center")
         draw_text(19.5, yt_merged, "هـ", ARABIC_FONT_BOLD, 11, "center")
-        
+
         yt_f = y_tab - 2*rh - 11*rh + 0.12
         draw_text(18.5, yt_f, "F", "Helvetica", 9, "center")
         draw_text(19.5, yt_f, "و", ARABIC_FONT, 9, "center")
