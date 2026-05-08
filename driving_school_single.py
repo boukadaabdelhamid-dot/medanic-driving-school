@@ -3096,21 +3096,11 @@ class CandidateDialog(tk.Toplevel):
         v_porg = tk.StringVar()
         make_entry(inp_row, v_porg, width=18).pack(side=S(), padx=(0,10))
 
-        # Treeview for previous licenses
+        # --- أزرار الإضافة والحذف (تُحزَم أولاً لتبقى ظاهرة دائماً) ---
         cols = ("cat","num","date","org")
         hdrs = (_pdf_t("الصنف","Cat."), _pdf_t("الرقم","N°"),
                 _pdf_t("التاريخ","Date"), _pdf_t("هيئة الإصدار","Organisme"))
         widths = (60, 120, 100, 200)
-        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD)
-        tree_f.pack(fill="both", expand=True)
-        self._prev_tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=6)
-        for c, h, w in zip(cols, hdrs, widths):
-            self._prev_tree.heading(c, text=h)
-            self._prev_tree.column(c, width=w, anchor="center")
-        sb = ttk.Scrollbar(tree_f, orient="vertical", command=self._prev_tree.yview)
-        self._prev_tree.configure(yscrollcommand=sb.set)
-        self._prev_tree.pack(side="left", fill="both", expand=True)
-        sb.pack(side="right", fill="y")
 
         def _prev_add():
             try:
@@ -3120,7 +3110,6 @@ class CandidateDialog(tk.Toplevel):
                 org  = v_porg.get().strip()
                 if not cat:
                     return
-                # Remove duplicate category
                 for item in self._prev_tree.get_children():
                     row_vals = self._prev_tree.item(item)["values"]
                     if row_vals and str(row_vals[0]) == cat:
@@ -3138,12 +3127,25 @@ class CandidateDialog(tk.Toplevel):
             except Exception:
                 pass
 
+        # أزرار الإضافة/الحذف تُحزَم قبل الجدول حتى لا يخفيها
         btn_row = tk.Frame(prev_frame, bg=COLOR_CARD)
-        btn_row.pack(fill="x", pady=(6,0))
-        ModernButton(btn_row, _pdf_t("إضافة","Ajouter"), _prev_add,
+        btn_row.pack(fill="x", pady=(4, 4))
+        ModernButton(btn_row, _pdf_t("إضافة للجدول","Ajouter"), _prev_add,
                      icon="➕", color=COLOR_SUCCESS).pack(side=S(), padx=4)
-        ModernButton(btn_row, _pdf_t("حذف","Supprimer"), _prev_del,
+        ModernButton(btn_row, _pdf_t("حذف المحدد","Supprimer"), _prev_del,
                      icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
+
+        # الجدول (يُحزَم أخيراً ليأخذ المساحة المتبقية)
+        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD)
+        tree_f.pack(fill="both", expand=True)
+        self._prev_tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=5)
+        for col_id, h, w in zip(cols, hdrs, widths):
+            self._prev_tree.heading(col_id, text=h)
+            self._prev_tree.column(col_id, width=w, anchor="center")
+        sb = ttk.Scrollbar(tree_f, orient="vertical", command=self._prev_tree.yview)
+        self._prev_tree.configure(yscrollcommand=sb.set)
+        self._prev_tree.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
 
         # ══════════════════════════════════════════════
         # التبويب 4: نتائج الامتحانات (تعديل فقط)
