@@ -3113,22 +3113,30 @@ class CandidateDialog(tk.Toplevel):
         sb.pack(side="right", fill="y")
 
         def _prev_add():
-            cat  = v_pcat.get().strip()
-            num  = v_pnum.get().strip()
-            date = v_pdate.get().strip()
-            org  = v_porg.get().strip()
-            if not cat: return
-            # Remove duplicate category
-            for item in self._prev_tree.get_children():
-                if self._prev_tree.item(item)["values"][0] == cat:
-                    self._prev_tree.delete(item)
-            self._prev_tree.insert("", "end", values=(cat, num, date, org))
-            v_pnum.set(""); v_pdate.set(""); v_porg.set("")
+            try:
+                cat  = v_pcat.get().strip()
+                num  = v_pnum.get().strip()
+                date = v_pdate.get().strip()
+                org  = v_porg.get().strip()
+                if not cat:
+                    return
+                # Remove duplicate category
+                for item in self._prev_tree.get_children():
+                    row_vals = self._prev_tree.item(item)["values"]
+                    if row_vals and str(row_vals[0]) == cat:
+                        self._prev_tree.delete(item)
+                self._prev_tree.insert("", "end", values=(cat, num, date, org))
+                v_pnum.set(""); v_pdate.set(""); v_porg.set("")
+            except Exception as _e:
+                show_error(f"خطأ في الإضافة: {_e}")
 
         def _prev_del():
-            sel = self._prev_tree.selection()
-            for item in sel:
-                self._prev_tree.delete(item)
+            try:
+                sel = self._prev_tree.selection()
+                for item in sel:
+                    self._prev_tree.delete(item)
+            except Exception:
+                pass
 
         btn_row = tk.Frame(prev_frame, bg=COLOR_CARD)
         btn_row.pack(fill="x", pady=(6,0))
@@ -3332,18 +3340,24 @@ class CandidateDialog(tk.Toplevel):
                      "disability", "national_id",
                      "second_nationality", "current_address", "embassy", "consulate",
                      "file_number", "file_date", "address_commune", "address_wilaya"]
-        d = {k: self.vars[k].get().strip() for k in text_keys}
+        try:
+            d = {k: self.vars[k].get().strip() for k in text_keys}
+        except KeyError as _ke:
+            show_error(f"خطأ في قراءة الحقل: {_ke}"); return
         # Collect previous licenses from Treeview
-        prev_entries = []
-        for item in self._prev_tree.get_children():
-            vals = self._prev_tree.item(item)["values"]
-            cat  = str(vals[0]) if len(vals) > 0 else ''
-            num  = str(vals[1]) if len(vals) > 1 else ''
-            date = str(vals[2]) if len(vals) > 2 else ''
-            org  = str(vals[3]) if len(vals) > 3 else ''
-            if cat:
-                prev_entries.append(f"{cat}|{num}|{date}|{org}")
-        d["previous_licenses"] = ", ".join(prev_entries)
+        try:
+            prev_entries = []
+            for item in self._prev_tree.get_children():
+                vals = self._prev_tree.item(item)["values"]
+                cat  = str(vals[0]) if len(vals) > 0 else ''
+                num  = str(vals[1]) if len(vals) > 1 else ''
+                date = str(vals[2]) if len(vals) > 2 else ''
+                org  = str(vals[3]) if len(vals) > 3 else ''
+                if cat:
+                    prev_entries.append(f"{cat}|{num}|{date}|{org}")
+            d["previous_licenses"] = ", ".join(prev_entries)
+        except Exception as _pe:
+            d["previous_licenses"] = ""
         d["blood_type"]     = self.vars["blood_type"].get()
         d["license_type"]   = self.vars["license_type"].get()
         d["gender"]         = to_ar_gender(self.vars["gender"].get())
@@ -6643,9 +6657,19 @@ class DocumentsFrame(tk.Frame):
             # Fill row data if candidate has this category
             pinfo = prev_data.get(cn, {})
             if pinfo:
-                draw_text(15.25, yt, pinfo.get('num',''), "Helvetica", 8, "center")
-                draw_text(12.75, yt, pinfo.get('date',''), "Helvetica", 8, "center")
-                draw_text(4.25,  yt, pinfo.get('org',''), ARABIC_FONT, 8, "center")
+                c.saveState()
+                c.setFillColorRGB(0.9, 1.0, 0.9)
+                c.rect(0.3*cm, (yt-0.32)*cm, 20.1*cm, rh*cm, fill=1, stroke=0)
+                c.restoreState()
+                num_v  = pinfo.get('num','')
+                date_v = pinfo.get('date','')
+                org_v  = pinfo.get('org','')
+                if num_v:
+                    draw_text(15.25, yt, num_v,  "Helvetica", 8, "center")
+                if date_v:
+                    draw_text(12.75, yt, date_v, "Helvetica", 8, "center")
+                if org_v:
+                    draw_text(4.25,  yt, org_v,  ARABIC_FONT, 8, "center")
 
         yt_merged = y_tab - 2*rh - 8.5*rh + 0.12
         draw_text(18.5, yt_merged, "E", "Helvetica-Bold", 11, "center")
