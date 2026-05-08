@@ -3076,91 +3076,24 @@ class CandidateDialog(tk.Toplevel):
             self._make_field(g3, T("cdlg_f_init_pay"),
                              "initial_payment", "entry", row=1, col=0)
 
-        # -- الأصناف المتحصل عليها من قبل (جدول منظم) --
+        # -- الأصناف المتحصل عليها من قبل --
         section_title(tab3, T("cdlg_sec_prev_lic"), icon="📋")
-        # Dummy var so text_keys loop won't crash (real data from Treeview)
         self.vars["previous_licenses"] = tk.StringVar()
+        self._prev_lic_data = []  # list of (cat, num, date, org)
 
-        PREV_CATS = ["A1","A","B","D","C1","C","BE","C1E","CE","DE","F"]
+        prev_frame = tk.Frame(tab3, bg=COLOR_CARD, padx=10, pady=6)
+        prev_frame.pack(fill="x", padx=10, pady=4)
 
-        prev_frame = tk.Frame(tab3, bg=COLOR_CARD, padx=10, pady=8)
-        prev_frame.pack(fill="both", expand=True, padx=10, pady=4)
+        self._prev_lic_lbl = tk.Label(
+            prev_frame,
+            text=_pdf_t("لا توجد أصناف مضافة", "Aucune catégorie ajoutée"),
+            font=FONT_MAIN, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT, anchor=A())
+        self._prev_lic_lbl.pack(fill="x", pady=(0, 6))
 
-        # Input row
-        inp_row = tk.Frame(prev_frame, bg=COLOR_CARD)
-        inp_row.pack(fill="x", pady=(0, 6))
-
-        tk.Label(inp_row, text=_pdf_t("الصنف","Cat."),
-                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
-        v_pcat = tk.StringVar(value="B")
-        make_combo(inp_row, v_pcat, PREV_CATS, width=6).pack(side=S(), padx=(0,10))
-
-        tk.Label(inp_row, text=_pdf_t("رقم الرخصة","N° Permis"),
-                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
-        v_pnum = tk.StringVar()
-        make_entry(inp_row, v_pnum, width=14).pack(side=S(), padx=(0,10))
-
-        tk.Label(inp_row, text=_pdf_t("تاريخ الإصدار","Date"),
-                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
-        v_pdate = tk.StringVar()
-        make_entry(inp_row, v_pdate, width=12).pack(side=S(), padx=(0,10))
-
-        tk.Label(inp_row, text=_pdf_t("هيئة الإصدار","Organisme"),
-                 font=FONT_BOLD, bg=COLOR_CARD).pack(side=S(), padx=(0,4))
-        v_porg = tk.StringVar()
-        make_entry(inp_row, v_porg, width=18).pack(side=S(), padx=(0,10))
-
-        # --- أزرار الإضافة والحذف (تُحزَم أولاً لتبقى ظاهرة دائماً) ---
-        cols = ("cat","num","date","org")
-        hdrs = (_pdf_t("الصنف","Cat."), _pdf_t("الرقم","N°"),
-                _pdf_t("التاريخ","Date"), _pdf_t("هيئة الإصدار","Organisme"))
-        widths = (60, 120, 100, 200)
-
-        def _prev_add():
-            try:
-                cat  = v_pcat.get().strip()
-                num  = v_pnum.get().strip()
-                date = v_pdate.get().strip()
-                org  = v_porg.get().strip()
-                if not cat:
-                    return
-                for item in self._prev_tree.get_children():
-                    row_vals = self._prev_tree.item(item)["values"]
-                    if row_vals and str(row_vals[0]) == cat:
-                        self._prev_tree.delete(item)
-                self._prev_tree.insert("", "end", values=(cat, num, date, org))
-                v_pnum.set(""); v_pdate.set(""); v_porg.set("")
-            except Exception as _e:
-                show_error(f"خطأ في الإضافة: {_e}")
-
-        def _prev_del():
-            try:
-                sel = self._prev_tree.selection()
-                for item in sel:
-                    self._prev_tree.delete(item)
-            except Exception:
-                pass
-
-        # أزرار الإضافة/الحذف تُحزَم قبل الجدول حتى لا يخفيها
-        btn_row = tk.Frame(prev_frame, bg=COLOR_CARD)
-        btn_row.pack(fill="x", pady=(4, 4))
-        ModernButton(btn_row, _pdf_t("إضافة للجدول","Ajouter"), _prev_add,
-                     icon="➕", color=COLOR_SUCCESS).pack(side=S(), padx=4)
-        ModernButton(btn_row, _pdf_t("حذف المحدد","Supprimer"), _prev_del,
-                     icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
-
-        # الجدول — ارتفاع ثابت مضمون بغض النظر عن حجم الشاشة
-        tree_f = tk.Frame(prev_frame, bg=COLOR_CARD, height=140)
-        tree_f.pack_propagate(False)
-        tree_f.pack(fill="x", pady=(2, 0))
-        self._prev_tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=5)
-        for col_id, h, w in zip(cols, hdrs, widths):
-            self._prev_tree.heading(col_id, text=h)
-            self._prev_tree.column(col_id, width=w, anchor="center")
-        sb = ttk.Scrollbar(tree_f, orient="vertical", command=self._prev_tree.yview)
-        self._prev_tree.configure(yscrollcommand=sb.set)
-        self._prev_tree.pack(side="left", fill="both", expand=True)
-        sb.pack(side="right", fill="y")
+        ModernButton(prev_frame,
+                     _pdf_t("إدارة الأصناف السابقة", "Gérer les catégories"),
+                     self._open_prev_lic_window,
+                     icon="📋", color=COLOR_PRIMARY).pack(anchor=A())
 
         # ══════════════════════════════════════════════
         # التبويب 4: نتائج الامتحانات (تعديل فقط)
@@ -3242,9 +3175,8 @@ class CandidateDialog(tk.Toplevel):
             else:
                 v.set(str(c.get(k, "")) if c.get(k) is not None else "")
         self.born_abroad_var.set(int(c.get("is_born_abroad") or 0))
-        # Fill previous licenses Treeview
-        for item in self._prev_tree.get_children():
-            self._prev_tree.delete(item)
+        # Fill previous licenses data list
+        self._prev_lic_data.clear()
         raw = c.get("previous_licenses", "") or ""
         for entry in raw.split(","):
             entry = entry.strip()
@@ -3256,7 +3188,129 @@ class CandidateDialog(tk.Toplevel):
             date = parts[2].strip() if len(parts) > 2 else ""
             org  = parts[3].strip() if len(parts) > 3 else ""
             if cat:
-                self._prev_tree.insert("", "end", values=(cat, num, date, org))
+                self._prev_lic_data.append((cat, num, date, org))
+        count = len(self._prev_lic_data)
+        if count:
+            cats = ", ".join(r[0] for r in self._prev_lic_data)
+            self._prev_lic_lbl.configure(
+                text=_pdf_t(f"{count} صنف: {cats}", f"{count} catégorie(s): {cats}"),
+                fg=COLOR_TEXT)
+        else:
+            self._prev_lic_lbl.configure(
+                text=_pdf_t("لا توجد أصناف مضافة", "Aucune catégorie ajoutée"),
+                fg=COLOR_TEXT_LIGHT)
+
+    # ── نافذة إدارة الأصناف السابقة ──────────────────────────────────────────
+    def _open_prev_lic_window(self):
+        win = tk.Toplevel(self)
+        win.title(_pdf_t("الأصناف المتحصل عليها من قبل", "Catégories précédentes"))
+        win.geometry("700x400")
+        win.minsize(600, 340)
+        win.configure(bg=COLOR_BG)
+        win.transient(self)
+        win.grab_set()
+
+        PREV_CATS = ["A1","A","B","D","C1","C","BE","C1E","CE","DE","F"]
+        cols   = ("cat","num","date","org")
+        hdrs   = (_pdf_t("الصنف","Cat."), _pdf_t("الرقم","N°"),
+                  _pdf_t("التاريخ","Date"), _pdf_t("هيئة الإصدار","Organisme"))
+        widths = (70, 140, 110, 220)
+
+        # رأس النافذة
+        head = tk.Frame(win, bg=COLOR_PRIMARY, pady=10, padx=16)
+        head.pack(fill="x")
+        tk.Label(head, text=_pdf_t("الأصناف المتحصل عليها من قبل",
+                                   "Catégories précédentes"),
+                 font=(FONT_FAMILY, 13, "bold"),
+                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side=S())
+
+        body = tk.Frame(win, bg=COLOR_BG, padx=14, pady=10)
+        body.pack(fill="both", expand=True)
+
+        # صف الإدخال
+        inp_row = tk.Frame(body, bg=COLOR_BG)
+        inp_row.pack(fill="x", pady=(0, 6))
+        tk.Label(inp_row, text=_pdf_t("الصنف","Cat."),
+                 font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
+        v_pcat = tk.StringVar(value="B")
+        make_combo(inp_row, v_pcat, PREV_CATS, width=6).pack(side=S(), padx=(0,10))
+        tk.Label(inp_row, text=_pdf_t("رقم الرخصة","N° Permis"),
+                 font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
+        v_pnum = tk.StringVar()
+        make_entry(inp_row, v_pnum, width=14).pack(side=S(), padx=(0,10))
+        tk.Label(inp_row, text=_pdf_t("تاريخ الإصدار","Date"),
+                 font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
+        v_pdate = tk.StringVar()
+        make_entry(inp_row, v_pdate, width=12).pack(side=S(), padx=(0,10))
+        tk.Label(inp_row, text=_pdf_t("هيئة الإصدار","Organisme"),
+                 font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
+        v_porg = tk.StringVar()
+        make_entry(inp_row, v_porg, width=18).pack(side=S(), padx=(0,10))
+
+        # الجدول
+        tree_f = tk.Frame(body, bg=COLOR_BG)
+        tree_f.pack(fill="both", expand=True, pady=(4, 8))
+        tree = ttk.Treeview(tree_f, columns=cols, show="headings", height=8)
+        for col_id, h, w in zip(cols, hdrs, widths):
+            tree.heading(col_id, text=h)
+            tree.column(col_id, width=w, anchor="center")
+        _sb = ttk.Scrollbar(tree_f, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=_sb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        _sb.pack(side="right", fill="y")
+
+        # تعبئة البيانات الموجودة
+        for (cat, num, date, org) in self._prev_lic_data:
+            tree.insert("", "end", values=(cat, num, date, org))
+
+        def _add():
+            cat = v_pcat.get().strip()
+            if not cat:
+                return
+            for item in tree.get_children():
+                if str(tree.item(item)["values"][0]) == cat:
+                    tree.delete(item)
+            tree.insert("", "end", values=(
+                cat, v_pnum.get().strip(),
+                v_pdate.get().strip(), v_porg.get().strip()))
+            v_pnum.set(""); v_pdate.set(""); v_porg.set("")
+
+        def _del():
+            for item in tree.selection():
+                tree.delete(item)
+
+        def _confirm():
+            self._prev_lic_data.clear()
+            for item in tree.get_children():
+                vals = tree.item(item)["values"]
+                self._prev_lic_data.append((
+                    str(vals[0]) if len(vals) > 0 else "",
+                    str(vals[1]) if len(vals) > 1 else "",
+                    str(vals[2]) if len(vals) > 2 else "",
+                    str(vals[3]) if len(vals) > 3 else "",
+                ))
+            count = len(self._prev_lic_data)
+            if count:
+                cats = ", ".join(r[0] for r in self._prev_lic_data)
+                self._prev_lic_lbl.configure(
+                    text=_pdf_t(f"{count} صنف: {cats}",
+                                f"{count} catégorie(s): {cats}"),
+                    fg=COLOR_TEXT)
+            else:
+                self._prev_lic_lbl.configure(
+                    text=_pdf_t("لا توجد أصناف مضافة", "Aucune catégorie ajoutée"),
+                    fg=COLOR_TEXT_LIGHT)
+            win.destroy()
+
+        # أزرار
+        btn_row = tk.Frame(body, bg=COLOR_BG)
+        btn_row.pack(fill="x")
+        ModernButton(btn_row, _pdf_t("إضافة","Ajouter"),
+                     _add, icon="➕", color=COLOR_SUCCESS).pack(side=S(), padx=4)
+        ModernButton(btn_row, _pdf_t("حذف المحدد","Supprimer"),
+                     _del, icon="🗑️", color=COLOR_DANGER).pack(side=S(), padx=4)
+        ModernButton(btn_row, _pdf_t("✔ تأكيد وإغلاق","✔ Confirmer"),
+                     _confirm, color=COLOR_PRIMARY).pack(side=So(), padx=4)
 
     # ── نتائج الامتحانات ──────────────────────────────────────────────────────
     def _load_exam_results(self):
@@ -3361,15 +3415,10 @@ class CandidateDialog(tk.Toplevel):
             d = {k: self.vars[k].get().strip() for k in text_keys}
         except KeyError as _ke:
             show_error(f"خطأ في قراءة الحقل: {_ke}"); return
-        # Collect previous licenses from Treeview
+        # Collect previous licenses from data list
         try:
             prev_entries = []
-            for item in self._prev_tree.get_children():
-                vals = self._prev_tree.item(item)["values"]
-                cat  = str(vals[0]) if len(vals) > 0 else ''
-                num  = str(vals[1]) if len(vals) > 1 else ''
-                date = str(vals[2]) if len(vals) > 2 else ''
-                org  = str(vals[3]) if len(vals) > 3 else ''
+            for (cat, num, date, org) in self._prev_lic_data:
                 if cat:
                     prev_entries.append(f"{cat}|{num}|{date}|{org}")
             d["previous_licenses"] = ", ".join(prev_entries)
