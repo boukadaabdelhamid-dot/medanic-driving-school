@@ -6463,13 +6463,10 @@ class DocumentsFrame(tk.Frame):
 
         # Main title / العنوان الرئيسي
         c.setFont(ARABIC_FONT_BOLD, 15 if is_fr else 18)
-        c.setTextRenderMode(2)
-        c.setLineWidth(0.3)
-        c.setStrokeColorRGB(0, 0, 0)
-        c.drawCentredString(10.5 * cm, 25.8 * cm,
-                            _pdf_t(ar("إستمارة الترشح للاجتياز إمتحانات رخصة السياقة"),
-                                   "Formulaire de candidature aux examens du permis de conduire"))
-        c.setTextRenderMode(0)
+        _title_str = _pdf_t(ar("إستمارة الترشح للاجتياز إمتحانات رخصة السياقة"),
+                            "Formulaire de candidature aux examens du permis de conduire")
+        c.drawCentredString(10.5 * cm, 25.8 * cm, _title_str)
+        c.drawCentredString(10.5 * cm + 0.3, 25.8 * cm, _title_str)
         c.setLineWidth(0.8)
         c.line(5.5 * cm, 25.6 * cm, 18.5 * cm, 25.6 * cm)
 
