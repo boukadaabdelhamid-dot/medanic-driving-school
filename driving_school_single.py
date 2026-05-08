@@ -6463,11 +6463,15 @@ class DocumentsFrame(tk.Frame):
 
         # Main title / العنوان الرئيسي
         c.setFont(ARABIC_FONT_BOLD, 15 if is_fr else 18)
+        c.setTextRenderMode(2)
+        c.setLineWidth(0.3)
+        c.setStrokeColorRGB(0, 0, 0)
         c.drawCentredString(10.5 * cm, 25.8 * cm,
                             _pdf_t(ar("إستمارة الترشح للاجتياز إمتحانات رخصة السياقة"),
                                    "Formulaire de candidature aux examens du permis de conduire"))
+        c.setTextRenderMode(0)
         c.setLineWidth(0.8)
-        c.line(2.5 * cm, 25.6 * cm, 18.5 * cm, 25.6 * cm)
+        c.line(5.5 * cm, 25.6 * cm, 18.5 * cm, 25.6 * cm)
 
         # Category / الصنف المطلوب
         lic = cand.get('license_type', 'B') or 'B'
@@ -6477,12 +6481,12 @@ class DocumentsFrame(tk.Frame):
         c.setLineWidth(0.8)
         c.line(6.0 * cm, 24.75 * cm, 13.5 * cm, 24.75 * cm)
 
-        # School stamp box / مربع ختم المدرسة — moved to right
+        # School stamp box / مربع ختم المدرسة — wider (+1cm) taller (+0.5cm downward)
         c.setLineWidth(1.5)
-        draw_rect(12.5, 21.5, 7.0, 3.0)
+        draw_rect(12.0, 21.0, 8.0, 3.5)
         draw_text(16.0, 23.7, _pdf_t("ختم مدرسة تعليم السياقة", "Cachet de l'auto-école"),
                   ARABIC_FONT_BOLD, 11, "center")
-        draw_text(16.0, 21.8,
+        draw_text(16.0, 21.3,
                   _pdf_t("في حالة مرشح حر يوضع ختم المندوبية الولائية للأمن الطرق",
                          "Pour candidat libre: cachet de la délégation de wilaya"),
                   ARABIC_FONT, 7 if is_fr else 8, "center")
