@@ -1674,7 +1674,7 @@ class CandidateDB:
              d['previous_licenses'], d.get('instructor_id'), d['total_amount'],
              d.get('national_id',''), d.get('second_nationality',''),
              d.get('current_address',''), d.get('is_born_abroad',0),
-             d.get('birth_country','الجزائر'), d.get('embassy',''), d.get('consulate',''),
+             d.get('birth_country',''), d.get('embassy',''), d.get('consulate',''),
              d.get('file_number',''), d.get('file_date',''),
              d.get('address_commune',''), d.get('address_wilaya',''),
              d.get('last_name_fr',''), d.get('first_name_fr','')))
@@ -1703,7 +1703,7 @@ class CandidateDB:
              d['previous_licenses'], d.get('instructor_id'), d['total_amount'],
              d.get('national_id',''), d.get('second_nationality',''),
              d.get('current_address',''), d.get('is_born_abroad',0),
-             d.get('birth_country','الجزائر'), d.get('embassy',''),
+             d.get('birth_country',''), d.get('embassy',''),
              d.get('consulate',''), d.get('file_number',''), d.get('file_date',''),
              d.get('address_commune',''), d.get('address_wilaya',''),
              d.get('last_name_fr',''), d.get('first_name_fr',''), i))
@@ -3365,7 +3365,7 @@ class CandidateDialog(tk.Toplevel):
         d["gender"]         = to_ar_gender(self.vars["gender"].get())
         d["marital_status"] = to_ar_marital(self.vars["marital_status"].get())
         d["nationality"]    = self.vars["nationality"].get().strip() or "جزائرية"
-        d["birth_country"]  = self.vars["birth_country"].get().strip() or "الجزائر"
+        d["birth_country"]  = self.vars["birth_country"].get().strip()
         d["instructor_id"]  = instr
         d["total_amount"]   = total
         d["is_born_abroad"] = self.born_abroad_var.get()
@@ -6435,15 +6435,15 @@ class DocumentsFrame(tk.Frame):
         draw_rect(1.5, 25.2, 3.8, 3.2)
         draw_text(3.4, 26.7, _pdf_t("الصورة", "Photo"), ARABIC_FONT, 13, "center")
 
-        # File date & number UNDER photo / التاريخ ورقم الملف تحت الصورة
+        # File date & number UNDER photo — labels outside rects, values inside
         c.setLineWidth(1.0)
         draw_rect(1.5, 24.1, 3.8, 0.9)
-        draw_text(5.1, 24.45, _pdf_t("تاريخ إيداع الملف", "Date de dépôt :"),
+        draw_text(8.5, 24.45, _pdf_t("تاريخ إيداع الملف :", "Date de dépôt :"),
                   ARABIC_FONT_BOLD, 9, "right")
         draw_text(3.4, 24.35, cand.get('file_date', '') or "", "Helvetica-Bold", 9, "center")
 
         draw_rect(1.5, 23.0, 3.8, 0.9)
-        draw_text(5.1, 23.35, _pdf_t("رقم الملف", "N° du dossier :"),
+        draw_text(8.5, 23.35, _pdf_t("رقم الملف :", "N° du dossier :"),
                   ARABIC_FONT_BOLD, 9, "right")
         draw_text(3.4, 23.25, cand.get('file_number', '') or "", "Helvetica-Bold", 9, "center")
 
@@ -6463,12 +6463,12 @@ class DocumentsFrame(tk.Frame):
         c.setLineWidth(0.8)
         c.line(6.0 * cm, 24.75 * cm, 13.5 * cm, 24.75 * cm)
 
-        # School stamp box / مربع ختم المدرسة
+        # School stamp box / مربع ختم المدرسة — moved to right
         c.setLineWidth(1.5)
-        draw_rect(6.5, 21.5, 7.5, 3.0)
-        draw_text(10.25, 23.7, _pdf_t("ختم مدرسة تعليم السياقة", "Cachet de l'auto-école"),
+        draw_rect(12.5, 21.5, 7.0, 3.0)
+        draw_text(16.0, 23.7, _pdf_t("ختم مدرسة تعليم السياقة", "Cachet de l'auto-école"),
                   ARABIC_FONT_BOLD, 11, "center")
-        draw_text(10.25, 21.8,
+        draw_text(16.0, 21.8,
                   _pdf_t("في حالة مرشح حر يوضع ختم المندوبية الولائية للأمن الطرق",
                          "Pour candidat libre: cachet de la délégation de wilaya"),
                   ARABIC_FONT, 7 if is_fr else 8, "center")
