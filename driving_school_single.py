@@ -321,8 +321,10 @@ STRINGS: dict = {
     "cdlg_sec_exam_hist":{"ar": "سجل الامتحانات",              "fr": "Historique des examens"},
     "cdlg_f_file_num":   {"ar": "رقم الملف",                  "fr": "N° dossier"},
     "cdlg_f_file_date":  {"ar": "تاريخ إيداع الملف",          "fr": "Date de dépôt"},
-    "cdlg_f_lastname":   {"ar": "اللقب / Nom *",              "fr": "Nom *"},
-    "cdlg_f_firstname":  {"ar": "الاسم / Prénom *",           "fr": "Prénom *"},
+    "cdlg_f_lastname":   {"ar": "اللقب (بالعربية) *",          "fr": "Nom (en arabe) *"},
+    "cdlg_f_firstname":  {"ar": "الاسم (بالعربية) *",         "fr": "Prénom (en arabe) *"},
+    "cdlg_f_lastname_fr":  {"ar": "اللقب (بالفرنسية)",        "fr": "Nom (en français)"},
+    "cdlg_f_firstname_fr": {"ar": "الاسم (بالفرنسية)",        "fr": "Prénom (en français)"},
     "cdlg_f_gender":     {"ar": "الجنس",                      "fr": "Sexe"},
     "cdlg_f_marital":    {"ar": "الحالة العائلية",            "fr": "Situation familiale"},
     "cdlg_f_nin":        {"ar": "رقم التعريف الوطني (NIN)",   "fr": "NIN"},
@@ -1212,6 +1214,8 @@ def upgrade_db():
             ("file_date",          "TEXT DEFAULT ''"),
             ("address_commune",    "TEXT DEFAULT ''"),
             ("address_wilaya",     "TEXT DEFAULT ''"),
+            ("last_name_fr",       "TEXT DEFAULT ''"),
+            ("first_name_fr",      "TEXT DEFAULT ''"),
         ]
         for col, dtype in cand_cols:
             if col not in cand_existing:
@@ -1660,8 +1664,9 @@ class CandidateDB:
             birth_place_commune,birth_place_wilaya,marital_status,father_name,mother_name,phone,
             nationality,disability,blood_type,license_type,previous_licenses,instructor_id,
             total_amount,national_id,second_nationality,current_address,is_born_abroad,
-            birth_country,embassy,consulate,file_number,file_date,address_commune,address_wilaya)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            birth_country,embassy,consulate,file_number,file_date,address_commune,address_wilaya,
+            last_name_fr,first_name_fr)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (d['first_name'], d['last_name'], d['gender'], d['birth_date'],
              d['birth_place_commune'], d['birth_place_wilaya'], d['marital_status'],
              d['father_name'], d['mother_name'], d['phone'], d['nationality'],
@@ -1671,7 +1676,8 @@ class CandidateDB:
              d.get('current_address',''), d.get('is_born_abroad',0),
              d.get('birth_country','الجزائر'), d.get('embassy',''), d.get('consulate',''),
              d.get('file_number',''), d.get('file_date',''),
-             d.get('address_commune',''), d.get('address_wilaya','')))
+             d.get('address_commune',''), d.get('address_wilaya',''),
+             d.get('last_name_fr',''), d.get('first_name_fr','')))
         lid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         conn.execute("INSERT INTO training_stages (candidate_id,stage_type) VALUES (?,?)",
                      (lid, 'code'))
@@ -1687,7 +1693,8 @@ class CandidateDB:
             mother_name=?,phone=?,nationality=?,disability=?,blood_type=?,license_type=?,
             previous_licenses=?,instructor_id=?,total_amount=?,national_id=?,
             second_nationality=?,current_address=?,is_born_abroad=?,birth_country=?,
-            embassy=?,consulate=?,file_number=?,file_date=?,address_commune=?,address_wilaya=?
+            embassy=?,consulate=?,file_number=?,file_date=?,address_commune=?,address_wilaya=?,
+            last_name_fr=?,first_name_fr=?
             WHERE id=?""",
             (d['first_name'], d['last_name'], d['gender'], d['birth_date'],
              d['birth_place_commune'], d['birth_place_wilaya'], d['marital_status'],
@@ -1698,7 +1705,8 @@ class CandidateDB:
              d.get('current_address',''), d.get('is_born_abroad',0),
              d.get('birth_country','الجزائر'), d.get('embassy',''),
              d.get('consulate',''), d.get('file_number',''), d.get('file_date',''),
-             d.get('address_commune',''), d.get('address_wilaya',''), i))
+             d.get('address_commune',''), d.get('address_wilaya',''),
+             d.get('last_name_fr',''), d.get('first_name_fr',''), i))
         conn.commit()
         conn.close()
 
@@ -2937,8 +2945,10 @@ class CandidateDialog(tk.Toplevel):
         g1.columnconfigure(0, weight=1); g1.columnconfigure(1, weight=1)
 
         personal = [
-            (T("cdlg_f_lastname"),  "last_name",          "entry", None),
-            (T("cdlg_f_firstname"), "first_name",         "entry", None),
+            (T("cdlg_f_lastname"),     "last_name",     "entry", None),
+            (T("cdlg_f_firstname"),    "first_name",    "entry", None),
+            (T("cdlg_f_lastname_fr"),  "last_name_fr",  "entry", None),
+            (T("cdlg_f_firstname_fr"), "first_name_fr", "entry", None),
             (T("cdlg_f_gender"),    "gender",             "combo", gender_opts()),
             (T("cdlg_f_marital"),   "marital_status",     "combo", marital_opts()),
             (T("cdlg_f_nin"),       "national_id",        "entry", None),
@@ -6380,28 +6390,25 @@ class DocumentsFrame(tk.Frame):
         draw_rect(2.5, 18.0, 1.5, 0.8)
         draw_text(3.25, 18.2, cand.get('blood_type','') or "*", "Helvetica-Bold", 12, "center")
         
-        # Name / الاسم واللقب — split "latin/arabic" stored format
-        def _split_name(raw):
-            raw = (raw or '').strip()
-            if '/' in raw:
-                parts = raw.split('/', 1)
-                return parts[0].strip(), parts[1].strip()
-            return '', raw
-
-        last_lat,  last_ar  = _split_name(cand.get('last_name',''))
-        first_lat, first_ar = _split_name(cand.get('first_name',''))
+        # Name / الاسم واللقب
+        last_ar  = cand.get('last_name','')  or ''
+        first_ar = cand.get('first_name','') or ''
+        last_fr  = cand.get('last_name_fr','')  or ''
+        first_fr = cand.get('first_name_fr','') or ''
 
         draw_text(20.0, 17.2, _pdf_t("اللقب :", "Nom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 17.2, last_ar, ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(1.5, 17.2, 17.5, 17.2)
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(1.5 * cm, 17.2 * cm, f"Nom : ...{last_lat}..." if last_lat else "Nom : .................................")
+        c.drawString(1.5 * cm, 17.2 * cm,
+                     f"Nom : ...{last_fr}..." if last_fr else "Nom : .................................")
 
         draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prenom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 16.2, first_ar, ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(1.5, 16.2, 17.5, 16.2)
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(1.5 * cm, 16.2 * cm, f"Prenom : ...{first_lat}..." if first_lat else "Prenom : .................................")
+        c.drawString(1.5 * cm, 16.2 * cm,
+                     f"Prenom : ...{first_fr}..." if first_fr else "Prenom : .................................")
         
         # Birth date & place / تاريخ ومكان الميلاد
         draw_text(20.0, 14.2, _pdf_t("تاريخ و مكان الميلاد :", "Date et lieu de naissance :"),
