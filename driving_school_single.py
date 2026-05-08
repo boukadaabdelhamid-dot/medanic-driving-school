@@ -6380,18 +6380,28 @@ class DocumentsFrame(tk.Frame):
         draw_rect(2.5, 18.0, 1.5, 0.8)
         draw_text(3.25, 18.2, cand.get('blood_type','') or "*", "Helvetica-Bold", 12, "center")
         
-        # Name / الاسم واللقب
+        # Name / الاسم واللقب — split "latin/arabic" stored format
+        def _split_name(raw):
+            raw = (raw or '').strip()
+            if '/' in raw:
+                parts = raw.split('/', 1)
+                return parts[0].strip(), parts[1].strip()
+            return '', raw
+
+        last_lat,  last_ar  = _split_name(cand.get('last_name',''))
+        first_lat, first_ar = _split_name(cand.get('first_name',''))
+
         draw_text(20.0, 17.2, _pdf_t("اللقب :", "Nom :"), ARABIC_FONT_BOLD, 11, "right")
-        draw_text(17.5, 17.2, cand.get('last_name',''), ARABIC_FONT_BOLD, 11, "right")
+        draw_text(17.5, 17.2, last_ar, ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(1.5, 17.2, 17.5, 17.2)
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(1.5 * cm, 17.2 * cm, "Nom :..................................")
+        c.drawString(1.5 * cm, 17.2 * cm, f"Nom : ...{last_lat}..." if last_lat else "Nom : .................................")
 
         draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prenom :"), ARABIC_FONT_BOLD, 11, "right")
-        draw_text(17.5, 16.2, cand.get('first_name',''), ARABIC_FONT_BOLD, 11, "right")
+        draw_text(17.5, 16.2, first_ar, ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(1.5, 16.2, 17.5, 16.2)
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(1.5 * cm, 16.2 * cm, "Prenom :..................................")
+        c.drawString(1.5 * cm, 16.2 * cm, f"Prenom : ...{first_lat}..." if first_lat else "Prenom : .................................")
         
         # Birth date & place / تاريخ ومكان الميلاد
         draw_text(20.0, 14.2, _pdf_t("تاريخ و مكان الميلاد :", "Date et lieu de naissance :"),
