@@ -6382,16 +6382,16 @@ class DocumentsFrame(tk.Frame):
         
         # Name / الاسم واللقب
         draw_text(20.0, 17.2, _pdf_t("اللقب :", "Nom :"), ARABIC_FONT_BOLD, 11, "right")
-        draw_text(16.5, 17.2, cand.get('last_name',''), ARABIC_FONT_BOLD, 11, "right")
-        draw_dotted_line(13.0, 17.2, 17.5, 17.2)
+        draw_text(17.5, 17.2, cand.get('last_name',''), ARABIC_FONT_BOLD, 11, "right")
+        draw_dotted_line(1.5, 17.2, 17.5, 17.2)
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(1.5 * cm, 17.2 * cm, f"Nom : {cand.get('last_name','')}")
+        c.drawString(1.5 * cm, 17.2 * cm, "Nom :..................................")
 
-        draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prénom :"), ARABIC_FONT_BOLD, 11, "right")
-        draw_text(16.5, 16.2, cand.get('first_name',''), ARABIC_FONT_BOLD, 11, "right")
-        draw_dotted_line(13.0, 16.2, 17.5, 16.2)
+        draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prenom :"), ARABIC_FONT_BOLD, 11, "right")
+        draw_text(17.5, 16.2, cand.get('first_name',''), ARABIC_FONT_BOLD, 11, "right")
+        draw_dotted_line(1.5, 16.2, 17.5, 16.2)
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(1.5 * cm, 16.2 * cm, f"Prenom : {cand.get('first_name','')}")
+        c.drawString(1.5 * cm, 16.2 * cm, "Prenom :..................................")
         
         # Birth date & place / تاريخ ومكان الميلاد
         draw_text(20.0, 14.2, _pdf_t("تاريخ و مكان الميلاد :", "Date et lieu de naissance :"),
