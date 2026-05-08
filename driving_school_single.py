@@ -6565,11 +6565,11 @@ class DocumentsFrame(tk.Frame):
         draw_rect(5.3, 11.2, 0.4, 0.4)
         if ms == "أرمل": draw_text(5.5, 11.35, "X", "Helvetica-Bold", 12, "center")
         
-        # Phone / الهاتف — moved to right side under marital status
+        # Phone / الهاتف — label outside rect (right), digits inside rect (left of label)
         draw_text(20.0, 10.2, _pdf_t("رقم الهاتف :", "N° de téléphone :"),
                   ARABIC_FONT_BOLD, 11, "right")
-        draw_rect(14.5, 10.0, 5.0, 0.7)
-        draw_text(17.0, 10.15, cand.get('phone','') or "", "Helvetica-Bold", 12, "center")
+        draw_rect(9.0, 10.0, 7.0, 0.7)
+        draw_text(12.5, 10.15, cand.get('phone','') or "", "Helvetica-Bold", 12, "center")
         
         # Nationality / الجنسية
         draw_text(20.0, 9.2, _pdf_t("الجنسية الأصلية :", "Nationalité d'origine :"),
@@ -6587,10 +6587,13 @@ class DocumentsFrame(tk.Frame):
                          "Pour les personnes nées à l'étranger / Pays de naissance :"),
                   ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(10.0, 8.2, 13.0, 8.2)
+        draw_text(11.5, 8.2, cand.get('birth_country','') or "", ARABIC_FONT_BOLD, 10, "right")
         draw_text(9.5, 8.2,
                   _pdf_t("سفارة أو قنصلية التسجيل :", "Ambassade ou consulat d'enregistrement :"),
                   ARABIC_FONT_BOLD, 10, "right")
         draw_dotted_line(1.5, 8.2, 5.5, 8.2)
+        _emb = (cand.get('embassy','') or '') + (' ' + (cand.get('consulate','') or '')).rstrip()
+        draw_text(5.0, 8.2, _emb.strip(), ARABIC_FONT_BOLD, 10, "right")
         
         # 4. Previously obtained categories table / جدول الأصناف
         draw_text(10.5, 7.3,
@@ -6603,8 +6606,8 @@ class DocumentsFrame(tk.Frame):
         c.setLineWidth(1.2)
         draw_rect(1.5, y_bot, 18.5, y_tab - y_bot)
         
-        draw_line(11.0, y_bot, 11.0, y_tab)
-        draw_line(14.5, y_bot, 14.5, y_tab)
+        draw_line(6.3,  y_bot, 6.3,  y_tab)
+        draw_line(11.1, y_bot, 11.1, y_tab)
         draw_line(16.0, y_bot, 16.0, y_tab)
         
         draw_line(16.0, y_tab - rh, 20.0, y_tab - rh)
@@ -6626,9 +6629,9 @@ class DocumentsFrame(tk.Frame):
         draw_text(18.0, yh1, _pdf_t("الصنف", "Catégorie"), ARABIC_FONT_BOLD, 10, "center")
         draw_text(17.0, yh2, _pdf_t("الجديد", "Nouvelle"), ARABIC_FONT_BOLD, 9, "center")
         draw_text(19.0, yh2, _pdf_t("القديم", "Ancienne"), ARABIC_FONT_BOLD, 9, "center")
-        draw_text(15.25, y_tab - rh - 0.12, _pdf_t("الرقم", "N°"), ARABIC_FONT_BOLD, 10, "center")
-        draw_text(12.75, y_tab - rh - 0.12, _pdf_t("التاريخ", "Date"), ARABIC_FONT_BOLD, 10, "center")
-        draw_text(6.25, y_tab - rh - 0.12, _pdf_t("هيئة الإصدار", "Organisme émetteur"),
+        draw_text(13.55, y_tab - rh - 0.12, _pdf_t("الرقم", "N°"), ARABIC_FONT_BOLD, 10, "center")
+        draw_text(8.7,   y_tab - rh - 0.12, _pdf_t("التاريخ", "Date"), ARABIC_FONT_BOLD, 10, "center")
+        draw_text(3.9,   y_tab - rh - 0.12, _pdf_t("هيئة الإصدار", "Organisme émetteur"),
                   ARABIC_FONT_BOLD, 10, "center")
         
         cats_new = [("A1","أ1"),("A","أ2"),("B","ب"),("D","د"),("C1","ج1"),("C","ج"),
@@ -6661,9 +6664,9 @@ class DocumentsFrame(tk.Frame):
                 num_v  = pinfo.get('num','')
                 date_v = pinfo.get('date','')
                 org_v  = pinfo.get('org','')
-                draw_text(15.25, yt, num_v,  "Helvetica-Bold", 8, "center")
-                draw_text(12.75, yt, date_v, "Helvetica-Bold", 8, "center")
-                draw_text(6.25,  yt, org_v,  ARABIC_FONT_BOLD, 8, "center")
+                draw_text(13.55, yt, num_v,  "Helvetica-Bold", 8, "center")
+                draw_text(8.7,   yt, date_v, "Helvetica-Bold", 8, "center")
+                draw_text(3.9,   yt, org_v,  ARABIC_FONT_BOLD, 8, "center")
 
         yt_merged = y_tab - 2*rh - 8.5*rh + 0.12
         draw_text(18.5, yt_merged, "E", "Helvetica-Bold", 11, "center")
