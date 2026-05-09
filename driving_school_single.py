@@ -8345,35 +8345,61 @@ class DocumentsFrame(tk.Frame):
             txt_right(_pdf_t(f"مدرسة تعليم السياقة:  {school_name}",
                               f"Auto-école :  {school_name}"),
                       y, ARABIC_FONT_BOLD, 10)
-            y -= 0.48
+            y -= 0.46
             txt_right(_pdf_t(f"مسيّر:  {manager_name}",
                               f"Responsable :  {manager_name}"),
                       y, ARABIC_FONT, 9)
+            # ن.م (الرقم الوطني للمالك) — يُعرض إن وُجد
+            national_id_v = school.get('national_id', '') or school.get('owner_id', '')
+            if national_id_v:
+                txt_left(_pdf_t(f"ن.م:  {national_id_v}",
+                                 f"N.I. :  {national_id_v}"),
+                         y, "Helvetica", 9)
 
-            # السجل التجاري + الهاتف + المرجع
+            # السطر الثاني: م.ب.ر.ت (رقم التسجيل) | اسم و لقب المنتحي | الهاتف
             y -= 0.45
-            ref_val = doc_ref or ""
+            reg_num_v = school.get('registration_number', '')
             if is_fr:
-                right_txt = f"Réf. {ref_val}" if ref_val else ""
-                left_txt  = f"R.C. {school_cr}" if school_cr else ""
+                if reg_num_v:
+                    txt_right(f"N° enreg. :  {reg_num_v}", y, "Helvetica", 9)
+                txt_center(_pdf_t(f"اسم و لقب المنتحي:  {manager_name}",
+                                   f"Responsable :  {manager_name}"),
+                           y, ARABIC_FONT, 9)
             else:
-                right_txt = f"م.ب.ر.ت:  {ref_val}" if ref_val else ""
-                left_txt  = f"ب.ت:  {school_cr}" if school_cr else ""
-            if right_txt:
-                txt_right(right_txt, y, "Helvetica", 9)
+                if reg_num_v:
+                    txt_right(f"م.ب.ر.ت:  {reg_num_v}", y, "Helvetica", 9)
+                txt_center(_pdf_t(f"اسم و لقب المنتحي:  {manager_name}",
+                                   f"Responsable :  {manager_name}"),
+                           y, ARABIC_FONT, 9)
             if school_phone:
-                txt_center(school_phone, y, "Helvetica", 9)
-            if left_txt:
-                txt_left(left_txt, y, "Helvetica", 9)
+                txt_left(school_phone, y, "Helvetica", 9)
 
-            # تاريخ الامتحان + مركز الامتحان
+            # السطر الثالث: ر.ت (السجل التجاري) | الإشارة/المرجع | تاريخ الامتحان
             y -= 0.45
-            txt_right(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
-                              f"Date d'examen :  {exam_date}"),
+            if is_fr:
+                if school_cr:
+                    txt_right(f"R.C. :  {school_cr}", y, "Helvetica", 9)
+                ref_val = doc_ref or ""
+                if ref_val:
+                    txt_center(f"Réf. :  {ref_val}", y, "Helvetica", 9)
+                txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
+                                 f"Date d'examen :  {exam_date}"),
+                         y, ARABIC_FONT, 9)
+            else:
+                if school_cr:
+                    txt_right(f"ر.ت:  {school_cr}", y, "Helvetica", 9)
+                ref_val = doc_ref or ""
+                if ref_val:
+                    txt_center(f"رت:  {ref_val}", y, "Helvetica", 9)
+                txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
+                                 f"Date d'examen :  {exam_date}"),
+                         y, ARABIC_FONT, 9)
+
+            # السطر الرابع: مركز الامتحان
+            y -= 0.42
+            txt_right(_pdf_t(f"مركز الامتحان:  {exam_center}",
+                              f"Centre d'examen :  {exam_center}"),
                       y, ARABIC_FONT, 9)
-            txt_left(_pdf_t(f"مركز الامتحان:  {exam_center}",
-                             f"Centre d'examen :  {exam_center}"),
-                     y, ARABIC_FONT, 9)
             y -= 0.3
             return y
 
@@ -8409,17 +8435,20 @@ class DocumentsFrame(tk.Frame):
                               f"Conduite :  {cnt_circuit:02d}"),
                       y, ARABIC_FONT, 10)
 
-            # يسار: المقبولون (خطوط فارغة للكتابة اليدوية)
+            # يسار: المقبولون (خطوط منقوطة للكتابة اليدوية)
             y_left = y_cur - 0.55 - 0.55
             txt_left(_pdf_t("المترشحين المقبولين:",
                              "Candidats admis :"),
                      y_left, ARABIC_FONT_BOLD, 11)
             y_left -= 0.50
-            txt_left(_pdf_t("قانون المرور:", "Code de la route :"), y_left, ARABIC_FONT, 10)
+            txt_left(_pdf_t("قانون المرور: ........", "Code de la route : ........"),
+                     y_left, ARABIC_FONT, 10)
             y_left -= 0.50
-            txt_left(_pdf_t("المناورات:",    "Manoeuvres :"),       y_left, ARABIC_FONT, 10)
+            txt_left(_pdf_t("المناورات: ........",    "Manoeuvres : ........"),
+                     y_left, ARABIC_FONT, 10)
             y_left -= 0.50
-            txt_left(_pdf_t("السياقة:",      "Conduite :"),          y_left, ARABIC_FONT, 10)
+            txt_left(_pdf_t("السياقة: ........",      "Conduite : ........"),
+                     y_left, ARABIC_FONT, 10)
 
             # توقيع المدرسة (أسفل يسار)
             sig_y = y + 0.15
