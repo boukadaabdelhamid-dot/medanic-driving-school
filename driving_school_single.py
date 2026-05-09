@@ -1248,6 +1248,14 @@ def upgrade_db():
         if "wilaya" not in school_existing:
             conn.execute("ALTER TABLE school_info ADD COLUMN wilaya TEXT DEFAULT ''")
 
+        # عمود نوع المركبة في جدول vehicles
+        cur4 = conn.execute("PRAGMA table_info(vehicles)")
+        veh_existing = {row[1] for row in cur4.fetchall()}
+        if "vehicle_type" not in veh_existing:
+            conn.execute(
+                "ALTER TABLE vehicles ADD COLUMN vehicle_type TEXT DEFAULT 'سيارة'"
+            )
+
         # جدول الإعدادات العامة (مفتاح/قيمة) — مخزن اللغة وغيرها
         conn.execute("""
             CREATE TABLE IF NOT EXISTS settings (
@@ -2038,6 +2046,50 @@ class VehicleDB:
         conn.close()
         return [dict(r) for r in rows]
 
+    @staticmethod
+    def add(data: dict):
+        conn = get_connection()
+        conn.execute(
+            """INSERT INTO vehicles
+               (vehicle_type, model, plate_number,
+                insurance_expiry, tech_inspection_expiry, notes)
+               VALUES (?,?,?,?,?,?)""",
+            (data.get("vehicle_type", "سيارة"),
+             data.get("model", ""),
+             data.get("plate_number", ""),
+             data.get("insurance_expiry", ""),
+             data.get("tech_inspection_expiry", ""),
+             data.get("notes", ""))
+        )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def update(vid: int, data: dict):
+        conn = get_connection()
+        conn.execute(
+            """UPDATE vehicles SET
+               vehicle_type=?, model=?, plate_number=?,
+               insurance_expiry=?, tech_inspection_expiry=?, notes=?
+               WHERE id=?""",
+            (data.get("vehicle_type", "سيارة"),
+             data.get("model", ""),
+             data.get("plate_number", ""),
+             data.get("insurance_expiry", ""),
+             data.get("tech_inspection_expiry", ""),
+             data.get("notes", ""),
+             vid)
+        )
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def delete(vid: int):
+        conn = get_connection()
+        conn.execute("DELETE FROM vehicles WHERE id=?", (vid,))
+        conn.commit()
+        conn.close()
+
 
 class SessionDB:
     """طبقة الوصول لجدول الحصص التدريبية."""
@@ -2747,10 +2799,100 @@ class DashboardFrame(tk.Frame):
 #  واجهة: معلومات المدرسة
 # ============================================================================
 
+VEHICLE_TYPES = ["سيارة", "دراجة نارية", "شاحنة", "حافلة", "غيرها"]
+
+
+class VehicleDialog(tk.Toplevel):
+    """نافذة منبثقة لإضافة أو تعديل مركبة."""
+
+    def __init__(self, parent, on_save, vehicle=None):
+        super().__init__(parent)
+        self.on_save  = on_save
+        self.vehicle  = vehicle
+        self.vars: dict = {}
+        title_text = "تعديل مركبة" if vehicle else "إضافة مركبة جديدة"
+        self.title(title_text)
+        self.geometry("500x390")
+        self.resizable(False, False)
+        self.configure(bg=COLOR_BG)
+        self.transient(parent)
+        self.grab_set()
+        self._build()
+        if vehicle:
+            self._fill(vehicle)
+        else:
+            self.vars["vehicle_type"].set("سيارة")
+
+    def _build(self):
+        head = tk.Frame(self, bg=COLOR_PRIMARY, pady=14, padx=20)
+        head.pack(fill="x")
+        title_text = "تعديل بيانات المركبة" if self.vehicle else "إضافة مركبة جديدة"
+        tk.Label(head, text=title_text, font=(FONT_FAMILY, 13, "bold"),
+                 bg=COLOR_PRIMARY, fg="white", anchor=A()).pack(side=S())
+
+        bf = tk.Frame(self, bg=COLOR_BG, pady=10)
+        bf.pack(side="bottom", fill="x", padx=20)
+        tk.Frame(bf, bg=COLOR_BORDER, height=1).pack(fill="x", pady=(0, 8))
+        ModernButton(bf, "إلغاء", self.destroy, icon="✗",
+                     color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
+        save_lbl = "حفظ التعديلات" if self.vehicle else "إضافة المركبة"
+        ModernButton(bf, save_lbl, self._save,
+                     color=COLOR_SUCCESS, size="large").pack(side=S(), padx=5)
+
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=10)
+        wrap.pack(fill="both", expand=True)
+        outer, card = make_card(wrap, padding=22)
+        outer.pack(fill="both", expand=True)
+
+        grid = tk.Frame(card, bg=COLOR_CARD)
+        grid.pack(fill="x")
+        grid.columnconfigure(0, weight=1)
+        grid.columnconfigure(1, weight=1)
+
+        def field(label, key, row, col=0, kind="entry", values=None, colspan=1):
+            cell = tk.Frame(grid, bg=COLOR_CARD)
+            cell.grid(row=row, column=col, columnspan=colspan,
+                      sticky="ew", padx=8, pady=6)
+            make_label(cell, label, font=FONT_BOLD).pack(anchor=A())
+            v = tk.StringVar()
+            self.vars[key] = v
+            if kind == "combo":
+                w = make_combo(cell, v, values or [], width=24)
+            else:
+                w = make_entry(cell, v, width=26)
+            w.pack(fill="x", ipady=4, pady=(2, 0))
+
+        field("نوع المركبة", "vehicle_type", 0, 0, "combo", VEHICLE_TYPES)
+        field("الموديل / الصانع *", "model", 0, 1)
+        field("رقم اللوحة", "plate_number", 1, 0)
+        field("ملاحظات", "notes", 1, 1)
+        field("تاريخ انتهاء التأمين  (YYYY-MM-DD)", "insurance_expiry", 2, 0)
+        field("تاريخ انتهاء الفحص التقني  (YYYY-MM-DD)", "tech_inspection_expiry", 2, 1)
+
+    def _fill(self, v: dict):
+        for k, var in self.vars.items():
+            var.set(v.get(k, ""))
+        if not self.vars["vehicle_type"].get():
+            self.vars["vehicle_type"].set("سيارة")
+
+    def _save(self):
+        model = self.vars["model"].get().strip()
+        if not model:
+            messagebox.showerror("خطأ", "يجب إدخال موديل/صانع المركبة.")
+            return
+        data = {k: var.get().strip() for k, var in self.vars.items()}
+        if not data.get("vehicle_type"):
+            data["vehicle_type"] = "سيارة"
+        self.on_save(data)
+        self.destroy()
+
+
 class SchoolInfoFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg=COLOR_BG)
-        self.vars = {}
+        self.vars: dict      = {}
+        self._veh_tree       = None
+        self._veh_rows: list = []
         self._build()
         self._load()
 
@@ -2763,22 +2905,27 @@ class SchoolInfoFrame(tk.Frame):
                  bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(fill="x", pady=(0, 5))
         tk.Label(wrap, text=T("school_subtitle"),
                  font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
-                 anchor=A()).pack(fill="x", pady=(0, 20))
+                 anchor=A()).pack(fill="x", pady=(0, 14))
 
-        outer, card = make_card(wrap, padding=30)
-        outer.pack(fill="both", expand=True, padx=80)
+        nb = ttk.Notebook(wrap, style="Modern.TNotebook")
+        nb.pack(fill="both", expand=True)
+
+        tab1 = tk.Frame(nb, bg=COLOR_BG)
+        nb.add(tab1, text="  📋  بيانات المدرسة  ")
+        self._build_info_tab(tab1)
+
+        tab2 = tk.Frame(nb, bg=COLOR_BG)
+        nb.add(tab2, text="  🚗  المركبات  ")
+        self._build_vehicles_tab(tab2)
+
+    def _build_info_tab(self, parent):
+        outer, card = make_card(parent, padding=28)
+        outer.pack(fill="both", expand=True, padx=60, pady=20)
 
         section_title(card, T("school_basic"), icon="📋")
 
-        # إعادة ترتيب الحقول لجعل المعلومات الأساسية (العنوان والهاتف) في الأعلى
-        fields = [
-            (T("school_name"), "name"), (T("school_phone"), "phone"),
-            (T("school_address"), "address"), (T("school_cr"), "commercial_register"),
-            (T("school_accred"), "accreditation_number"), ("NIF", "nif"),
-            ("NIS", "nis"), ("N° Article", "article_number")
-        ]
         bf = tk.Frame(card, bg=COLOR_CARD)
-        bf.pack(side="bottom", fill="x", pady=(20, 0))
+        bf.pack(side="bottom", fill="x", pady=(16, 0))
         ModernButton(bf, T("btn_save_info"), self._save,
                      icon="💾", color=COLOR_SUCCESS).pack(side="right", padx=5)
         ModernButton(bf, T("btn_reload"), self._load,
@@ -2786,30 +2933,23 @@ class SchoolInfoFrame(tk.Frame):
 
         grid = tk.Frame(card, bg=COLOR_CARD)
         grid.pack(fill="x", expand=True)
-        
-        # توزيع الحقول بشكل ذكي وبدون تداخل
-        # سنقوم بوضع اسم المدرسة والهاتف في الصف الأول
-        # ثم العنوان في الصف الثاني (يأخذ العرض كاملاً)
-        # ثم بقية الحقول في عمودين
-        
-        # 1. الصف الأول: اسم المدرسة + الهاتف
+        grid.columnconfigure(0, weight=1)
+        grid.columnconfigure(1, weight=1)
+
         f_name = tk.Frame(grid, bg=COLOR_CARD)
         f_name.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
-        grid.columnconfigure(0, weight=1)
         make_label(f_name, T("school_name"), font=FONT_BOLD).pack(anchor=A())
         v_name = tk.StringVar()
         self.vars["name"] = v_name
         make_entry(f_name, v_name, width=32).pack(fill="x", ipady=4, pady=(2, 0))
-        
+
         f_phone = tk.Frame(grid, bg=COLOR_CARD)
         f_phone.grid(row=0, column=1, sticky="ew", padx=10, pady=5)
-        grid.columnconfigure(1, weight=1)
         make_label(f_phone, T("school_phone"), font=FONT_BOLD).pack(anchor=A())
         v_phone = tk.StringVar()
         self.vars["phone"] = v_phone
         make_entry(f_phone, v_phone, width=32).pack(fill="x", ipady=4, pady=(2, 0))
-        
-        # 2. الصف الثاني: العنوان + الولاية
+
         f_addr = tk.Frame(grid, bg=COLOR_CARD)
         f_addr.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
         make_label(f_addr, T("school_address"), font=FONT_BOLD).pack(anchor=A())
@@ -2822,27 +2962,96 @@ class SchoolInfoFrame(tk.Frame):
         make_label(f_wilaya, T("school_wilaya"), font=FONT_BOLD).pack(anchor=A())
         v_wilaya = tk.StringVar()
         self.vars["wilaya"] = v_wilaya
-        cb_wilaya = ttk.Combobox(f_wilaya, textvariable=v_wilaya,
-                                 values=ALGERIA_WILAYAS, width=30, state="readonly")
-        cb_wilaya.pack(fill="x", ipady=4, pady=(2, 0))
-        
-        # 3. بقية الحقول (CR, Accreditation, NIF, NIS, Article)
+        ttk.Combobox(f_wilaya, textvariable=v_wilaya,
+                     values=ALGERIA_WILAYAS, width=30,
+                     state="readonly").pack(fill="x", ipady=4, pady=(2, 0))
+
         other_fields = [
-            (T("school_cr"), "commercial_register"), (T("school_accred"), "accreditation_number"),
+            (T("school_cr"), "commercial_register"),
+            (T("school_accred"), "accreditation_number"),
             ("NIF", "nif"), ("NIS", "nis"),
-            ("N° Article", "article_number")
+            ("N° Article", "article_number"),
         ]
-        
         for i, (label, key) in enumerate(other_fields):
             row = (i // 2) + 2
             col = i % 2
-            
             cell = tk.Frame(grid, bg=COLOR_CARD)
             cell.grid(row=row, column=col, sticky="ew", padx=10, pady=5)
             make_label(cell, label, font=FONT_BOLD).pack(anchor=A())
             v = tk.StringVar()
             self.vars[key] = v
             make_entry(cell, v, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+
+    def _build_vehicles_tab(self, parent):
+        outer, card = make_card(parent, padding=20)
+        outer.pack(fill="both", expand=True, padx=40, pady=20)
+
+        section_title(card, "المركبات المسجّلة", icon="🚗")
+
+        tb = tk.Frame(card, bg=COLOR_CARD)
+        tb.pack(fill="x", pady=(0, 10))
+        ModernButton(tb, "إضافة مركبة", self._veh_add,
+                     icon="➕", color=COLOR_PRIMARY).pack(side=S(), padx=(0, 6))
+        ModernButton(tb, "تعديل", self._veh_edit,
+                     icon="✏", color=COLOR_WARNING).pack(side=S(), padx=(0, 6))
+        ModernButton(tb, "حذف", self._veh_del,
+                     icon="🗑", color=COLOR_DANGER).pack(side=S())
+
+        cols   = ("vtype",  "model",          "plate",        "ins_exp",        "tech_exp",              "notes")
+        heads  = ("النوع", "الموديل / الصانع", "رقم اللوحة", "انتهاء التأمين", "انتهاء الفحص التقني",  "الملاحظات")
+        widths = (90,       160,               110,            115,              140,                     130)
+        self._veh_tree = create_treeview(card, cols, heads, widths, height=10)
+        self._veh_tree.bind("<Double-1>", lambda e: self._veh_edit())
+        self._veh_refresh()
+
+    def _veh_refresh(self):
+        if self._veh_tree is None:
+            return
+        rows = VehicleDB.get_all()
+        self._veh_rows = rows
+        insert_zebra(self._veh_tree, [
+            (r.get("vehicle_type", "سيارة"),
+             r.get("model", ""),
+             r.get("plate_number", ""),
+             r.get("insurance_expiry", ""),
+             r.get("tech_inspection_expiry", ""),
+             r.get("notes", ""))
+            for r in rows
+        ])
+
+    def _veh_selected(self):
+        sel = self._veh_tree.selection()
+        if not sel:
+            messagebox.showwarning("تنبيه", "يرجى تحديد مركبة أولاً.")
+            return None
+        idx = self._veh_tree.index(sel[0])
+        return self._veh_rows[idx] if idx < len(self._veh_rows) else None
+
+    def _veh_add(self):
+        VehicleDialog(self, self._on_veh_save)
+
+    def _veh_edit(self):
+        v = self._veh_selected()
+        if v:
+            vid = v["id"]
+            VehicleDialog(self,
+                          lambda data, _id=vid: self._on_veh_save(data, _id),
+                          vehicle=v)
+
+    def _veh_del(self):
+        v = self._veh_selected()
+        if v and messagebox.askyesno(
+                "تأكيد الحذف",
+                f"هل تريد حذف المركبة: {v.get('model', '')}؟"):
+            VehicleDB.delete(v["id"])
+            self._veh_refresh()
+
+    def _on_veh_save(self, data: dict, vid: int = None):
+        if vid:
+            VehicleDB.update(vid, data)
+        else:
+            VehicleDB.add(data)
+        self._veh_refresh()
 
     def _load(self):
         d = SchoolInfoDB.get()
