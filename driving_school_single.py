@@ -6739,7 +6739,7 @@ class DocumentsFrame(tk.Frame):
         c.line(5.5 * cm, 25.6 * cm, 18.5 * cm, 25.6 * cm)
 
         # Category / الصنف المطلوب
-        lic = cand.get('license_type', 'B') or 'B'
+        lic = cand.get('license_type', 'ب') or 'ب'
         draw_text(14.0, 24.9, _pdf_t(f"الصنف المطلوب : ........{lic}",
                                       f"Catégorie demandée : ........{lic}"),
                   ARABIC_FONT_BOLD, 13, "right")
@@ -7260,7 +7260,7 @@ class DocumentsFrame(tk.Frame):
         phone_s = school.get('phone','')
         _t(f"البريد الإلكتروني  {'.'*30}            الهاتف  {_dots(phone_s,20)}"); _nl()
 
-        lic_type = cand.get('license_type','B') or 'B'
+        lic_type = cand.get('license_type','ب') or 'ب'
         _field("صنف )أصناف( رخصة السياقة محل التعليم", lic_type, 30)
         _t(f"رقم التأمين على الحوادث لفائدة المترشح )ة(  {'.'*42}  :"); _nl(0.9)
 
@@ -8212,7 +8212,7 @@ class DocumentsFrame(tk.Frame):
         make_entry(sr, sv, width=30).pack(side=S(), fill="x", expand=True, ipady=3)
 
         # ── فلاتر الصنف ──────────────────────────────────────────────────────
-        all_cats = sorted({(c.get('license_type') or 'B').strip() for c in all_cands})
+        all_cats = sorted({(c.get('license_type') or 'ب').strip() for c in all_cands})
         cat_filter = tk.StringVar(value="all")   # "all" أو اسم صنف محدد
 
         cat_bar = tk.Frame(left_col, bg="#f0f9ff", padx=6, pady=4)
@@ -8261,7 +8261,7 @@ class DocumentsFrame(tk.Frame):
             act_cat = cat_filter.get()
             result = []
             for cand in all_cands:
-                if act_cat != "all" and (cand.get('license_type') or 'B').strip() != act_cat:
+                if act_cat != "all" and (cand.get('license_type') or 'ب').strip() != act_cat:
                     continue
                 full = f"{cand['last_name']} {cand['first_name']}"
                 if txt and txt.lower() not in full.lower() \
@@ -8329,7 +8329,7 @@ class DocumentsFrame(tk.Frame):
             for cand in all_cands:
                 # فلترة الصنف
                 if act_cat != "all" and \
-                        (cand.get('license_type') or 'B').strip() != act_cat:
+                        (cand.get('license_type') or 'ب').strip() != act_cat:
                     continue
                 # فلترة النص
                 full = f"{cand['last_name']} {cand['first_name']}"
@@ -8375,6 +8375,10 @@ class DocumentsFrame(tk.Frame):
                 show_error(T("doc_err_sel_one")); return
 
             selected_cands = [c for c in all_cands if c['id'] in selected_ids]
+            act_cat = cat_filter.get()
+            if act_cat != "all":
+                selected_cands = [c for c in selected_cands
+                                  if (c.get('license_type') or 'ب').strip() == act_cat]
             exam_date  = opts_vars["exam_date"].get().strip()
             exam_center= opts_vars["exam_center"].get().strip() or "............"
             doc_ref    = opts_vars["doc_ref"].get().strip()
@@ -8675,7 +8679,7 @@ class DocumentsFrame(tk.Frame):
         # ── تجميع المترشحين حسب الصنف ────────────────────────────────────────
         cat_groups = defaultdict(list)
         for cand in cands:
-            cat = (cand.get('license_type') or 'B').strip() or 'B'
+            cat = (cand.get('license_type') or 'ب').strip() or 'ب'
             cat_groups[cat].append(cand)
         categories = sorted(cat_groups.keys())
 
@@ -8705,7 +8709,7 @@ class DocumentsFrame(tk.Frame):
                 reg_num   = str(cand.get('national_id', '') or cand.get('id', ''))
                 full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
                 birth_d   = cand.get('birth_date', '')
-                lic_type  = cand.get('license_type', 'B')
+                lic_type  = cand.get('license_type', 'ب')
                 row_num   = idx + 1
 
                 # تحديد المرحلة وتحديث العدادات
