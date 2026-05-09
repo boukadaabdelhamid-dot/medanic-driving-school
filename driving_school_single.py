@@ -1247,6 +1247,8 @@ def upgrade_db():
         school_existing = {row[1] for row in cur3.fetchall()}
         if "wilaya" not in school_existing:
             conn.execute("ALTER TABLE school_info ADD COLUMN wilaya TEXT DEFAULT ''")
+        if "manager_name" not in school_existing:
+            conn.execute("ALTER TABLE school_info ADD COLUMN manager_name TEXT DEFAULT ''")
 
         # عمود نوع المركبة في جدول vehicles
         cur4 = conn.execute("PRAGMA table_info(vehicles)")
@@ -2967,6 +2969,7 @@ class SchoolInfoFrame(tk.Frame):
                      state="readonly").pack(fill="x", ipady=4, pady=(2, 0))
 
         other_fields = [
+            ("اسم مسيّر المدرسة" if LANG == "ar" else "Nom du responsable", "manager_name"),
             (T("school_cr"), "commercial_register"),
             (T("school_accred"), "accreditation_number"),
             ("NIF", "nif"), ("NIS", "nis"),
