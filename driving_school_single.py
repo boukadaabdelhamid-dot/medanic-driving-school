@@ -1257,6 +1257,10 @@ def upgrade_db():
             conn.execute(
                 "ALTER TABLE vehicles ADD COLUMN vehicle_type TEXT DEFAULT 'سيارة'"
             )
+        if "training_card_number" not in veh_existing:
+            conn.execute(
+                "ALTER TABLE vehicles ADD COLUMN training_card_number TEXT DEFAULT ''"
+            )
 
         # جدول الإعدادات العامة (مفتاح/قيمة) — مخزن اللغة وغيرها
         conn.execute("""
@@ -2054,14 +2058,16 @@ class VehicleDB:
         conn.execute(
             """INSERT INTO vehicles
                (vehicle_type, model, plate_number,
-                insurance_expiry, tech_inspection_expiry, notes)
-               VALUES (?,?,?,?,?,?)""",
+                insurance_expiry, tech_inspection_expiry, notes,
+                training_card_number)
+               VALUES (?,?,?,?,?,?,?)""",
             (data.get("vehicle_type", "سيارة"),
              data.get("model", ""),
              data.get("plate_number", ""),
              data.get("insurance_expiry", ""),
              data.get("tech_inspection_expiry", ""),
-             data.get("notes", ""))
+             data.get("notes", ""),
+             data.get("training_card_number", ""))
         )
         conn.commit()
         conn.close()
@@ -2072,7 +2078,8 @@ class VehicleDB:
         conn.execute(
             """UPDATE vehicles SET
                vehicle_type=?, model=?, plate_number=?,
-               insurance_expiry=?, tech_inspection_expiry=?, notes=?
+               insurance_expiry=?, tech_inspection_expiry=?, notes=?,
+               training_card_number=?
                WHERE id=?""",
             (data.get("vehicle_type", "سيارة"),
              data.get("model", ""),
@@ -2080,6 +2087,7 @@ class VehicleDB:
              data.get("insurance_expiry", ""),
              data.get("tech_inspection_expiry", ""),
              data.get("notes", ""),
+             data.get("training_card_number", ""),
              vid)
         )
         conn.commit()
@@ -2814,7 +2822,7 @@ class VehicleDialog(tk.Toplevel):
         self.vars: dict = {}
         title_text = "تعديل مركبة" if vehicle else "إضافة مركبة جديدة"
         self.title(title_text)
-        self.geometry("500x390")
+        self.geometry("500x450")
         self.resizable(False, False)
         self.configure(bg=COLOR_BG)
         self.transient(parent)
@@ -2868,8 +2876,9 @@ class VehicleDialog(tk.Toplevel):
         field("الموديل / الصانع *", "model", 0, 1)
         field("رقم اللوحة", "plate_number", 1, 0)
         field("ملاحظات", "notes", 1, 1)
-        field("تاريخ انتهاء التأمين  (YYYY-MM-DD)", "insurance_expiry", 2, 0)
-        field("تاريخ انتهاء الفحص التقني  (YYYY-MM-DD)", "tech_inspection_expiry", 2, 1)
+        field("رقم بطاقة التدريب", "training_card_number", 2, 0)
+        field("تاريخ انتهاء التأمين  (YYYY-MM-DD)", "insurance_expiry", 3, 0)
+        field("تاريخ انتهاء الفحص التقني  (YYYY-MM-DD)", "tech_inspection_expiry", 3, 1)
 
     def _fill(self, v: dict):
         for k, var in self.vars.items():
