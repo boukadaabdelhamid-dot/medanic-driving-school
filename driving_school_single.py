@@ -8225,6 +8225,14 @@ class DocumentsFrame(tk.Frame):
         def _cat_btn(parent, label, value, color="#64748b"):
             def _on():
                 cat_filter.set(value)
+                if value == "all":
+                    for cand in all_cands:
+                        selected_set.add(cand['id'])
+                else:
+                    selected_set.clear()
+                    for cand in all_cands:
+                        if (cand.get('license_type') or 'ب').strip() == value:
+                            selected_set.add(cand['id'])
                 _refresh_cat_buttons()
                 populate_tree(sv.get().strip())
             b = tk.Button(parent, text=label, font=FONT_SMALL,
@@ -8370,15 +8378,18 @@ class DocumentsFrame(tk.Frame):
                      color=COLOR_TEXT_LIGHT).pack(side=So(), padx=5)
 
         def do_generate():
-            selected_ids = list(selected_set)
-            if not selected_ids:
-                show_error(T("doc_err_sel_one")); return
-
-            selected_cands = [c for c in all_cands if c['id'] in selected_ids]
             act_cat = cat_filter.get()
-            if act_cat != "all":
-                selected_cands = [c for c in selected_cands
-                                  if (c.get('license_type') or 'ب').strip() == act_cat]
+            if act_cat == "all":
+                selected_cands = list(all_cands)
+            else:
+                selected_ids = list(selected_set)
+                if not selected_ids:
+                    show_error(T("doc_err_sel_one")); return
+                selected_cands = [c for c in all_cands
+                                  if c['id'] in selected_ids
+                                  and (c.get('license_type') or 'ب').strip() == act_cat]
+                if not selected_cands:
+                    show_error(T("doc_err_sel_one")); return
             exam_date  = opts_vars["exam_date"].get().strip()
             exam_center= opts_vars["exam_center"].get().strip() or "............"
             doc_ref    = opts_vars["doc_ref"].get().strip()
