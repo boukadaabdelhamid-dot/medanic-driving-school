@@ -8629,11 +8629,6 @@ class DocumentsFrame(tk.Frame):
                               f"Délégation de Wilaya à la Sécurité Routière - {wilaya_display}"),
                       y, ARABIC_FONT, 8)
 
-            # ③ خط فاصل
-            y -= 0.35
-            c.setLineWidth(1)
-            c.line(1.5*cm, y*cm, page_w - 1.5*cm, y*cm)
-
             # ④ عنوان الوثيقة — منتصف + تسطير
             y -= 0.85
             txt_center(_pdf_t("قائمة المترشحين لنيل رخصة السياقة",
@@ -8643,12 +8638,6 @@ class DocumentsFrame(tk.Frame):
             c.setLineWidth(0.8)
             c.line((page_w - title_w) / 2, (y - 0.12)*cm,
                    (page_w + title_w) / 2, (y - 0.12)*cm)
-
-            # ⑤ الصنف — منتصف
-            y -= 0.52
-            txt_center(_pdf_t(f"— الصنف:  {cat_name} —",
-                               f"— Catégorie :  {cat_name} —"),
-                       y, ARABIC_FONT_BOLD, 11 if not is_fr else 10)
 
             # ⑥ اسم المدرسة — يمين
             y -= 0.72
@@ -8688,13 +8677,7 @@ class DocumentsFrame(tk.Frame):
                              f"Centre d'examen :  {exam_center}"),
                      y, ARABIC_FONT, 9)
 
-            # ⑫ اسم و لقب الممتحن يسار
-            y -= 0.42
-            txt_left(_pdf_t("اسم و لقب الممتحن:  ..........",
-                             "Nom et prénom de l'examinateur :  .........."),
-                     y, ARABIC_FONT, 9)
-
-            # ⑬ ممرن يمين (إن وُجد)
+            # ⑫ ممرن يمين (إن وُجد)
             if instructor_name:
                 txt_right(_pdf_t(f"ممرن:  {instructor_name}",
                                   f"Moniteur :  {instructor_name}"),
