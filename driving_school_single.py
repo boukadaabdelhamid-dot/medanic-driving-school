@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+من# -*- coding: utf-8 -*-
 """
 نظام إدارة مدرسة تعليم السياقة - الجزائر
 Driving School Management System - Algeria
