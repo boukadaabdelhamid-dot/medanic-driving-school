@@ -8133,12 +8133,17 @@ class DocumentsFrame(tk.Frame):
 
         school = SchoolInfoDB.get()
 
-        # ── بناء قاموس الممرنين (اسم → id) ─────────────────────────────────
+        # ── بناء قاموس الممرنين (عنوان فريد → id) ──────────────────────────
         _all_instructors = InstructorDB.get_all()
         _all_lbl = _pdf_t("الكل", "Tous")
         inst_map = {_all_lbl: None}
+        _seen_inst_names = {}
         for _ins in _all_instructors:
-            inst_map[f"{_ins['last_name']} {_ins['first_name']}"] = _ins['id']
+            _base = f"{_ins['last_name']} {_ins['first_name']}"
+            if _base in _seen_inst_names:
+                _base = f"{_base} ({_ins['id']})"
+            _seen_inst_names[_base] = True
+            inst_map[_base] = _ins['id']
         inst_names = list(inst_map.keys())
 
         # ========== نافذة الإعداد ==========
