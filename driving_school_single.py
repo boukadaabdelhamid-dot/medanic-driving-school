@@ -8133,6 +8133,14 @@ class DocumentsFrame(tk.Frame):
 
         school = SchoolInfoDB.get()
 
+        # ── بناء قاموس الممرنين (اسم → id) ─────────────────────────────────
+        _all_instructors = InstructorDB.get_all()
+        _all_lbl = _pdf_t("الكل", "Tous")
+        inst_map = {_all_lbl: None}
+        for _ins in _all_instructors:
+            inst_map[f"{_ins['last_name']} {_ins['first_name']}"] = _ins['id']
+        inst_names = list(inst_map.keys())
+
         # ========== نافذة الإعداد ==========
         dlg = tk.Toplevel(self)
         dlg.title(T("examlist_dlg_title"))
@@ -8265,6 +8273,18 @@ class DocumentsFrame(tk.Frame):
                     btn.configure(relief="flat", bd=0)
         _refresh_cat_buttons()
 
+        # ── فلتر الممرن ───────────────────────────────────────────────────────
+        inst_filter_var = tk.StringVar(value=inst_names[0])
+        inst_bar = tk.Frame(left_col, bg="#f0fdf4", padx=6, pady=4)
+        inst_bar.pack(fill="x")
+        tk.Label(inst_bar,
+                 text=_pdf_t("فلترة حسب الممرن:", "Filtrer par moniteur :"),
+                 font=FONT_SMALL, bg="#f0fdf4", fg="#15803d",
+                 anchor=A()).pack(side=S(), padx=(0, 6))
+        ttk.Combobox(inst_bar, textvariable=inst_filter_var,
+                     values=inst_names, state="readonly",
+                     width=24).pack(side=S(), padx=4)
+
         # ── أزرار تحديد الكل / إلغاء الكل (للصنف الظاهر حالياً) ─────────────
         sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
         sel_row.pack(fill="x")
@@ -8273,12 +8293,15 @@ class DocumentsFrame(tk.Frame):
         selected_set = set()
 
         def _visible_cands():
-            """يُعيد قائمة المترشحين المطابقين للفلترين (نص + صنف)."""
+            """يُعيد قائمة المترشحين المطابقين للفلاتر (نص + صنف + ممرن)."""
             txt = sv.get().strip()
             act_cat = cat_filter.get()
+            act_inst_id = inst_map.get(inst_filter_var.get())
             result = []
             for cand in all_cands:
                 if act_cat != "all" and (cand.get('license_type') or 'ب').strip() != act_cat:
+                    continue
+                if act_inst_id is not None and cand.get('instructor_id') != act_inst_id:
                     continue
                 full = f"{cand['last_name']} {cand['first_name']}"
                 if txt and txt.lower() not in full.lower() \
@@ -8342,11 +8365,15 @@ class DocumentsFrame(tk.Frame):
             for item in cand_tree.get_children():
                 cand_tree.delete(item)
             act_cat = cat_filter.get()
+            act_inst_id = inst_map.get(inst_filter_var.get())
             idx = 0
             for cand in all_cands:
                 # فلترة الصنف
                 if act_cat != "all" and \
                         (cand.get('license_type') or 'ب').strip() != act_cat:
+                    continue
+                # فلترة الممرن
+                if act_inst_id is not None and cand.get('instructor_id') != act_inst_id:
                     continue
                 # فلترة النص
                 full = f"{cand['last_name']} {cand['first_name']}"
@@ -8380,6 +8407,20 @@ class DocumentsFrame(tk.Frame):
 
         cand_tree.bind("<Button-1>", toggle_item)
         sv.trace("w", lambda *a: populate_tree(sv.get().strip()))
+
+        def _on_inst_filter(*_):
+            act_inst_id = inst_map.get(inst_filter_var.get())
+            if act_inst_id is None:
+                for cand in all_cands:
+                    selected_set.add(cand['id'])
+            else:
+                selected_set.clear()
+                for cand in all_cands:
+                    if cand.get('instructor_id') == act_inst_id:
+                        selected_set.add(cand['id'])
+            populate_tree(sv.get().strip())
+
+        inst_filter_var.trace("w", _on_inst_filter)
 
         # --- شريط الأزرار السفلي ---
         bf = tk.Frame(dlg, bg=COLOR_BG, pady=12); bf.pack(side="bottom", fill="x", padx=20)
