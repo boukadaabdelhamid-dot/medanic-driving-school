@@ -8193,6 +8193,15 @@ class DocumentsFrame(tk.Frame):
                   date.today().strftime("%d/%m/%Y"))
         lbl_entry(rc_frame, T("examlist_exam_center"), "exam_center", "")
         lbl_entry(rc_frame, T("examlist_doc_ref"), "doc_ref", "")
+        lbl_entry(rc_frame, _pdf_t("ب.ر.ت (رقم بطاقة تدريب المركبة)", "B.R.T (N° carte formation véh.)"), "training_card_num", "")
+
+        # قائمة المركبات — ن.م
+        _vehs = VehicleDB.get_all()
+        _veh_labels = [""] + [f"{v.get('vehicle_type','')} — {v.get('plate_number','')}"
+                               for v in _vehs if v.get('plate_number','')]
+        lbl_combobox(rc_frame, _pdf_t("ن.م (نوع المركبة)", "N.V. (Type véhicule)"),
+                     "vehicle_nm", "", _veh_labels)
+
         lbl_combobox(rc_frame, T("examlist_wilaya"), "wilaya",
                      school.get('wilaya', '').strip(),
                      ALGERIA_WILAYAS)
@@ -8450,6 +8459,11 @@ class DocumentsFrame(tk.Frame):
             doc_ref    = opts_vars["doc_ref"].get().strip()
             wilaya_val = opts_vars["wilaya"].get().strip()
             stage_type = stage_var.get()
+            training_card_num = opts_vars["training_card_num"].get().strip()
+            vehicle_nm = opts_vars["vehicle_nm"].get().strip()
+            _all_lbl_gen = _pdf_t("الكل", "Tous")
+            _sel_inst = inst_filter_var.get()
+            instructor_name = "" if _sel_inst == _all_lbl_gen else _sel_inst
 
             default_exam_file = (f"liste_candidats_examen_{exam_date.replace('/','_')}.pdf"
                                  if LANG == "fr" else
@@ -8461,14 +8475,18 @@ class DocumentsFrame(tk.Frame):
             self._generate_exam_list_pdf(
                 path, selected_cands, school, exam_date,
                 exam_center, doc_ref, wilaya_val, stage_type,
-                default_name=default_exam_file)
+                default_name=default_exam_file,
+                instructor_name=instructor_name,
+                training_card_num=training_card_num,
+                vehicle_nm=vehicle_nm)
 
         ModernButton(bf, T("examlist_gen_pdf"), do_generate,
                      icon="📄", color="#0369a1").pack(side=S(), padx=5)
 
     def _generate_exam_list_pdf(self, path, cands, school, exam_date,
                                  exam_center, doc_ref, wilaya_val, stage_type,
-                                 default_name=None):
+                                 default_name=None, instructor_name="",
+                                 training_card_num="", vehicle_nm=""):
         """يولّد PDF قائمة المترشحين للامتحان — صفحة منفصلة لكل صنف."""
         from reportlab.pdfgen import canvas as rl_canvas
         from reportlab.lib.pagesizes import A4
@@ -8589,100 +8607,100 @@ class DocumentsFrame(tk.Frame):
         # ── رسم الترويسة الرسمية الكاملة ─────────────────────────────────────
         def draw_full_header(cat_name):
             y = 28.5
+
+            # ① الجمهورية — منتصف + تسطير
             txt_center(_pdf_t("الجمهورية الجزائرية الديمقراطية الشعبية",
                                "République Algérienne Démocratique et Populaire"),
                        y, ARABIC_FONT_BOLD, 13 if not is_fr else 11)
-            y -= 0.65
-            txt_center(_pdf_t("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية",
-                               "Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire"),
-                       y, ARABIC_FONT, 9 if not is_fr else 7)
-            y -= 0.55
-            txt_center(_pdf_t("المندوبيـة الوطنيـة للأمن في الطرق",
-                               "Délégation Nationale à la Sécurité Routière"),
-                       y, ARABIC_FONT, 9)
-            y -= 0.50
-            txt_center(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_display}",
-                               f"Délégation de Wilaya à la Sécurité Routière - {wilaya_display}"),
-                       y, ARABIC_FONT, 9)
+            c.setLineWidth(0.8)
+            c.line(page_w*0.25, (y - 0.15)*cm, page_w*0.75, (y - 0.15)*cm)
+
+            # ② الوزارة والمندوبيات — يمين فقط
+            y -= 0.60
+            txt_right(_pdf_t("وزارة الداخلية و الجماعات المحلية و التهيئة العمرانية",
+                              "Ministère de l'Intérieur, des Collectivités Locales"),
+                      y, ARABIC_FONT, 8)
+            y -= 0.48
+            txt_right(_pdf_t("المندوبيـة الوطنية للأمـن في الطرق",
+                              "Délégation Nationale à la Sécurité Routière"),
+                      y, ARABIC_FONT, 8)
+            y -= 0.48
+            txt_right(_pdf_t(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya_display}",
+                              f"Délégation de Wilaya à la Sécurité Routière - {wilaya_display}"),
+                      y, ARABIC_FONT, 8)
+
+            # ③ خط فاصل
             y -= 0.35
             c.setLineWidth(1)
             c.line(1.5*cm, y*cm, page_w - 1.5*cm, y*cm)
 
-            # عنوان الوثيقة
+            # ④ عنوان الوثيقة — منتصف + تسطير
             y -= 0.85
             txt_center(_pdf_t("قائمة المترشحين لنيل رخصة السياقة",
                                "Liste des candidats au permis de conduire"),
                        y, ARABIC_FONT_BOLD, 14 if not is_fr else 12)
-            y -= 0.55
-            txt_center(_pdf_t(f"— الصنف:  {cat_name} —",
-                               f"— Catégorie :  {cat_name} —"),
-                       y, ARABIC_FONT_BOLD, 11 if not is_fr else 10)
             title_w = 10 * cm
-            c.setLineWidth(1)
+            c.setLineWidth(0.8)
             c.line((page_w - title_w) / 2, (y - 0.12)*cm,
                    (page_w + title_w) / 2, (y - 0.12)*cm)
 
-            # بيانات المدرسة — يمين
+            # ⑤ الصنف — منتصف
+            y -= 0.52
+            txt_center(_pdf_t(f"— الصنف:  {cat_name} —",
+                               f"— Catégorie :  {cat_name} —"),
+                       y, ARABIC_FONT_BOLD, 11 if not is_fr else 10)
+
+            # ⑥ اسم المدرسة — يمين
             y -= 0.72
             txt_right(_pdf_t(f"مدرسة تعليم السياقة:  {school_name}",
                               f"Auto-école :  {school_name}"),
                       y, ARABIC_FONT_BOLD, 10)
-            y -= 0.46
+
+            # ⑦ مسيّر — يمين
+            y -= 0.45
             txt_right(_pdf_t(f"مسيّر:  {manager_name}",
                               f"Responsable :  {manager_name}"),
                       y, ARABIC_FONT, 9)
-            # ن.م (الرقم الوطني للمالك) — يُعرض إن وُجد
-            national_id_v = school.get('national_id', '') or school.get('owner_id', '')
-            if national_id_v:
-                txt_left(_pdf_t(f"ن.م:  {national_id_v}",
-                                 f"N.I. :  {national_id_v}"),
-                         y, "Helvetica", 9)
 
-            # السطر الثاني: م.ب.ر.ت (رقم التسجيل) | اسم و لقب المنتحي | الهاتف
-            y -= 0.45
-            reg_num_v = school.get('registration_number', '')
-            if is_fr:
-                if reg_num_v:
-                    txt_right(f"N° enreg. :  {reg_num_v}", y, "Helvetica", 9)
-                txt_center(_pdf_t(f"اسم و لقب المنتحي:  {manager_name}",
-                                   f"Responsable :  {manager_name}"),
-                           y, ARABIC_FONT, 9)
-            else:
-                if reg_num_v:
-                    txt_right(f"م.ب.ر.ت:  {reg_num_v}", y, "Helvetica", 9)
-                txt_center(_pdf_t(f"اسم و لقب المنتحي:  {manager_name}",
-                                   f"Responsable :  {manager_name}"),
-                           y, ARABIC_FONT, 9)
-            if school_phone:
-                txt_left(school_phone, y, "Helvetica", 9)
+            # ⑧ ن.م (نوع المركبة) يمين | ر.ت يسار
+            y -= 0.44
+            if vehicle_nm:
+                txt_right(_pdf_t(f"ن.م:  {vehicle_nm}", f"N.V. :  {vehicle_nm}"),
+                          y, ARABIC_FONT, 9)
+            if school_cr:
+                txt_left(f"{'R.C.' if is_fr else 'ر.ت'}:  {school_cr}", y, "Helvetica", 9)
 
-            # السطر الثالث: ر.ت (السجل التجاري) | الإشارة/المرجع | تاريخ الامتحان
-            y -= 0.45
-            if is_fr:
-                if school_cr:
-                    txt_right(f"R.C. :  {school_cr}", y, "Helvetica", 9)
-                ref_val = doc_ref or ""
-                if ref_val:
-                    txt_center(f"Réf. :  {ref_val}", y, "Helvetica", 9)
-                txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
-                                 f"Date d'examen :  {exam_date}"),
-                         y, ARABIC_FONT, 9)
-            else:
-                if school_cr:
-                    txt_right(f"ر.ت:  {school_cr}", y, "Helvetica", 9)
-                ref_val = doc_ref or ""
-                if ref_val:
-                    txt_center(f"رت:  {ref_val}", y, "Helvetica", 9)
-                txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
-                                 f"Date d'examen :  {exam_date}"),
-                         y, ARABIC_FONT, 9)
-
-            # السطر الرابع: مركز الامتحان
+            # ⑨ ب.ر.ت يسار
             y -= 0.42
-            txt_right(_pdf_t(f"مركز الامتحان:  {exam_center}",
-                              f"Centre d'examen :  {exam_center}"),
-                      y, ARABIC_FONT, 9)
-            y -= 0.3
+            _brt = training_card_num or "............"
+            txt_left(_pdf_t(f"ب.ر.ت:  {_brt}", f"B.R.T. :  {_brt}"),
+                     y, ARABIC_FONT, 9)
+
+            # ⑩ تاريخ الامتحان يسار
+            y -= 0.42
+            txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
+                             f"Date d'examen :  {exam_date}"),
+                     y, ARABIC_FONT, 9)
+
+            # ⑪ مركز الامتحان يسار
+            y -= 0.42
+            txt_left(_pdf_t(f"مركز الامتحان:  {exam_center}",
+                             f"Centre d'examen :  {exam_center}"),
+                     y, ARABIC_FONT, 9)
+
+            # ⑫ اسم و لقب الممتحن يسار
+            y -= 0.42
+            txt_left(_pdf_t("اسم و لقب الممتحن:  ..........",
+                             "Nom et prénom de l'examinateur :  .........."),
+                     y, ARABIC_FONT, 9)
+
+            # ⑬ ممرن يمين (إن وُجد)
+            if instructor_name:
+                txt_right(_pdf_t(f"ممرن:  {instructor_name}",
+                                  f"Moniteur :  {instructor_name}"),
+                          y, ARABIC_FONT, 9)
+
+            y -= 0.35
             return y
 
         # ── رسم التذييل: قسمان (المدعوون يمين / المقبولون يسار) ─────────────
