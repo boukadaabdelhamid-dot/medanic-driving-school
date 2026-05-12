@@ -7641,7 +7641,7 @@ class DocumentsFrame(tk.Frame):
         full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
         birth_date = cand.get('birth_date', '............')
         commune = cand.get('birth_place_commune', '............')
-        wilaya  = cand.get('birth_place_wilaya',  '............')
+        wilaya  = _no_wnum(cand.get('birth_place_wilaya',  '............'))
         address = cand.get('current_address', '') or cand.get('birth_place_commune', '............')
         file_no = str(cand.get('id', '......'))
         lic_type = cand.get('license_type', 'B')
