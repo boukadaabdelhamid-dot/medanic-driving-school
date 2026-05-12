@@ -7996,7 +7996,17 @@ class DocumentsFrame(tk.Frame):
         """يُنتج PDF جدول إرسال يضم قائمة المترشحين المحددين."""
         school = SchoolInfoDB.get()
         wilaya = settings.get("wilaya", ".........")
-        dispatch_date = settings.get("dispatch_date", date.today().strftime("%d/%m/%Y"))
+        _raw_date = settings.get("dispatch_date", date.today().strftime("%d/%m/%Y"))
+        # تطبيع الصيغة: قبول DD/MM/YYYY أو YYYY-MM-DD → YYYY/MM/DD
+        def _norm_date(d):
+            for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%Y/%m/%d"):
+                try:
+                    from datetime import datetime as _dt
+                    return _dt.strptime(d, fmt).strftime("%Y/%m/%d")
+                except ValueError:
+                    pass
+            return d
+        dispatch_date = _norm_date(_raw_date)
         record_number = settings.get("record_number", "")
         is_fr = LANG == "fr"
 
