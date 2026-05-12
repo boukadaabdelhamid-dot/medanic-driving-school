@@ -6834,10 +6834,7 @@ class DocumentsFrame(tk.Frame):
             c.line(x1 * cm, y1 * cm, x2 * cm, y2 * cm)
             
         def draw_dotted_line(x1, y1, x2, y2):
-            c.saveState()
-            c.setDash(1, 2)
             c.line(x1 * cm, y1 * cm, x2 * cm, y2 * cm)
-            c.restoreState()
             
         def draw_rect(x, y, w, h):
             c.rect(x * cm, y * cm, w * cm, h * cm)
@@ -6935,14 +6932,14 @@ class DocumentsFrame(tk.Frame):
         draw_dotted_line(1.5, 17.2, 17.5, 17.2)
         c.setFont("Helvetica-Bold", 10)
         c.drawString(1.5 * cm, 17.2 * cm,
-                     f"Nom : ...{last_fr}..." if last_fr else "Nom : .................................")
+                     f"Nom : {last_fr}" if last_fr else "Nom :")
 
         draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prenom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 16.2, first_ar, ARABIC_FONT_BOLD, 11, "right")
         draw_dotted_line(1.5, 16.2, 17.5, 16.2)
         c.setFont("Helvetica-Bold", 10)
         c.drawString(1.5 * cm, 16.2 * cm,
-                     f"Prenom : ...{first_fr}..." if first_fr else "Prenom : .................................")
+                     f"Prenom : {first_fr}" if first_fr else "Prenom :")
         
         # Birth date & place / تاريخ ومكان الميلاد
         draw_text(20.0, 14.2, _pdf_t("تاريخ و مكان الميلاد :", "Date et lieu de naissance :"),
