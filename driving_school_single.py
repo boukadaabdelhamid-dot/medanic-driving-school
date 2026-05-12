@@ -3487,9 +3487,9 @@ class CandidateDialog(tk.Toplevel):
         body = tk.Frame(win, bg=COLOR_BG, padx=14, pady=10)
         body.pack(fill="both", expand=True)
 
-        # صف الإدخال
+        # صف الإدخال الأول: الصنف + رقم الرخصة + تاريخ الإصدار
         inp_row = tk.Frame(body, bg=COLOR_BG)
-        inp_row.pack(fill="x", pady=(0, 6))
+        inp_row.pack(fill="x", pady=(0, 4))
         tk.Label(inp_row, text=_pdf_t("الصنف","Cat."),
                  font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
         v_pcat = tk.StringVar(value="B")
@@ -3502,10 +3502,14 @@ class CandidateDialog(tk.Toplevel):
                  font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
         v_pdate = tk.StringVar()
         make_entry(inp_row, v_pdate, width=12).pack(side=S(), padx=(0,10))
-        tk.Label(inp_row, text=_pdf_t("هيئة الإصدار","Organisme"),
+
+        # صف الإدخال الثاني: هيئة الإصدار
+        inp_row2 = tk.Frame(body, bg=COLOR_BG)
+        inp_row2.pack(fill="x", pady=(0, 6))
+        tk.Label(inp_row2, text=_pdf_t("هيئة الإصدار","Organisme"),
                  font=FONT_BOLD, bg=COLOR_BG).pack(side=S(), padx=(0,4))
         v_porg = tk.StringVar()
-        make_entry(inp_row, v_porg, width=18).pack(side=S(), padx=(0,10))
+        make_entry(inp_row2, v_porg, width=40).pack(side=S(), padx=(0,10))
 
         # الجدول
         tree_f = tk.Frame(body, bg=COLOR_BG)
