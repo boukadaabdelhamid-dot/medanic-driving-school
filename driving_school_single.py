@@ -8616,7 +8616,7 @@ class DocumentsFrame(tk.Frame):
             y_bot = y_top - hdr_h
             c.setFillColorRGB(1, 1, 1)
             c.setStrokeColorRGB(0, 0, 0)
-            c.setLineWidth(0.7)
+            c.setLineWidth(0.5)
             c.rect(margin_l*cm, y_bot*cm, total_w*cm, hdr_h*cm, fill=1, stroke=1)
             c.setFillColorRGB(0, 0, 0)
             for lbl, cw, cx in zip(col_headers, col_widths, col_x):
