@@ -5917,6 +5917,13 @@ def _styled_table(data_rows, col_widths):
     return t
 
 
+def _ar_lic_code(lic):
+    """يُعيد الكود الرسمي للصنف كما يُكتب في جدول الارسال الجزائري."""
+    return {"A1": "أ1/", "A": "أ/", "B": "ب",
+            "C1": "ج1", "C": "ج", "D": "د",
+            "E": "هـ", "F": "و"}.get(lic, lic)
+
+
 # ============================================================================
 #  نافذة إضافة / تعديل حصة تدريبية
 # ============================================================================
@@ -8008,14 +8015,18 @@ class DocumentsFrame(tk.Frame):
                 story.append(Paragraph(f"N° du procès-verbal : {record_number}", s["right"]))
             story.append(Spacer(1, 1.0*cm))
             story.append(Paragraph(f"<u><b>Tableau d'envoi</b></u>", s["title"]))
-            story.append(Spacer(1, 0.8*cm))
-            rows = [["N°", "Nom et Prénom", "Date de naissance"]]
-            for i, c in enumerate(cands, 1):
-                rows.append([str(i),
-                             f"{c.get('last_name','')} {c.get('first_name','')}",
-                             c.get('birth_date', '')])
-            footer_txt = f"Fait à {wilaya}, le : {dispatch_date}"
+            story.append(Spacer(1, 0.4*cm))
+            story.append(Paragraph(f"{wilaya}, le : {dispatch_date}", s["right"]))
+            story.append(Spacer(1, 0.6*cm))
+            rows = [["Nom et Prénom", "Date de naissance", "Catégorie", "Observations"]]
+            for c in cands:
+                bd = c.get('birth_date', '').replace('-', '/')
+                rows.append([f"{c.get('last_name','')} {c.get('first_name','')}",
+                             bd,
+                             c.get('license_type', ''),
+                             ""])
             stamp_txt = "Cachet et signature de l'auto-école"
+            col_widths_tbl = [7.5*cm, 3.5*cm, 2.5*cm, 3*cm]
         else:
             story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["center"]))
             story.append(Spacer(1, 0.3*cm))
@@ -8026,18 +8037,22 @@ class DocumentsFrame(tk.Frame):
                 story.append(Spacer(1, 0.4*cm))
                 story.append(Paragraph(ar(f"رقم المحضر: {record_number}"), s["right"]))
             story.append(Spacer(1, 1.0*cm))
-            story.append(Paragraph(f"<u><b>{ar('جدول ارسال')}</b></u>", s["title"]))
-            story.append(Spacer(1, 0.8*cm))
-            rows = [["الرقم", "الاسم واللقب", "تاريخ الميلاد"]]
-            for i, c in enumerate(cands, 1):
-                rows.append([str(i),
-                             f"{c.get('last_name','')} {c.get('first_name','')}",
-                             c.get('birth_date', '')])
-            footer_txt = f"حُرِّرَ بـ {wilaya}، يوم: {dispatch_date}"
+            story.append(Paragraph(f"<u><b>{ar('جدول الارسال')}</b></u>", s["title"]))
+            story.append(Spacer(1, 0.4*cm))
+            story.append(Paragraph(ar(f"{wilaya} يوم: {dispatch_date}"), s["right"]))
+            story.append(Spacer(1, 0.6*cm))
+            rows = [["الاسم و اللقب", "تاريخ الميلاد", "الصنف", "الملاحظة"]]
+            for c in cands:
+                bd = c.get('birth_date', '').replace('-', '/')
+                rows.append([f"{c.get('last_name','')} {c.get('first_name','')}",
+                             bd,
+                             _ar_lic_code(c.get('license_type', '')),
+                             ""])
             stamp_txt = "ختم وتوقيع مدرسة تعليم السياقة"
+            col_widths_tbl = [7.5*cm, 3.5*cm, 2.5*cm, 3*cm]
 
         processed = [[_ptxt(cell) for cell in row] for row in rows]
-        tbl = Table(processed, colWidths=[2*cm, 10*cm, 5*cm])
+        tbl = Table(processed, colWidths=col_widths_tbl)
         tbl.setStyle(TableStyle([
             ('FONTNAME',    (0, 0), (-1, -1), ARABIC_FONT),
             ('FONTNAME',    (0, 0), (-1,  0), ARABIC_FONT_BOLD),
@@ -8050,9 +8065,7 @@ class DocumentsFrame(tk.Frame):
             ('BACKGROUND',  (0, 0), (-1,  0), colors.HexColor("#DBEAFE")),
         ]))
         story.append(tbl)
-        story.append(Spacer(1, 0.8*cm))
-        story.append(Paragraph(_ptxt(footer_txt), s["right"]))
-        story.append(Spacer(1, 1.2*cm))
+        story.append(Spacer(1, 1.5*cm))
         story.append(Paragraph(_ptxt(stamp_txt), s["center"]))
         story.append(Spacer(1, 2*cm))
         story.append(Paragraph("___________________________", s["center"]))
