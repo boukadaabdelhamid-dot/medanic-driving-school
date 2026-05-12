@@ -353,8 +353,8 @@ STRINGS: dict = {
     "cdlg_f_awilaya":    {"ar": "ولاية السكن",                "fr": "Wilaya de résidence"},
     "cdlg_f_addr":       {"ar": "العنوان الكامل (الشارع، الحي...)","fr": "Adresse complète (rue, quartier...)"},
     "cdlg_f_lic_type":   {"ar": "🎯  نوع الرخصة المطلوبة *", "fr": "🎯  Type de permis demandé *"},
-    "cdlg_f_lic_hint":   {"ar": "A: دراجة نارية  |  B: سيارة  |  C: شاحنة  |  D: حافلة  |  E: مقطورة",
-                          "fr": "A: Moto  |  B: Voiture  |  C: Camion  |  D: Bus  |  E: Remorque"},
+    "cdlg_f_lic_hint":   {"ar": "A1: دراجة صغيرة  |  A: دراجة نارية  |  B: سيارة  |  C1/C: شاحنة  |  D: حافلة  |  E: مقطورة  |  F: خاص",
+                          "fr": "A1: Moto légère  |  A: Moto  |  B: Voiture  |  C1/C: Camion  |  D: Bus  |  E: Remorque  |  F: Spécial"},
     "cdlg_f_inst":       {"ar": "الممرن المُكلَّف",           "fr": "Moniteur assigné"},
     "cdlg_f_total_amt":  {"ar": "المبلغ الإجمالي للتكوين (دج) *","fr": "Montant total formation (DA) *"},
     "cdlg_f_init_pay":   {"ar": "المبلغ المدفوع عند التسجيل (دج)","fr": "Acompte à l'inscription (DA)"},
@@ -911,7 +911,7 @@ def _calc_age(birth_date_str):
 STATUS_OPTIONS         = ["لم يبدأ", "قيد التكوين", "ناجح", "راسب"]
 GENDER_OPTIONS         = ["ذكر", "أنثى"]
 MARITAL_OPTIONS        = ["أعزب", "متزوج", "مطلق", "أرمل"]
-LICENSE_OPTIONS        = ["A", "B", "C", "D", "E"]
+LICENSE_OPTIONS        = ["A1", "A", "B", "C1", "C", "D", "E", "F"]
 PAYMENT_METHOD_OPTIONS = ["نقدي", "تحويل بنكي", "شيك"]
 BLOOD_TYPE_OPTIONS     = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 EXPENSE_TYPES          = ["وقود","صيانة","كراء","رواتب","تأمين","إعلان","مستلزمات مكتبية","أخرى"]
