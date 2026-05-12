@@ -4351,6 +4351,7 @@ class InstructorsFrame(tk.Frame):
         dlg.configure(bg=COLOR_BG)
 
         w, h = 440, 210
+        dlg.minsize(w, h)
         dlg.update_idletasks()
         x = (dlg.winfo_screenwidth() - w) // 2
         y = (dlg.winfo_screenheight() - h) // 2
@@ -6553,6 +6554,7 @@ class DocumentsFrame(tk.Frame):
         dlg = tk.Toplevel(self)
         dlg.title(T("period_title"))
         dlg.resizable(True, True)
+        dlg.minsize(340, 220)
         dlg.grab_set()
         dlg.configure(bg=COLOR_CARD)
 
@@ -6641,6 +6643,7 @@ class DocumentsFrame(tk.Frame):
         dlg.configure(bg=COLOR_BG)
 
         w, h = 440, 210
+        dlg.minsize(w, h)
         dlg.update_idletasks()
         x = (dlg.winfo_screenwidth() - w) // 2
         y = (dlg.winfo_screenheight() - h) // 2
