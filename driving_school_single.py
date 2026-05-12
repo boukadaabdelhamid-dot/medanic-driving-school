@@ -1564,10 +1564,11 @@ class SchoolInfoDB:
     def update(d):
         conn = get_connection()
         conn.execute("""UPDATE school_info SET name=?,commercial_register=?,
-            accreditation_number=?,nif=?,nis=?,article_number=?,address=?,phone=?,wilaya=? WHERE id=1""",
+            accreditation_number=?,nif=?,nis=?,article_number=?,address=?,phone=?,wilaya=?,
+            manager_name=? WHERE id=1""",
             (d['name'], d['commercial_register'], d['accreditation_number'],
              d['nif'], d['nis'], d['article_number'], d['address'], d['phone'],
-             d.get('wilaya', '')))
+             d.get('wilaya', ''), d.get('manager_name', '')))
         conn.commit()
         conn.close()
 
@@ -8555,7 +8556,7 @@ class DocumentsFrame(tk.Frame):
         school_name  = school.get('name', '.....................')
         school_phone = school.get('phone', '')
         school_cr    = school.get('commercial_register', '') or school.get('registration_number', '')
-        manager_name = school.get('manager_name') or school_name
+        manager_name = school.get('manager_name') or '...................'
 
         # ── تحديد مرحلة الامتحان لكل مترشح ──────────────────────────────────
         def get_stage_for_cand(cand):
@@ -8624,14 +8625,10 @@ class DocumentsFrame(tk.Frame):
                     (cx + cw / 2)*cm,
                     (y_bot + hdr_h * 0.38)*cm,
                     _t(lbl))
-            c.setStrokeColorRGB(0.6, 0.6, 0.6)
-            c.setLineWidth(0.3)
+            c.setStrokeColorRGB(0, 0, 0)
+            c.setLineWidth(0.5)
             for cx in col_x[1:]:
                 c.line(cx*cm, y_bot*cm, cx*cm, y_top*cm)
-            c.setStrokeColorRGB(0, 0, 0)
-            c.setLineWidth(0.8)
-            c.line(col_x[1]*cm, y_bot*cm, col_x[1]*cm, y_top*cm)
-            c.setLineWidth(0.3)
             c.setFillColorRGB(0, 0, 0)
             return y_bot
 
@@ -8811,15 +8808,11 @@ class DocumentsFrame(tk.Frame):
                 c.setFillColorRGB(0, 0, 0)
 
                 # حدود الصف
-                c.setStrokeColorRGB(0.78, 0.82, 0.9)
-                c.setLineWidth(0.4)
+                c.setStrokeColorRGB(0, 0, 0)
+                c.setLineWidth(0.5)
                 c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=0, stroke=1)
                 for cx in col_x[1:]:
                     c.line(cx*cm, (y - row_h)*cm, cx*cm, y*cm)
-                c.setStrokeColorRGB(0, 0, 0)
-                c.setLineWidth(0.8)
-                c.line(col_x[1]*cm, (y - row_h)*cm, col_x[1]*cm, y*cm)
-                c.setLineWidth(0.4)
 
                 # بيانات الصف — 8 أعمدة
                 row_data = [str(row_num), reg_num, full_name, birth_d,
