@@ -8651,37 +8651,30 @@ class DocumentsFrame(tk.Frame):
                               f"Responsable :  {manager_name}"),
                       y, ARABIC_FONT, 9)
 
-            # ⑧ ن.م (نوع المركبة) يمين | ر.ت يسار
+            # ⑧ السطر 3: ن.س + ر.ت يمين | ر.ب.ت وسط | ممرن يسار
             y -= 0.44
-            if vehicle_nm:
-                txt_right(_pdf_t(f"ن.م:  {vehicle_nm}", f"N.V. :  {vehicle_nm}"),
-                          y, ARABIC_FONT, 9)
-            if school_cr:
-                txt_left(f"{'R.C.' if is_fr else 'ر.ت'}:  {school_cr}", y, "Helvetica", 9)
-
-            # ⑨ ب.ر.ت يسار
-            y -= 0.42
+            _veh_parts = vehicle_nm.split(" — ", 1) if vehicle_nm else []
+            _veh_type  = _veh_parts[0].strip() if len(_veh_parts) > 0 else ""
+            _veh_plate = _veh_parts[1].strip() if len(_veh_parts) > 1 else ""
+            if _veh_type or _veh_plate:
+                _ns_label = f"{'N.V.' if is_fr else 'ن.س'}:  {_veh_type}  {'R.T.' if is_fr else 'ر.ت'}:  {_veh_plate}"
+                txt_right(_pdf_t(_ns_label, _ns_label), y, ARABIC_FONT, 9)
             _brt = training_card_num or "............"
-            txt_left(_pdf_t(f"ب.ر.ت:  {_brt}", f"B.R.T. :  {_brt}"),
-                     y, ARABIC_FONT, 9)
+            txt_center(_pdf_t(f"ر.ب.ت:  {_brt}", f"B.R.T. :  {_brt}"),
+                       y, ARABIC_FONT, 9)
+            if instructor_name:
+                txt_left(_pdf_t(f"ممرن:  {instructor_name}",
+                                 f"Moniteur :  {instructor_name}"),
+                         y, ARABIC_FONT, 9)
 
-            # ⑩ تاريخ الامتحان يسار
-            y -= 0.42
+            # ⑨ السطر 4: مركز الامتحان يمين | تاريخ الامتحان يسار
+            y -= 0.44
+            txt_right(_pdf_t(f"مركز الامتحان:  {exam_center}",
+                              f"Centre d'examen :  {exam_center}"),
+                      y, ARABIC_FONT, 9)
             txt_left(_pdf_t(f"تاريخ الامتحان:  {exam_date}",
                              f"Date d'examen :  {exam_date}"),
                      y, ARABIC_FONT, 9)
-
-            # ⑪ مركز الامتحان يسار
-            y -= 0.42
-            txt_left(_pdf_t(f"مركز الامتحان:  {exam_center}",
-                             f"Centre d'examen :  {exam_center}"),
-                     y, ARABIC_FONT, 9)
-
-            # ⑫ ممرن يمين (إن وُجد)
-            if instructor_name:
-                txt_right(_pdf_t(f"ممرن:  {instructor_name}",
-                                  f"Moniteur :  {instructor_name}"),
-                          y, ARABIC_FONT, 9)
 
             y -= 0.35
             return y
@@ -8733,15 +8726,6 @@ class DocumentsFrame(tk.Frame):
             txt_left(_pdf_t("السياقة: ........",      "Conduite : ........"),
                      y_left, ARABIC_FONT, 10)
 
-            # توقيع المدرسة (أسفل يسار)
-            sig_y = y + 0.15
-            txt_left(_pdf_t(f"{wilaya_display} يوم:  {exam_date}",
-                             f"{wilaya_display} le :  {exam_date}"),
-                     sig_y, ARABIC_FONT, 9)
-            sig_y -= 0.48
-            txt_left(_pdf_t("ختم وتوقيع مدرسة تعليم السياقة",
-                             "Cachet et signature de l'auto-école"),
-                     sig_y, ARABIC_FONT_BOLD, 9)
 
         # ── تجميع المترشحين حسب الصنف ────────────────────────────────────────
         cat_groups = defaultdict(list)
@@ -8773,7 +8757,7 @@ class DocumentsFrame(tk.Frame):
                     prev_stage = None
 
                 age_str   = calc_age(cand.get('birth_date', ''))
-                reg_num   = str(cand.get('national_id', '') or cand.get('id', ''))
+                reg_num   = cand.get('file_number', '') or ''
                 full_name = f"{cand.get('last_name', '')} {cand.get('first_name', '')}"
                 birth_d   = cand.get('birth_date', '')
                 lic_type  = cand.get('license_type', 'ب')
