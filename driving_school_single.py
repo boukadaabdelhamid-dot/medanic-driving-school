@@ -3470,7 +3470,7 @@ class CandidateDialog(tk.Toplevel):
         win.transient(self)
         win.grab_set()
 
-        PREV_CATS = ["A1","A2","B","BE","C1","C1E","CE","DE","F"]
+        PREV_CATS = ["A1","A","B","D","C1","C","BE","C1E","CE","DE","F"]
         cols   = ("cat","num","date","org")
         hdrs   = (_pdf_t("الصنف","Cat."), _pdf_t("الرقم","N°"),
                   _pdf_t("التاريخ","Date"), _pdf_t("هيئة الإصدار","Organisme"))
@@ -3565,6 +3565,8 @@ class CandidateDialog(tk.Toplevel):
                     text=_pdf_t("لا توجد أصناف مضافة", "Aucune catégorie ajoutée"),
                     fg=COLOR_TEXT_LIGHT)
             win.destroy()
+
+        win.protocol("WM_DELETE_WINDOW", _confirm)
 
         # أزرار
         btn_row = tk.Frame(body, bg=COLOR_BG)
@@ -7086,7 +7088,7 @@ class DocumentsFrame(tk.Frame):
                 draw_text(19.5, yt, cats_old[i][1], ARABIC_FONT, 9, "center")
             # Fill row data if candidate has this category
             pinfo = prev_data.get(cn, {})
-            if pinfo:
+            if pinfo and any(pinfo.values()):
                 num_v  = pinfo.get('num','')
                 date_v = pinfo.get('date','')
                 org_v  = pinfo.get('org','')
