@@ -8224,7 +8224,9 @@ class DocumentsFrame(tk.Frame):
 
         def _on_inst_filter_for_header(*_):
             sel = inst_filter_var.get()
-            if sel != _all_lbl:
+            if sel == _all_lbl:
+                opts_vars["instructor_nm"].set("")
+            else:
                 opts_vars["instructor_nm"].set(sel)
 
         lbl_combobox(rc_frame, T("examlist_wilaya"), "wilaya",
