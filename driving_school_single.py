@@ -3691,16 +3691,18 @@ class CandidateDialog(tk.Toplevel):
             show_error(T("cand_err_name")); return
         if not d["license_type"]:
             show_error(T("cand_err_license")); return
-        # ── تحقق من شرط السن حسب الصنف ────────────────────────────────────
+        # ── تحقق من شرط السن حسب الصنف (يُستخدم LICENSE_MIN_AGE للمركزية) ──
         _age = _calc_age(d.get("birth_date", ""))
         if _age is not None:
             _lic = d["license_type"]
-            if _lic == "B" and _age < 17:
-                show_error(T("cand_err_age_b_reg")); return
-            elif _lic == "C1" and _age < 23:
-                show_error(T("cand_err_age_c1_reg")); return
-            elif _lic in ("C", "D", "E") and _age < 25:
-                show_error(T("cand_err_age_cde_reg")); return
+            _min_age = LICENSE_MIN_AGE.get(_lic)
+            if _min_age is not None and _age < _min_age:
+                if _lic == "B":
+                    show_error(T("cand_err_age_b_reg")); return
+                elif _lic == "C1":
+                    show_error(T("cand_err_age_c1_reg")); return
+                else:
+                    show_error(T("cand_err_age_cde_reg")); return
         if d["is_born_abroad"] and not (d["embassy"] or d["consulate"]):
             if not messagebox.askyesno(T("msg_confirm_del"),
                 T("cand_warn_born_abroad")):
