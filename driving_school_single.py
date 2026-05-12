@@ -6906,7 +6906,6 @@ class DocumentsFrame(tk.Frame):
         draw_text(10.5, 19.4,
                   _pdf_t("معلومات خاصة بالمترشح", "Informations relatives au candidat"),
                   ARABIC_FONT_BOLD, 14, "center")
-        draw_line(8.0, 19.3, 13.0, 19.3)
         
         # National ID / رقم التعريف
         draw_text(20.0, 18.3,
@@ -6929,14 +6928,12 @@ class DocumentsFrame(tk.Frame):
 
         draw_text(20.0, 17.2, _pdf_t("اللقب :", "Nom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 17.2, last_ar, ARABIC_FONT_BOLD, 11, "right")
-        draw_dotted_line(1.5, 17.2, 17.5, 17.2)
         c.setFont("Helvetica-Bold", 10)
         c.drawString(1.5 * cm, 17.2 * cm,
                      f"Nom : {last_fr}" if last_fr else "Nom :")
 
         draw_text(20.0, 16.2, _pdf_t("الاسم :", "Prenom :"), ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 16.2, first_ar, ARABIC_FONT_BOLD, 11, "right")
-        draw_dotted_line(1.5, 16.2, 17.5, 16.2)
         c.setFont("Helvetica-Bold", 10)
         c.drawString(1.5 * cm, 16.2 * cm,
                      f"Prenom : {first_fr}" if first_fr else "Prenom :")
@@ -6949,28 +6946,22 @@ class DocumentsFrame(tk.Frame):
         draw_text(11.0, 14.2, cand.get('birth_place_commune',''), ARABIC_FONT_BOLD, 10, "right")
         draw_text(7.5, 14.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(5.0, 14.2, _no_wnum(cand.get('birth_place_wilaya','')), ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(1.5, 14.2, 17.5, 14.2)
         
         # Parents / الوالدان
         draw_text(20.0, 13.2, _pdf_t("اسم الأب :", "Nom du père :"),
                   ARABIC_FONT_BOLD, 10, "right")
         draw_text(18.0, 13.2, cand.get('father_name',''), ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(12.5, 13.2, 18.0, 13.2)
         draw_text(12.0, 13.2, _pdf_t("اسم و لقب الأم :", "Nom et prénom de la mère :"),
                   ARABIC_FONT_BOLD, 10, "right")
         draw_text(9.0, 13.2, cand.get('mother_name',''), ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(1.5, 13.2, 9.0, 13.2)
         
         # Address / العنوان
         draw_text(20.0, 12.2, _pdf_t("العنوان :", "Adresse :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(18.5, 12.2, cand.get('current_address',''), ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(13.0, 12.2, 18.5, 12.2)
         draw_text(12.5, 12.2, _pdf_t("بلدية :", "Commune :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(11.0, 12.2, cand.get('address_commune',''), ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(8.0, 12.2, 11.2, 12.2)
         draw_text(7.5, 12.2, _pdf_t("ولاية :", "Wilaya :"), ARABIC_FONT_BOLD, 10, "right")
         draw_text(6.0, 12.2, _no_wnum(cand.get('address_wilaya','')), ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(1.5, 12.2, 6.0, 12.2)
         
         # Marital status / الحالة العائلية
         draw_text(20.0, 11.2, _pdf_t("الحالة العائلية :", "Situation familiale :"),
@@ -6999,23 +6990,19 @@ class DocumentsFrame(tk.Frame):
         draw_text(20.0, 9.2, _pdf_t("الجنسية الأصلية :", "Nationalité d'origine :"),
                   ARABIC_FONT_BOLD, 11, "right")
         draw_text(17.5, 9.2, cand.get('nationality',''), ARABIC_FONT_BOLD, 11, "right")
-        draw_dotted_line(11.5, 9.2, 17.5, 9.2)
         draw_text(11.0, 9.2, _pdf_t("الجنسية المكتسبة :", "Nationalité acquise :"),
                   ARABIC_FONT_BOLD, 11, "right")
         draw_text(8.0, 9.2, cand.get('second_nationality',''), ARABIC_FONT_BOLD, 11, "right")
-        draw_dotted_line(1.5, 9.2, 8.0, 9.2)
         
         # Born abroad / المولودون بالخارج
         draw_text(20.0, 8.2,
                   _pdf_t("بالنسبة للأشخاص المولودين بالخارج / بلد الميلاد :",
                          "Pour les personnes nées à l'étranger / Pays de naissance :"),
                   ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(10.0, 8.2, 13.0, 8.2)
         draw_text(11.5, 8.2, cand.get('birth_country','') or "", ARABIC_FONT_BOLD, 10, "right")
         draw_text(9.5, 8.2,
                   _pdf_t("سفارة أو قنصلية التسجيل :", "Ambassade ou consulat d'enregistrement :"),
                   ARABIC_FONT_BOLD, 10, "right")
-        draw_dotted_line(1.5, 8.2, 5.5, 8.2)
         _emb = (cand.get('embassy','') or '') + (' ' + (cand.get('consulate','') or '')).rstrip()
         draw_text(5.0, 8.2, _emb.strip(), ARABIC_FONT_BOLD, 10, "right")
         
@@ -7023,7 +7010,6 @@ class DocumentsFrame(tk.Frame):
         draw_text(10.5, 7.3,
                   _pdf_t("الأصناف المتحصل عليها من قبل", "Catégories déjà obtenues"),
                   ARABIC_FONT_BOLD, 12, "center")
-        draw_line(8.0, 7.2, 13.0, 7.2)
         
         y_tab = 6.8; rh = 0.45; rows = 11
         y_bot = y_tab - (rh * (rows + 2))
