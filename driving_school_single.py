@@ -8611,6 +8611,9 @@ class DocumentsFrame(tk.Frame):
             col_headers = ["الرقم", "رقم التسجيل", "اللقب و الاسم", "تاريخ الميلاد",
                            "السن", "الصنف", "طبيعة الإمتحان", "الملاحظة"]
 
+        # الفواصل العمودية الداخلية (RTL: col_x[0]..col_x[-2] | LTR: col_x[1:])
+        _inner_seps = col_x[1:] if is_fr else col_x[:-1]
+
         # ── رسم رأس الجدول (صف أحادي) ───────────────────────────────────────
         def draw_table_header(y_top):
             y_bot = y_top - hdr_h
@@ -8627,7 +8630,7 @@ class DocumentsFrame(tk.Frame):
                     _t(lbl))
             c.setStrokeColorRGB(0, 0, 0)
             c.setLineWidth(0.5)
-            for cx in col_x[1:]:
+            for cx in _inner_seps:
                 c.line(cx*cm, y_bot*cm, cx*cm, y_top*cm)
             c.setFillColorRGB(0, 0, 0)
             return y_bot
@@ -8811,7 +8814,7 @@ class DocumentsFrame(tk.Frame):
                 c.setStrokeColorRGB(0, 0, 0)
                 c.setLineWidth(0.5)
                 c.rect(margin_l*cm, (y - row_h)*cm, total_w*cm, row_h*cm, fill=0, stroke=1)
-                for cx in col_x[1:]:
+                for cx in _inner_seps:
                     c.line(cx*cm, (y - row_h)*cm, cx*cm, y*cm)
 
                 # بيانات الصف — 8 أعمدة
