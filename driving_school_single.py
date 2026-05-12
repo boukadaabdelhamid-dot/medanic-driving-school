@@ -3470,7 +3470,7 @@ class CandidateDialog(tk.Toplevel):
         win.transient(self)
         win.grab_set()
 
-        PREV_CATS = ["A1","A","B","D","C1","C","BE","C1E","CE","DE","F"]
+        PREV_CATS = ["A1","A2","B","BE","C1","C1E","CE","DE","F"]
         cols   = ("cat","num","date","org")
         hdrs   = (_pdf_t("الصنف","Cat."), _pdf_t("الرقم","N°"),
                   _pdf_t("التاريخ","Date"), _pdf_t("هيئة الإصدار","Organisme"))
