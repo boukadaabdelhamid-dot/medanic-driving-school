@@ -8226,7 +8226,6 @@ class DocumentsFrame(tk.Frame):
             sel = inst_filter_var.get()
             if sel != _all_lbl:
                 opts_vars["instructor_nm"].set(sel)
-        inst_filter_var.trace_add("write", _on_inst_filter_for_header)
 
         lbl_combobox(rc_frame, T("examlist_wilaya"), "wilaya",
                      school.get('wilaya', '').strip(),
@@ -8324,6 +8323,7 @@ class DocumentsFrame(tk.Frame):
         ttk.Combobox(inst_bar, textvariable=inst_filter_var,
                      values=inst_names, state="readonly",
                      width=24).pack(side=S(), padx=4)
+        inst_filter_var.trace_add("write", _on_inst_filter_for_header)
 
         # ── أزرار تحديد الكل / إلغاء الكل (للصنف الظاهر حالياً) ─────────────
         sel_row = tk.Frame(left_col, bg="#e0f2fe", padx=6, pady=5)
