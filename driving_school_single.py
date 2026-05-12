@@ -5925,6 +5925,12 @@ def _ar_lic_code(lic):
             "E": "هـ", "F": "و"}.get(lic, lic)
 
 
+def _strip_wilaya_num(w):
+    """يُزيل بادئة الرقم من اسم الولاية: '02 - الشلف' → 'الشلف'."""
+    import re as _re
+    return _re.sub(r'^\d+\s*-\s*', '', (w or '').strip())
+
+
 # ============================================================================
 #  نافذة إضافة / تعديل حصة تدريبية
 # ============================================================================
@@ -8037,18 +8043,19 @@ class DocumentsFrame(tk.Frame):
         story = []
 
         if is_fr:
+            _wil_fr = _strip_wilaya_num(wilaya)
             story.append(Paragraph("République Algérienne Démocratique et Populaire", s["center"]))
             story.append(Spacer(1, 0.3*cm))
             story.append(Paragraph("Ministère de l'Intérieur, des Collectivités Locales et de l'Aménagement du Territoire", s["center"]))
             story.append(Paragraph("Délégation Nationale à la Sécurité Routière", s["center"]))
-            story.append(Paragraph(f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {wilaya}", s["center"]))
+            story.append(Paragraph(f"Délégation de Wilaya à la Sécurité Routière - Wilaya de {_wil_fr}", s["center"]))
             if record_number:
                 story.append(Spacer(1, 0.4*cm))
                 story.append(Paragraph(f"N° du procès-verbal : {record_number}", s["right"]))
             story.append(Spacer(1, 1.0*cm))
-            story.append(Paragraph(f"<u><b>Tableau d'envoi</b></u>", s["title"]))
+            story.append(Paragraph(f"{_wil_fr}, le : {dispatch_date}", s["right"]))
             story.append(Spacer(1, 0.4*cm))
-            story.append(Paragraph(f"{wilaya}, le : {dispatch_date}", s["right"]))
+            story.append(Paragraph(f"<u><b>Tableau d'envoi</b></u>", s["title"]))
             story.append(Spacer(1, 0.6*cm))
             rows = [["Nom et Prénom", "Date de naissance", "Catégorie", "Observations"]]
             for c in cands:
@@ -8060,28 +8067,29 @@ class DocumentsFrame(tk.Frame):
             stamp_txt = "Cachet et signature de l'auto-école"
             col_widths_tbl = [7.5*cm, 3.5*cm, 2.5*cm, 3*cm]
         else:
+            _wil_ar = _strip_wilaya_num(wilaya)
             story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["center"]))
             story.append(Spacer(1, 0.3*cm))
             story.append(Paragraph(ar("وزارة الداخلية والجماعات المحلية والتهيئة العمرانية"), s["center"]))
             story.append(Paragraph(ar("المندوبية الوطنية للأمن في الطرق"), s["center"]))
-            story.append(Paragraph(ar(f"المندوبية الولائية للأمن في الطرق لولاية {wilaya}"), s["center"]))
+            story.append(Paragraph(ar(f"المندوبية الولائية للأمن في الطرق لولاية {_wil_ar}"), s["center"]))
             if record_number:
                 story.append(Spacer(1, 0.4*cm))
                 story.append(Paragraph(ar(f"رقم المحضر: {record_number}"), s["right"]))
             story.append(Spacer(1, 1.0*cm))
-            story.append(Paragraph(f"<u><b>{ar('جدول الارسال')}</b></u>", s["title"]))
+            story.append(Paragraph(ar(f"{_wil_ar} يوم: {dispatch_date}"), s["right"]))
             story.append(Spacer(1, 0.4*cm))
-            story.append(Paragraph(ar(f"{wilaya} يوم: {dispatch_date}"), s["right"]))
+            story.append(Paragraph(f"<u><b>{ar('جدول الارسال')}</b></u>", s["title"]))
             story.append(Spacer(1, 0.6*cm))
-            rows = [["الاسم و اللقب", "تاريخ الميلاد", "الصنف", "الملاحظة"]]
+            rows = [["الملاحظة", "الصنف", "تاريخ الميلاد", "الاسم و اللقب"]]
             for c in cands:
                 bd = c.get('birth_date', '').replace('-', '/')
-                rows.append([f"{c.get('last_name','')} {c.get('first_name','')}",
-                             bd,
+                rows.append(["",
                              _ar_lic_code(c.get('license_type', '')),
-                             ""])
+                             bd,
+                             f"{c.get('last_name','')} {c.get('first_name','')}"])
             stamp_txt = "ختم وتوقيع مدرسة تعليم السياقة"
-            col_widths_tbl = [7.5*cm, 3.5*cm, 2.5*cm, 3*cm]
+            col_widths_tbl = [3*cm, 2.5*cm, 3.5*cm, 7.5*cm]
 
         processed = [[_ptxt(cell) for cell in row] for row in rows]
         tbl = Table(processed, colWidths=col_widths_tbl)
