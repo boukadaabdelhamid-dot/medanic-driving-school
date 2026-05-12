@@ -2855,7 +2855,8 @@ class VehicleDialog(tk.Toplevel):
         title_text = "تعديل مركبة" if vehicle else "إضافة مركبة جديدة"
         self.title(title_text)
         self.geometry("500x450")
-        self.resizable(False, False)
+        self.minsize(500, 450)
+        self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.transient(parent)
         self.grab_set()
@@ -3737,7 +3738,8 @@ class ExamResultDialog(tk.Toplevel):
         self.on_save = on_save
         self.title(T("exdlg_title"))
         self.geometry("480x400")
-        self.resizable(False, False)
+        self.minsize(480, 400)
+        self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.transient(parent)
         self.grab_set()
@@ -4344,7 +4346,7 @@ class InstructorsFrame(tk.Frame):
 
         dlg = tk.Toplevel()
         dlg.title(T("print_dlg_title"))
-        dlg.resizable(False, False)
+        dlg.resizable(True, True)
         dlg.grab_set()
         dlg.configure(bg=COLOR_BG)
 
@@ -5944,7 +5946,8 @@ class SessionDialog(tk.Toplevel):
         self.on_save    = on_save
         self.title(T("sched_edit_title") if session_id else T("sched_add_title"))
         self.geometry("580x600")
-        self.resizable(False, False)
+        self.minsize(580, 600)
+        self.resizable(True, True)
         self.grab_set()
         self.configure(bg=COLOR_BG)
         self._vars     = {}
@@ -6549,7 +6552,7 @@ class DocumentsFrame(tk.Frame):
 
         dlg = tk.Toplevel(self)
         dlg.title(T("period_title"))
-        dlg.resizable(False, False)
+        dlg.resizable(True, True)
         dlg.grab_set()
         dlg.configure(bg=COLOR_CARD)
 
@@ -6633,7 +6636,7 @@ class DocumentsFrame(tk.Frame):
 
         dlg = tk.Toplevel()
         dlg.title(T("print_dlg_title"))
-        dlg.resizable(False, False)
+        dlg.resizable(True, True)
         dlg.grab_set()
         dlg.configure(bg=COLOR_BG)
 
@@ -9011,7 +9014,8 @@ class LoginWindow:
         self.root.title(T("login_title"))
         _set_app_icon(self.root)
         self.root.geometry("460x560")
-        self.root.resizable(False, False)
+        self.root.minsize(460, 560)
+        self.root.resizable(True, True)
         self.root.configure(bg=COLOR_SIDEBAR)
         self.root.update_idletasks()
         sw = self.root.winfo_screenwidth()
@@ -9252,7 +9256,8 @@ class _UserFormDialog(tk.Toplevel):
         super().__init__(parent)
         self.title(title)
         self.geometry("500x620")
-        self.resizable(False, False)
+        self.minsize(500, 620)
+        self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.grab_set()
         self.result     = None
@@ -9365,7 +9370,8 @@ class _ChangePasswordDialog(tk.Toplevel):
         super().__init__(parent)
         self.title(f"{T('user_change_pass')} — {user['username']}")
         self.geometry("400x280")
-        self.resizable(False, False)
+        self.minsize(400, 280)
+        self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.grab_set()
         self._uid = user["id"]
