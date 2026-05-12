@@ -5883,6 +5883,9 @@ def _pdf_header(story, school, title):
         if school.get('accreditation_number'):
             story.append(Paragraph(f"N° Agrément: {school['accreditation_number']}",
                                    s["small_right"]))
+        if school.get('manager_name'):
+            story.append(Paragraph(f"Responsable : {school['manager_name']}",
+                                   s["small_right"]))
     else:
         story.append(Paragraph(ar("الجمهورية الجزائرية الديمقراطية الشعبية"), s["small_right"]))
         if school.get('name'):
@@ -5894,6 +5897,9 @@ def _pdf_header(story, school, title):
             story.append(Paragraph(ar(" | ".join(info_line)), s["small_right"]))
         if school.get('accreditation_number'):
             story.append(Paragraph(ar(f"رقم الاعتماد: {school['accreditation_number']}"),
+                                   s["small_right"]))
+        if school.get('manager_name'):
+            story.append(Paragraph(ar(f"المسيّر: {school['manager_name']}"),
                                    s["small_right"]))
     story.append(Spacer(1, 0.4*cm))
     line_table = Table([[""]], colWidths=[17*cm])
