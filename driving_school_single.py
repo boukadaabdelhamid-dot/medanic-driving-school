@@ -6832,9 +6832,9 @@ class DocumentsFrame(tk.Frame):
         c = canvas.Canvas(path, pagesize=A4)
         is_fr = LANG == "fr"
 
-        def draw_text(x_cm, y_cm, text, font=ARABIC_FONT, size=11, align="right"):
+        def draw_text(x_cm, y_cm, text, font=ARABIC_FONT, size=11, align="right", raw=False):
             c.setFont(font, size)
-            txt = str(text) if is_fr else ar(str(text))
+            txt = str(text) if (is_fr or raw) else ar(str(text))
             if align == "center":
                 c.drawCentredString(x_cm * cm, y_cm * cm, txt)
             elif align == "right":
@@ -7092,8 +7092,8 @@ class DocumentsFrame(tk.Frame):
                 num_v  = pinfo.get('num','')
                 date_v = pinfo.get('date','')
                 org_v  = pinfo.get('org','')
-                draw_text(13.55, yt, num_v,  "Helvetica-Bold", 8, "center")
-                draw_text(8.7,   yt, date_v, "Helvetica-Bold", 8, "center")
+                draw_text(13.55, yt, num_v,  "Helvetica-Bold", 8, "center", raw=True)
+                draw_text(8.7,   yt, date_v, "Helvetica-Bold", 8, "center", raw=True)
                 draw_text(3.9,   yt, org_v,  ARABIC_FONT_BOLD, 8, "center")
 
         yt_merged = y_tab - 2*rh - 8.5*rh + 0.12
