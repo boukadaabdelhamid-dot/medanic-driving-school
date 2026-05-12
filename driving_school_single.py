@@ -249,6 +249,14 @@ STRINGS: dict = {
     "cand_exam_deleted":    {"ar": "تم حذف النتيجة",                 "fr": "Résultat supprimé"},
     "cand_err_name":        {"ar": "الاسم واللقب إلزاميان",          "fr": "Le nom et le prénom sont obligatoires"},
     "cand_err_license":     {"ar": "يرجى تحديد نوع الرخصة المطلوبة","fr": "Veuillez choisir le type de permis"},
+    "cand_err_age_b_reg":   {"ar": "صنف ب يشترط 17 سنة على الأقل للتسجيل",
+                             "fr": "Catégorie B requiert 17 ans minimum pour l'inscription"},
+    "cand_err_age_c1_reg":  {"ar": "صنف ج1 (C1) يشترط 23 سنة على الأقل للتسجيل",
+                             "fr": "Catégorie C1 requiert 23 ans minimum pour l'inscription"},
+    "cand_err_age_cde_reg": {"ar": "أصناف ج/د/هـ (C/D/E) تشترط 25 سنة على الأقل للتسجيل",
+                             "fr": "Catégories C/D/E requièrent 25 ans minimum pour l'inscription"},
+    "train_err_age_circuit":{"ar": "صنف ب: يجب بلوغ 18 سنة كاملة لاجتياز مرحلة السيركوي",
+                             "fr": "Cat. B : 18 ans révolus requis pour l'épreuve circuit"},
     # ── التكوين ──────────────────────────────────────────────────────────────
     "train_sel_first":  {"ar": "الرجاء تحديد سجل لحذفه",    "fr": "Veuillez sélectionner un enregistrement"},
     "train_del_confirm":{"ar": "هذه النتيجة",                "fr": "ce résultat"},
@@ -884,6 +892,21 @@ MONTHS_FR = {"01":"Janvier","02":"Février","03":"Mars","04":"Avril","05":"Mai",
 STAGE_LABELS = {"code":"الكود (نظري)", "creneau":"الكرينو (مناورات)", "circuit":"الطريق (سياقة)"}
 STAGE_ORDER  = ["code", "creneau", "circuit"]
 STATUS_PASS  = "ناجح"
+
+# ── شروط الحد الأدنى للسن حسب الصنف ─────────────────────────────────────────
+LICENSE_MIN_AGE = {"B": 17, "C1": 23, "C": 25, "D": 25, "E": 25}
+LICENSE_CIRCUIT_AGE = {"B": 18}   # سن إضافية لفتح مرحلة السيركوي
+
+def _calc_age(birth_date_str):
+    """تعيد العمر بالسنوات المكتملة، أو None إذا كان التاريخ فارغاً/خاطئاً."""
+    if not birth_date_str or not str(birth_date_str).strip():
+        return None
+    try:
+        bd = datetime.strptime(str(birth_date_str).strip(), "%Y-%m-%d").date()
+        today = date.today()
+        return today.year - bd.year - ((today.month, today.day) < (bd.month, bd.day))
+    except Exception:
+        return None
 
 STATUS_OPTIONS         = ["لم يبدأ", "قيد التكوين", "ناجح", "راسب"]
 GENDER_OPTIONS         = ["ذكر", "أنثى"]
@@ -3668,6 +3691,16 @@ class CandidateDialog(tk.Toplevel):
             show_error(T("cand_err_name")); return
         if not d["license_type"]:
             show_error(T("cand_err_license")); return
+        # ── تحقق من شرط السن حسب الصنف ────────────────────────────────────
+        _age = _calc_age(d.get("birth_date", ""))
+        if _age is not None:
+            _lic = d["license_type"]
+            if _lic == "B" and _age < 17:
+                show_error(T("cand_err_age_b_reg")); return
+            elif _lic == "C1" and _age < 23:
+                show_error(T("cand_err_age_c1_reg")); return
+            elif _lic in ("C", "D", "E") and _age < 25:
+                show_error(T("cand_err_age_cde_reg")); return
         if d["is_born_abroad"] and not (d["embassy"] or d["consulate"]):
             if not messagebox.askyesno(T("msg_confirm_del"),
                 T("cand_warn_born_abroad")):
@@ -4656,13 +4689,40 @@ class TrainingFrame(tk.Frame):
                 fg=COLOR_DANGER)
             self._set_buttons_state("disabled")
         else:
-            self.lbl_current_stage.config(text=f"{T('train_stage_lbl')} {stage_name}",
-                                          fg=COLOR_PRIMARY)
-            self.lbl_stage_status.config(text=f"{T('train_status_lbl')} {active['status']}",
-                                         fg=COLOR_TEXT_LIGHT)
-            if active['status'] == STATUS_PASS:
+            # ── تحقق من شرط سن السيركوي للصنف ب ────────────────────────────
+            _circuit_locked = False
+            if active['stage_type'] == "circuit":
+                conn = get_connection()
+                _crow = conn.execute(
+                    "SELECT birth_date, license_type FROM candidates WHERE id=?",
+                    (self.selected_candidate_id,)).fetchone()
+                conn.close()
+                if _crow:
+                    _min_circ = LICENSE_CIRCUIT_AGE.get(_crow["license_type"])
+                    if _min_circ is not None:
+                        _cage = _calc_age(_crow["birth_date"])
+                        if _cage is not None and _cage < _min_circ:
+                            _circuit_locked = True
+
+            if _circuit_locked:
+                self.lbl_current_stage.config(
+                    text=f"🔒 {stage_name}",
+                    fg=COLOR_WARNING)
+                self.lbl_stage_status.config(
+                    text=T("train_err_age_circuit"),
+                    fg=COLOR_DANGER)
+                self._set_buttons_state("disabled")
+            elif active['status'] == STATUS_PASS:
+                self.lbl_current_stage.config(text=f"{T('train_stage_lbl')} {stage_name}",
+                                              fg=COLOR_PRIMARY)
+                self.lbl_stage_status.config(text=f"{T('train_status_lbl')} {active['status']}",
+                                             fg=COLOR_TEXT_LIGHT)
                 self._set_buttons_state("disabled")
             else:
+                self.lbl_current_stage.config(text=f"{T('train_stage_lbl')} {stage_name}",
+                                              fg=COLOR_PRIMARY)
+                self.lbl_stage_status.config(text=f"{T('train_status_lbl')} {active['status']}",
+                                             fg=COLOR_TEXT_LIGHT)
                 self._set_buttons_state("normal")
 
     def _load_stages(self):
@@ -4888,6 +4948,21 @@ class TrainingFrame(tk.Frame):
             prev_name = STAGE_LABELS.get(STAGE_ORDER[idx - 1], STAGE_ORDER[idx - 1])
             show_error(f"{T('train_locked_pass')} {prev_name}")
             return
+
+        # حماية: شرط سن السيركوي للصنف ب
+        if active['stage_type'] == "circuit":
+            conn = get_connection()
+            _crow = conn.execute(
+                "SELECT birth_date, license_type FROM candidates WHERE id=?",
+                (self.selected_candidate_id,)).fetchone()
+            conn.close()
+            if _crow:
+                _min_circ = LICENSE_CIRCUIT_AGE.get(_crow["license_type"])
+                if _min_circ is not None:
+                    _cage = _calc_age(_crow["birth_date"])
+                    if _cage is not None and _cage < _min_circ:
+                        show_error(T("train_err_age_circuit"))
+                        return
 
         # 1. تحديث المرحلة الحالية إلى ناجح
         from datetime import date
