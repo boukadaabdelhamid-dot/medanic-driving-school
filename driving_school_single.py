@@ -578,10 +578,11 @@ STRINGS: dict = {
     "dispatch_lbl_date":{"ar": "التاريخ",             "fr": "Date"},
     "dispatch_lbl_record_no":{"ar": "رقم المحضر",    "fr": "N° procès-verbal"},
     "dispatch_lbl_wilaya":{"ar": "مكان الإرسال (الولاية)", "fr": "Wilaya de convoi"},
-    "dispatch_sort_title":{"ar": "ترتيب المترشحين",  "fr": "Ordre des candidats"},
-    "dispatch_sort_default":{"ar": "الترتيب الافتراضي","fr": "Ordre par défaut"},
-    "dispatch_sort_alpha":{"ar": "أبجدياً (اللقب)",  "fr": "Alphabétique (nom)"},
-    "dispatch_sort_birth":{"ar": "حسب تاريخ الميلاد","fr": "Par date de naissance"},
+    "dispatch_sort_title":{"ar": "ترتيب المترشحين",     "fr": "Ordre des candidats"},
+    "dispatch_sort_default":{"ar": "الترتيب الافتراضي", "fr": "Ordre par défaut"},
+    "dispatch_sort_alpha":{"ar": "أبجدياً (اللقب)",     "fr": "Alphabétique (nom)"},
+    "dispatch_sort_birth":{"ar": "حسب تاريخ الميلاد",  "fr": "Par date de naissance"},
+    "dispatch_sort_reg":  {"ar": "حسب تاريخ التسجيل",  "fr": "Par date d'inscription"},
     "dispatch_choose_cands":{"ar": "اختر المترشحين", "fr": "Choisir les candidats"},
     "dispatch_select_all":{"ar": "✓ تحديد الكل",     "fr": "✓ Sélectionner tout"},
     "dispatch_deselect_all":{"ar": "✗ إلغاء الكل",  "fr": "✗ Désélectionner"},
@@ -7812,6 +7813,7 @@ class DocumentsFrame(tk.Frame):
             (T("dispatch_sort_default"), "default"),
             (T("dispatch_sort_alpha"),   "alpha"),
             (T("dispatch_sort_birth"),   "birth"),
+            (T("dispatch_sort_reg"),     "reg"),
         ]
         for label, value in sort_options:
             tk.Radiobutton(
@@ -7972,6 +7974,26 @@ class DocumentsFrame(tk.Frame):
                             c.get('first_name', '').lower(),
                             c.get('id', 0))
                 selected_cands = sorted(selected_cands, key=_birth_key)
+            elif order == "reg":
+                def _reg_key(c):
+                    rd = (c.get('registration_date', '') or '').strip()
+                    try:
+                        parts = rd.replace('/', '-').split('-')
+                        if len(parts) == 3:
+                            y, m, d = (int(parts[0]), int(parts[1]), int(parts[2])) \
+                                if len(parts[0]) == 4 \
+                                else (int(parts[2]), int(parts[1]), int(parts[0]))
+                            return (y, m, d,
+                                    c.get('last_name', '').lower(),
+                                    c.get('first_name', '').lower(),
+                                    c.get('id', 0))
+                    except (ValueError, IndexError):
+                        pass
+                    return (9999, 12, 31,
+                            c.get('last_name', '').lower(),
+                            c.get('first_name', '').lower(),
+                            c.get('id', 0))
+                selected_cands = sorted(selected_cands, key=_reg_key)
 
             settings = {
                 "dispatch_date":  opts_vars["dispatch_date"].get().strip()
