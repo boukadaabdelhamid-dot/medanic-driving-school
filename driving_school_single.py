@@ -587,7 +587,7 @@ STRINGS: dict = {
     "examlist_exam_data":{"ar": "بيانات الامتحان",   "fr": "Données de l'examen"},
     "examlist_exam_date":{"ar": "تاريخ الامتحان",    "fr": "Date d'examen"},
     "examlist_exam_center":{"ar": "مركز الامتحان",   "fr": "Centre d'examen"},
-    "examlist_doc_ref": {"ar": "رقم الوثيقة (ر.ت)",  "fr": "N° document (R.T)"},
+    "examlist_doc_ref": {"ar": "رقم التسجيل",          "fr": "N° immatriculation"},
     "examlist_wilaya":  {"ar": "الولاية",             "fr": "Wilaya"},
     "examlist_nature":  {"ar": "طبيعة الامتحان",      "fr": "Nature de l'examen"},
     "examlist_all_types":{"ar": "كل الأنواع",         "fr": "Tous les types"},
@@ -8193,14 +8193,40 @@ class DocumentsFrame(tk.Frame):
                   date.today().strftime("%d/%m/%Y"))
         lbl_entry(rc_frame, T("examlist_exam_center"), "exam_center", "")
         lbl_entry(rc_frame, T("examlist_doc_ref"), "doc_ref", "")
-        lbl_entry(rc_frame, _pdf_t("ب.ر.ت (رقم بطاقة تدريب المركبة)", "B.R.T (N° carte formation véh.)"), "training_card_num", "")
+        lbl_entry(rc_frame, _pdf_t("ر.ب.ت", "B.R.T"), "training_card_num", "")
 
         # قائمة المركبات — ن.م
         _vehs = VehicleDB.get_all()
-        _veh_labels = [""] + [f"{v.get('vehicle_type','')} — {v.get('plate_number','')}"
-                               for v in _vehs if v.get('plate_number','')]
+        _vehs_filtered = [v for v in _vehs if v.get('plate_number', '')]
+        _veh_labels = [""] + [f"{v.get('model', '')} — {v.get('plate_number', '')}"
+                               for v in _vehs_filtered]
         lbl_combobox(rc_frame, _pdf_t("ن.م (نوع المركبة)", "N.V. (Type véhicule)"),
                      "vehicle_nm", "", _veh_labels)
+
+        _veh_map = {f"{v.get('model', '')} — {v.get('plate_number', '')}": v
+                    for v in _vehs_filtered}
+
+        def _on_vehicle_select(*_):
+            lbl = opts_vars["vehicle_nm"].get()
+            veh = _veh_map.get(lbl)
+            if veh:
+                opts_vars["doc_ref"].set(veh.get("plate_number", ""))
+                opts_vars["training_card_num"].set(veh.get("training_card_number", ""))
+            else:
+                opts_vars["doc_ref"].set("")
+                opts_vars["training_card_num"].set("")
+        opts_vars["vehicle_nm"].trace_add("write", _on_vehicle_select)
+
+        # حقل الممرن لرأس الـ PDF (مستقل عن فلتر الممرن)
+        _inst_names_only = [n for n in inst_names if n != _all_lbl]
+        lbl_combobox(rc_frame, _pdf_t("ممرن", "Moniteur"),
+                     "instructor_nm", "", [""] + _inst_names_only)
+
+        def _on_inst_filter_for_header(*_):
+            sel = inst_filter_var.get()
+            if sel != _all_lbl:
+                opts_vars["instructor_nm"].set(sel)
+        inst_filter_var.trace_add("write", _on_inst_filter_for_header)
 
         lbl_combobox(rc_frame, T("examlist_wilaya"), "wilaya",
                      school.get('wilaya', '').strip(),
@@ -8461,9 +8487,7 @@ class DocumentsFrame(tk.Frame):
             stage_type = stage_var.get()
             training_card_num = opts_vars["training_card_num"].get().strip()
             vehicle_nm = opts_vars["vehicle_nm"].get().strip()
-            _all_lbl_gen = _pdf_t("الكل", "Tous")
-            _sel_inst = inst_filter_var.get()
-            instructor_name = "" if _sel_inst == _all_lbl_gen else _sel_inst
+            instructor_name = opts_vars["instructor_nm"].get().strip()
 
             default_exam_file = (f"liste_candidats_examen_{exam_date.replace('/','_')}.pdf"
                                  if LANG == "fr" else
@@ -8529,7 +8553,7 @@ class DocumentsFrame(tk.Frame):
         school_name  = school.get('name', '.....................')
         school_phone = school.get('phone', '')
         school_cr    = school.get('commercial_register', '') or school.get('registration_number', '')
-        manager_name = school.get('manager_name', school_name)
+        manager_name = school.get('manager_name') or school_name
 
         # ── تحديد مرحلة الامتحان لكل مترشح ──────────────────────────────────
         def get_stage_for_cand(cand):
@@ -8587,20 +8611,25 @@ class DocumentsFrame(tk.Frame):
         # ── رسم رأس الجدول (صف أحادي) ───────────────────────────────────────
         def draw_table_header(y_top):
             y_bot = y_top - hdr_h
-            c.setFillColorRGB(0.15, 0.35, 0.65)
-            c.rect(margin_l*cm, y_bot*cm, total_w*cm, hdr_h*cm, fill=1, stroke=1)
             c.setFillColorRGB(1, 1, 1)
+            c.setStrokeColorRGB(0, 0, 0)
+            c.setLineWidth(0.7)
+            c.rect(margin_l*cm, y_bot*cm, total_w*cm, hdr_h*cm, fill=1, stroke=1)
+            c.setFillColorRGB(0, 0, 0)
             for lbl, cw, cx in zip(col_headers, col_widths, col_x):
                 c.setFont(ARABIC_FONT_BOLD, 8)
                 c.drawCentredString(
                     (cx + cw / 2)*cm,
                     (y_bot + hdr_h * 0.38)*cm,
                     _t(lbl))
-            c.setStrokeColorRGB(0.6, 0.7, 0.9)
+            c.setStrokeColorRGB(0.6, 0.6, 0.6)
             c.setLineWidth(0.3)
             for cx in col_x[1:]:
                 c.line(cx*cm, y_bot*cm, cx*cm, y_top*cm)
             c.setStrokeColorRGB(0, 0, 0)
+            c.setLineWidth(0.8)
+            c.line(col_x[1]*cm, y_bot*cm, col_x[1]*cm, y_top*cm)
+            c.setLineWidth(0.3)
             c.setFillColorRGB(0, 0, 0)
             return y_bot
 
@@ -8786,6 +8815,9 @@ class DocumentsFrame(tk.Frame):
                 for cx in col_x[1:]:
                     c.line(cx*cm, (y - row_h)*cm, cx*cm, y*cm)
                 c.setStrokeColorRGB(0, 0, 0)
+                c.setLineWidth(0.8)
+                c.line(col_x[1]*cm, (y - row_h)*cm, col_x[1]*cm, y*cm)
+                c.setLineWidth(0.4)
 
                 # بيانات الصف — 8 أعمدة
                 row_data = [str(row_num), reg_num, full_name, birth_d,
