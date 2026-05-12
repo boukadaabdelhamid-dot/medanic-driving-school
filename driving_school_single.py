@@ -255,8 +255,14 @@ STRINGS: dict = {
                              "fr": "Catégorie C1 requiert 23 ans minimum pour l'inscription"},
     "cand_err_age_cde_reg": {"ar": "أصناف ج/د/هـ (C/D/E) تشترط 25 سنة على الأقل للتسجيل",
                              "fr": "Catégories C/D/E requièrent 25 ans minimum pour l'inscription"},
-    "train_err_age_circuit":{"ar": "صنف ب: يجب بلوغ 18 سنة كاملة لاجتياز مرحلة السيركوي",
-                             "fr": "Cat. B : 18 ans révolus requis pour l'épreuve circuit"},
+    "train_err_age_circuit":{"ar": "يجب بلوغ 18 سنة كاملة لاجتياز مرحلة السيركوي",
+                             "fr": "18 ans révolus requis pour l'épreuve circuit"},
+    "cand_err_age_a1_reg":  {"ar": "صنف A1 يشترط 16 سنة على الأقل للتسجيل",
+                             "fr": "Catégorie A1 requiert 16 ans minimum pour l'inscription"},
+    "cand_err_age_af_reg":  {"ar": "صنفا A وF يشترطان 17 سنة على الأقل للتسجيل",
+                             "fr": "Catégories A/F requièrent 17 ans minimum pour l'inscription"},
+    "train_err_a1_code_only":{"ar": "صنف A1: يُسمح بمرحلة الكود فقط",
+                              "fr": "Cat. A1 : épreuve code uniquement"},
     # ── التكوين ──────────────────────────────────────────────────────────────
     "train_sel_first":  {"ar": "الرجاء تحديد سجل لحذفه",    "fr": "Veuillez sélectionner un enregistrement"},
     "train_del_confirm":{"ar": "هذه النتيجة",                "fr": "ce résultat"},
@@ -894,8 +900,9 @@ STAGE_ORDER  = ["code", "creneau", "circuit"]
 STATUS_PASS  = "ناجح"
 
 # ── شروط الحد الأدنى للسن حسب الصنف ─────────────────────────────────────────
-LICENSE_MIN_AGE = {"B": 17, "C1": 23, "C": 25, "D": 25, "E": 25}
-LICENSE_CIRCUIT_AGE = {"B": 18}   # سن إضافية لفتح مرحلة السيركوي
+LICENSE_MIN_AGE = {"A1": 16, "A": 17, "F": 17, "B": 17, "C1": 23, "C": 25, "D": 25, "E": 25}
+LICENSE_CIRCUIT_AGE = {"A": 18, "F": 18, "B": 18}  # سن إضافية لفتح مرحلة السيركوي
+LICENSE_CODE_ONLY = {"A1"}  # أصناف تقتصر على مرحلة الكود فقط
 
 def _calc_age(birth_date_str):
     """تعيد العمر بالسنوات المكتملة، أو None إذا كان التاريخ فارغاً/خاطئاً."""
@@ -3697,7 +3704,11 @@ class CandidateDialog(tk.Toplevel):
             _lic = d["license_type"]
             _min_age = LICENSE_MIN_AGE.get(_lic)
             if _min_age is not None and _age < _min_age:
-                if _lic == "B":
+                if _lic == "A1":
+                    show_error(T("cand_err_age_a1_reg")); return
+                elif _lic in ("A", "F"):
+                    show_error(T("cand_err_age_af_reg")); return
+                elif _lic == "B":
                     show_error(T("cand_err_age_b_reg")); return
                 elif _lic == "C1":
                     show_error(T("cand_err_age_c1_reg")); return
@@ -4675,6 +4686,18 @@ class TrainingFrame(tk.Frame):
             self._set_buttons_state("disabled")
             return
 
+        # ── تخرج A1 بعد نجاح الكود مباشرةً ──────────────────────────────────
+        if active['status'] == STATUS_PASS and active['stage_type'] == "code":
+            conn = get_connection()
+            _r = conn.execute("SELECT license_type FROM candidates WHERE id=?",
+                              (self.selected_candidate_id,)).fetchone()
+            conn.close()
+            if _r and _r["license_type"] in LICENSE_CODE_ONLY:
+                self.lbl_current_stage.config(text=T("train_graduated"))
+                self.lbl_stage_status.config(text=T("train_all_done"))
+                self._set_buttons_state("disabled")
+                return
+
         # تحقق من أن المرحلة مفتوحة (المراحل السابقة ناجحة)
         stages_all = self.current_stages
         unlocked = self._is_unlocked(stages_all, active['stage_type'])
@@ -4691,20 +4714,33 @@ class TrainingFrame(tk.Frame):
                 fg=COLOR_DANGER)
             self._set_buttons_state("disabled")
         else:
-            # ── تحقق من شرط سن السيركوي للصنف ب ────────────────────────────
+            # ── جلب بيانات المترشح (صنف + تاريخ ميلاد) مرة واحدة ────────────
+            conn = get_connection()
+            _crow = conn.execute(
+                "SELECT birth_date, license_type FROM candidates WHERE id=?",
+                (self.selected_candidate_id,)).fetchone()
+            conn.close()
+            _clic = _crow["license_type"] if _crow else ""
+
+            # ── قفل A1: لا يُسمح إلا بمرحلة الكود ──────────────────────────
+            if _clic in LICENSE_CODE_ONLY and active['stage_type'] != "code":
+                self.lbl_current_stage.config(
+                    text=f"🔒 {stage_name}",
+                    fg=COLOR_WARNING)
+                self.lbl_stage_status.config(
+                    text=T("train_err_a1_code_only"),
+                    fg=COLOR_DANGER)
+                self._set_buttons_state("disabled")
+                return
+
+            # ── قفل السيركوي بشرط السن ───────────────────────────────────────
             _circuit_locked = False
-            if active['stage_type'] == "circuit":
-                conn = get_connection()
-                _crow = conn.execute(
-                    "SELECT birth_date, license_type FROM candidates WHERE id=?",
-                    (self.selected_candidate_id,)).fetchone()
-                conn.close()
-                if _crow:
-                    _min_circ = LICENSE_CIRCUIT_AGE.get(_crow["license_type"])
-                    if _min_circ is not None:
-                        _cage = _calc_age(_crow["birth_date"])
-                        if _cage is not None and _cage < _min_circ:
-                            _circuit_locked = True
+            if active['stage_type'] == "circuit" and _crow:
+                _min_circ = LICENSE_CIRCUIT_AGE.get(_clic)
+                if _min_circ is not None:
+                    _cage = _calc_age(_crow["birth_date"])
+                    if _cage is not None and _cage < _min_circ:
+                        _circuit_locked = True
 
             if _circuit_locked:
                 self.lbl_current_stage.config(
@@ -4951,20 +4987,27 @@ class TrainingFrame(tk.Frame):
             show_error(f"{T('train_locked_pass')} {prev_name}")
             return
 
-        # حماية: شرط سن السيركوي للصنف ب
-        if active['stage_type'] == "circuit":
-            conn = get_connection()
-            _crow = conn.execute(
-                "SELECT birth_date, license_type FROM candidates WHERE id=?",
-                (self.selected_candidate_id,)).fetchone()
-            conn.close()
-            if _crow:
-                _min_circ = LICENSE_CIRCUIT_AGE.get(_crow["license_type"])
-                if _min_circ is not None:
-                    _cage = _calc_age(_crow["birth_date"])
-                    if _cage is not None and _cage < _min_circ:
-                        show_error(T("train_err_age_circuit"))
-                        return
+        # ── جلب بيانات المترشح (صنف + تاريخ ميلاد) ─────────────────────────
+        conn = get_connection()
+        _crow = conn.execute(
+            "SELECT birth_date, license_type FROM candidates WHERE id=?",
+            (self.selected_candidate_id,)).fetchone()
+        conn.close()
+        _clic = _crow["license_type"] if _crow else ""
+
+        # حماية: A1 لا يتجاوز مرحلة الكود
+        if _clic in LICENSE_CODE_ONLY and active['stage_type'] != "code":
+            show_error(T("train_err_a1_code_only"))
+            return
+
+        # حماية: شرط سن السيركوي (B, A, F)
+        if active['stage_type'] == "circuit" and _crow:
+            _min_circ = LICENSE_CIRCUIT_AGE.get(_clic)
+            if _min_circ is not None:
+                _cage = _calc_age(_crow["birth_date"])
+                if _cage is not None and _cage < _min_circ:
+                    show_error(T("train_err_age_circuit"))
+                    return
 
         # 1. تحديث المرحلة الحالية إلى ناجح
         from datetime import date
@@ -4973,9 +5016,9 @@ class TrainingFrame(tk.Frame):
             "status": STATUS_PASS, "start_date": today, "end_date": today,
             "score": 0, "notes": ""})
 
-        # 2. إضافة المرحلة التالية إذا وجدت ولم تكن موجودة
+        # 2. إضافة المرحلة التالية — لا تُضاف لأصناف الكود فقط (A1)
         idx = STAGE_ORDER.index(active['stage_type'])
-        if idx + 1 < len(STAGE_ORDER):
+        if idx + 1 < len(STAGE_ORDER) and _clic not in LICENSE_CODE_ONLY:
             next_stage = STAGE_ORDER[idx + 1]
             existing = TrainingDB.get_by_candidate(self.selected_candidate_id)
             has_next = any(s['stage_type'] == next_stage for s in existing)
