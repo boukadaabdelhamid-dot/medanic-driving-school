@@ -8460,7 +8460,15 @@ class DocumentsFrame(tk.Frame):
         make_entry(sr, sv, width=30).pack(side=S(), fill="x", expand=True, ipady=3)
 
         # ── فلاتر الصنف ──────────────────────────────────────────────────────
-        all_cats = sorted({(c.get('license_type') or 'ب').strip() for c in all_cands})
+        _A_GROUP = {"A", "A1"}
+
+        def _norm_cat(lic):
+            """يُعيد 'A/A1' إذا كان الصنف A أو A1، وإلا يُعيد الصنف كما هو."""
+            v = (lic or "").strip()
+            return "A/A1" if v in _A_GROUP else v
+
+        _raw_cats = {(c.get('license_type') or 'ب').strip() for c in all_cands}
+        all_cats = sorted({_norm_cat(cat) for cat in _raw_cats})
         cat_filter = tk.StringVar(value="all")   # "all" أو اسم صنف محدد
 
         cat_bar = tk.Frame(left_col, bg="#f0f9ff", padx=6, pady=4)
@@ -8479,7 +8487,7 @@ class DocumentsFrame(tk.Frame):
                 else:
                     selected_set.clear()
                     for cand in all_cands:
-                        if (cand.get('license_type') or 'ب').strip() == value:
+                        if _norm_cat((cand.get('license_type') or 'ب').strip()) == value:
                             selected_set.add(cand['id'])
                 _refresh_cat_buttons()
                 populate_tree(sv.get().strip())
@@ -8531,7 +8539,7 @@ class DocumentsFrame(tk.Frame):
             act_inst_id = inst_map.get(inst_filter_var.get())
             result = []
             for cand in all_cands:
-                if act_cat != "all" and (cand.get('license_type') or 'ب').strip() != act_cat:
+                if act_cat != "all" and _norm_cat((cand.get('license_type') or 'ب').strip()) != act_cat:
                     continue
                 if act_inst_id is not None and cand.get('instructor_id') != act_inst_id:
                     continue
@@ -8602,7 +8610,7 @@ class DocumentsFrame(tk.Frame):
             for cand in all_cands:
                 # فلترة الصنف
                 if act_cat != "all" and \
-                        (cand.get('license_type') or 'ب').strip() != act_cat:
+                        _norm_cat((cand.get('license_type') or 'ب').strip()) != act_cat:
                     continue
                 # فلترة الممرن
                 if act_inst_id is not None and cand.get('instructor_id') != act_inst_id:
@@ -8669,7 +8677,7 @@ class DocumentsFrame(tk.Frame):
                     show_error(T("doc_err_sel_one")); return
                 selected_cands = [c for c in all_cands
                                   if c['id'] in selected_ids
-                                  and (c.get('license_type') or 'ب').strip() == act_cat]
+                                  and _norm_cat((c.get('license_type') or 'ب').strip()) == act_cat]
                 if not selected_cands:
                     show_error(T("doc_err_sel_one")); return
             exam_date  = opts_vars["exam_date"].get().strip()
@@ -8858,6 +8866,11 @@ class DocumentsFrame(tk.Frame):
             c.setLineWidth(0.8)
             c.line((page_w - title_w) / 2, (y - 0.12)*cm,
                    (page_w + title_w) / 2, (y - 0.12)*cm)
+            # اسم الصنف تحت العنوان
+            y -= 0.55
+            txt_center(_pdf_t(f"الصنف :  {cat_name}",
+                               f"Catégorie :  {cat_name}"),
+                       y, ARABIC_FONT_BOLD, 12)
 
             # ⑥ اسم المدرسة — يمين
             y -= 0.72
@@ -8947,12 +8960,20 @@ class DocumentsFrame(tk.Frame):
                      y_left, ARABIC_FONT, 10)
 
 
-        # ── تجميع المترشحين حسب الصنف ────────────────────────────────────────
+        # ── تجميع المترشحين حسب الصنف (A و A1 في مجموعة واحدة) ───────────────
+        _PDF_A_GROUP = {"A", "A1"}
+
+        def _pdf_norm_cat(lic):
+            v = (lic or "").strip()
+            return "A/A1" if v in _PDF_A_GROUP else v
+
         cat_groups = defaultdict(list)
         for cand in cands:
-            cat = (cand.get('license_type') or 'ب').strip() or 'ب'
+            cat = _pdf_norm_cat((cand.get('license_type') or 'ب').strip() or 'ب')
             cat_groups[cat].append(cand)
-        categories = sorted(cat_groups.keys())
+        _cat_order = ["A/A1", "B", "C1", "C", "D", "BE", "C1E", "CE", "DE", "F", "ب"]
+        categories = [c for c in _cat_order if c in cat_groups] + \
+                     [c for c in sorted(cat_groups.keys()) if c not in _cat_order]
 
         # ── حلقة الأصناف — صفحة منفصلة لكل صنف ──────────────────────────────
         first_cat = True
