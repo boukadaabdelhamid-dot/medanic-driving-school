@@ -9075,6 +9075,26 @@ class LoginWindow:
         y  = (sh - 560) // 2
         self.root.geometry(f"460x560+{x}+{y}")
 
+        # ── عداد فترة التجربة في عنوان النافذة ───────────────────────────
+        try:
+            from license_guard import trial_remaining_seconds as _trial_rem
+
+            def _update_trial_title():
+                rem = _trial_rem()
+                if rem is not None and rem > 0:
+                    h = int(rem // 3600)
+                    m = int((rem % 3600) // 60)
+                    self.root.title(
+                        f"برنامج ميدانيك  |  ⏳ التجربة: {h:02d}س {m:02d}د متبقية"
+                    )
+                    self.root.after(60_000, _update_trial_title)
+                # rem is None (مرخّص دائم) أو rem == 0 → لا يُعدَّل العنوان
+
+            _update_trial_title()
+        except ImportError:
+            pass
+        # ──────────────────────────────────────────────────────────────────
+
         self._build()
         self.root.mainloop()
 

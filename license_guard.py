@@ -9,11 +9,12 @@ license_guard.py  —  نظام حماية برنامج ميدانيك من ال
 
 =======================================================================
 كيفية العمل:
-1. عند أول تشغيل: يظهر مربع حوار يطلب مفتاح التفعيل.
-2. المستخدم يرسل لك "معرّف الجهاز" (HWID) الظاهر في نافذة التفعيل.
-3. أنت تُشغّل keygen_tool.py وتُدخل HWID → تحصل على المفتاح.
-4. المستخدم يُدخل المفتاح مرة واحدة فقط، ويُحفظ محلياً.
-5. في كل تشغيل لاحق يتم التحقق تلقائياً خلال ثانية واحدة.
+1. أول تشغيل: يعمل البرنامج مجاناً لمدة 48 ساعة (فترة التجربة).
+2. بعد 48 ساعة: يظهر مربع حوار يطلب مفتاح التفعيل.
+3. المستخدم يرسل "معرّف الجهاز" (HWID) + الهاتف/الإيميل للمطوّر.
+4. المطوّر يُشغّل keygen_tool.py ويُدخل HWID → يحصل على المفتاح.
+5. المستخدم يُدخل المفتاح مرة واحدة فقط، ويُحفظ محلياً.
+6. في كل تشغيل لاحق يتم التحقق تلقائياً خلال ثانية واحدة.
 """
 
 import hashlib
@@ -24,6 +25,7 @@ import base64
 import uuid
 import socket
 import sys
+import time
 import tkinter as tk
 from tkinter import ttk, messagebox
 from pathlib import Path
@@ -31,6 +33,12 @@ from pathlib import Path
 # ── ثابت سري (لا تُغيّره بعد التوزيع) ──────────────────────────────────
 _SALT = b"MEDANIC-DZ-2025-\xab\xcd\xef\x01\x23\x45\x67\x89"
 _APP  = "medanic"
+# ─────────────────────────────────────────────────────────────────────────
+
+# ── إعدادات التجربة ومعلومات الاتصال ─────────────────────────────────────
+TRIAL_HOURS     = 48
+_CONTACT_PHONE  = "+213 540 772 807"
+_CONTACT_EMAIL  = "contact@midanic.com"
 # ─────────────────────────────────────────────────────────────────────────
 
 
@@ -72,7 +80,7 @@ def _verify(hwid: str, key: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  3. تخزين الترخيص (مشفّر بسيط)
+#  3. تخزين الترخيص الدائم (مشفّر بسيط)
 # ══════════════════════════════════════════════════════════════════════════
 
 def _license_path() -> Path:
@@ -108,26 +116,72 @@ def _load_license() -> dict | None:
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  4. نافذة التفعيل
+#  4. إدارة فترة التجربة
+# ══════════════════════════════════════════════════════════════════════════
+
+def _trial_path() -> Path:
+    return _license_path().parent / "trial.dat"
+
+
+def _save_trial_start():
+    """يُسجّل وقت أول تشغيل مشفراً مع HWID."""
+    hwid = _get_hwid()
+    payload = json.dumps({"hwid": hwid, "start": time.time()}).encode('utf-8')
+    _trial_path().write_bytes(base64.b64encode(_xor(payload, _SALT)))
+
+
+def _load_trial() -> dict | None:
+    path = _trial_path()
+    if not path.exists():
+        return None
+    try:
+        raw = base64.b64decode(path.read_bytes())
+        return json.loads(_xor(raw, _SALT).decode('utf-8'))
+    except Exception:
+        return None
+
+
+def trial_remaining_seconds() -> float | None:
+    """
+    يُعيد الثواني المتبقية من فترة التجربة:
+      None  → لم تبدأ التجربة بعد (أول تشغيل)
+      > 0   → التجربة نشطة
+      0.0   → التجربة انتهت
+    """
+    data = _load_trial()
+    if data is None:
+        return None
+    if data.get("hwid") != _get_hwid():
+        return 0.0   # ملف نُقل من جهاز آخر
+    elapsed = time.time() - data.get("start", 0)
+    return max(0.0, TRIAL_HOURS * 3600 - elapsed)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  5. نافذة التفعيل
 # ══════════════════════════════════════════════════════════════════════════
 
 class _ActivationDialog(tk.Toplevel):
     """نافذة إدخال مفتاح التفعيل."""
 
-    FONT_TITLE  = ("Arial", 15, "bold")
-    FONT_BODY   = ("Arial", 10)
-    FONT_MONO   = ("Courier New", 12, "bold")
-    COLOR_BG    = "#f8fafc"
-    COLOR_CARD  = "#ffffff"
-    COLOR_PRI   = "#2563eb"
-    COLOR_DANGER= "#ef4444"
-    COLOR_TXT   = "#1e293b"
-    COLOR_LIGHT = "#64748b"
+    FONT_TITLE   = ("Arial", 15, "bold")
+    FONT_BODY    = ("Arial", 10)
+    FONT_CONTACT = ("Arial", 10, "bold")
+    FONT_MONO    = ("Courier New", 12, "bold")
+    COLOR_BG     = "#f8fafc"
+    COLOR_CARD   = "#ffffff"
+    COLOR_PRI    = "#2563eb"
+    COLOR_DANGER = "#ef4444"
+    COLOR_TXT    = "#1e293b"
+    COLOR_LIGHT  = "#64748b"
+    COLOR_WARN   = "#92400e"
+    COLOR_WARN_BG= "#fef3c7"
 
-    def __init__(self, parent, hwid: str):
+    def __init__(self, parent, hwid: str, trial_expired: bool = False):
         super().__init__(parent)
-        self.hwid    = hwid
-        self.success = False
+        self.hwid          = hwid
+        self.trial_expired = trial_expired
+        self.success       = False
         self._build()
         self.grab_set()
         self.resizable(False, False)
@@ -137,10 +191,11 @@ class _ActivationDialog(tk.Toplevel):
     def _build(self):
         self.title("تفعيل البرنامج — ميدانيك")
         self.configure(bg=self.COLOR_BG)
-        self.geometry("520x400")
+        h = 480 if self.trial_expired else 420
+        self.geometry(f"540x{h}")
+
         # أيقونة البرنامج
         try:
-            import sys, os
             base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
             ico = os.path.join(base, "medanic_icon.ico")
             if os.path.exists(ico):
@@ -157,13 +212,45 @@ class _ActivationDialog(tk.Toplevel):
                  font=self.FONT_BODY, bg=self.COLOR_PRI, fg="#bfdbfe").pack()
 
         # ── جسم ──────────────────────────────────────────────────────────
-        body = tk.Frame(self, bg=self.COLOR_BG, padx=30, pady=20)
+        body = tk.Frame(self, bg=self.COLOR_BG, padx=30, pady=16)
         body.pack(fill="both", expand=True)
 
-        tk.Label(body,
-                 text="هذه النسخة غير مفعّلة. أرسل معرّف جهازك للمطوّر للحصول على مفتاح التفعيل.",
-                 font=self.FONT_BODY, bg=self.COLOR_BG, fg=self.COLOR_TXT,
-                 wraplength=440, justify="right").pack(anchor="e", pady=(0, 16))
+        # رسالة الحالة
+        if self.trial_expired:
+            # بطاقة تحذير انتهاء التجربة
+            warn_card = tk.Frame(body, bg=self.COLOR_WARN_BG,
+                                 highlightthickness=1,
+                                 highlightbackground="#fbbf24",
+                                 padx=14, pady=12)
+            warn_card.pack(fill="x", pady=(0, 14))
+            tk.Label(warn_card,
+                     text="⏰  انتهت فترة التجربة المجانية (48 ساعة)",
+                     font=("Arial", 11, "bold"),
+                     bg=self.COLOR_WARN_BG, fg=self.COLOR_WARN,
+                     justify="right", anchor="e").pack(fill="x")
+            tk.Label(warn_card,
+                     text="لتفعيل البرنامج، أرسل معرّف جهازك (HWID) إلى المطوّر:",
+                     font=self.FONT_BODY,
+                     bg=self.COLOR_WARN_BG, fg=self.COLOR_WARN,
+                     justify="right", anchor="e").pack(fill="x", pady=(6, 4))
+            # معلومات الاتصال
+            contact_fr = tk.Frame(warn_card, bg=self.COLOR_WARN_BG)
+            contact_fr.pack(fill="x", pady=(2, 0))
+            tk.Label(contact_fr,
+                     text=f"📞  {_CONTACT_PHONE}",
+                     font=self.FONT_CONTACT,
+                     bg=self.COLOR_WARN_BG, fg="#1e40af",
+                     anchor="e").pack(anchor="e")
+            tk.Label(contact_fr,
+                     text=f"✉️  {_CONTACT_EMAIL}",
+                     font=self.FONT_CONTACT,
+                     bg=self.COLOR_WARN_BG, fg="#1e40af",
+                     anchor="e").pack(anchor="e")
+        else:
+            tk.Label(body,
+                     text="هذه النسخة غير مفعّلة. أرسل معرّف جهازك للمطوّر للحصول على مفتاح التفعيل.",
+                     font=self.FONT_BODY, bg=self.COLOR_BG, fg=self.COLOR_TXT,
+                     wraplength=460, justify="right").pack(anchor="e", pady=(0, 14))
 
         # HWID
         tk.Label(body, text="معرّف جهازك (HWID) — أرسل هذا الرمز للمطوّر:",
@@ -171,7 +258,7 @@ class _ActivationDialog(tk.Toplevel):
                  fg=self.COLOR_LIGHT).pack(anchor="e")
         hwid_fr = tk.Frame(body, bg=self.COLOR_CARD,
                             highlightthickness=1, highlightbackground="#cbd5e1")
-        hwid_fr.pack(fill="x", pady=(4, 16))
+        hwid_fr.pack(fill="x", pady=(4, 8))
         self._hwid_var = tk.StringVar(value=self.hwid)
         tk.Entry(hwid_fr, textvariable=self._hwid_var,
                  font=self.FONT_MONO, state="readonly",
@@ -182,7 +269,7 @@ class _ActivationDialog(tk.Toplevel):
         tk.Button(body, text="📋  نسخ HWID",
                   font=self.FONT_BODY, bg="#e0e7ff", fg=self.COLOR_PRI,
                   relief="flat", cursor="hand2", bd=0, padx=10, pady=4,
-                  command=self._copy_hwid).pack(anchor="e", pady=(0, 16))
+                  command=self._copy_hwid).pack(anchor="e", pady=(0, 14))
 
         # مفتاح التفعيل
         tk.Label(body, text="مفتاح التفعيل:",
@@ -199,7 +286,7 @@ class _ActivationDialog(tk.Toplevel):
 
         self._err_lbl = tk.Label(body, text="", font=("Arial", 9),
                                   bg=self.COLOR_BG, fg=self.COLOR_DANGER)
-        self._err_lbl.pack(anchor="e", pady=(0, 12))
+        self._err_lbl.pack(anchor="e", pady=(0, 10))
 
         tk.Button(body, text="✔  تفعيل",
                   font=("Arial", 11, "bold"),
@@ -247,15 +334,18 @@ class _ActivationDialog(tk.Toplevel):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  5. الدالة الرئيسية — استدعِها في بداية main()
+#  6. الدالة الرئيسية — استدعِها في بداية main()
 # ══════════════════════════════════════════════════════════════════════════
 
 def check_license(root: tk.Tk | None = None) -> bool:
     """
-    تتحقق من وجود ترخيص صالح.
-    - إذا كان الترخيص صالحاً → تُعيد True مباشرةً.
-    - إذا لم يكن موجوداً أو غير صالح → تفتح نافذة التفعيل.
-    - إذا رفض المستخدم التفعيل → تُعيد False (يجب إنهاء البرنامج).
+    تتحقق من وجود ترخيص صالح أو فترة تجربة نشطة.
+
+    - ترخيص دائم صالح           → True مباشرةً
+    - أول تشغيل (لا trial.dat)  → يبدأ عداد 48 ساعة → True
+    - التجربة نشطة (< 48 ساعة) → True
+    - التجربة انتهت             → نافذة التفعيل → True/False
+    - المستخدم يرفض التفعيل     → False (أنهِ البرنامج)
 
     مثال الاستخدام:
         root = tk.Tk()
@@ -266,14 +356,25 @@ def check_license(root: tk.Tk | None = None) -> bool:
     hwid = _get_hwid()
     data = _load_license()
 
+    # ① ترخيص دائم صالح
     if data and data.get("hwid") == hwid and _verify(hwid, data.get("key", "")):
         return True
 
-    # لم يُفعَّل بعد — افتح نافذة التفعيل
+    # ② فترة التجربة
+    remaining = trial_remaining_seconds()
+    if remaining is None:
+        # أول تشغيل → ابدأ عداد التجربة
+        _save_trial_start()
+        return True
+    if remaining > 0:
+        # التجربة لا تزال نشطة
+        return True
+
+    # ③ التجربة انتهت → نافذة التفعيل
     _owner = root
     if _owner is None:
         _owner = tk.Tk()
         _owner.withdraw()
 
-    dlg = _ActivationDialog(_owner, hwid)
+    dlg = _ActivationDialog(_owner, hwid, trial_expired=True)
     return dlg.success
