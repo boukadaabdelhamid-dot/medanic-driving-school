@@ -78,3 +78,9 @@ id = "3CbPOwI1ecxYJ7AE1njDq"
 uri = "file://Medanic_Dev_Guide.pdf"
 type = "pdf"
 title = "دليل المطوّر — برنامج ميدانيك"
+
+[[outputs]]
+id = "zduBiYn4akST6CokMv7Jy"
+uri = "file://Medanic_Client_Guide.pdf"
+type = "pdf"
+title = "دليل الزبون — برنامج ميدانيك"
