@@ -2854,8 +2854,8 @@ class VehicleDialog(tk.Toplevel):
         self.vars: dict = {}
         title_text = "تعديل مركبة" if vehicle else "إضافة مركبة جديدة"
         self.title(title_text)
-        self.geometry("500x450")
-        self.minsize(500, 450)
+        self.geometry("520x560")
+        self.minsize(460, 500)
         self.resizable(True, True)
         self.configure(bg=COLOR_BG)
         self.transient(parent)
@@ -2888,7 +2888,7 @@ class VehicleDialog(tk.Toplevel):
         outer.pack(fill="both", expand=True)
 
         grid = tk.Frame(card, bg=COLOR_CARD)
-        grid.pack(fill="x")
+        grid.pack(fill="both", expand=True)
         grid.columnconfigure(0, weight=1)
         grid.columnconfigure(1, weight=1)
 
@@ -3240,13 +3240,28 @@ class CandidateDialog(tk.Toplevel):
         # ══════════════════════════════════════════════
         # التبويب 2: الميلاد والعنوان
         # ══════════════════════════════════════════════
-        tab2 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
+        tab2 = tk.Frame(nb, bg=COLOR_CARD)
         nb.add(tab2, text=T("cdlg_tab_birth"))
 
-        section_title(tab2, T("cdlg_sec_birth"), icon="🎂")
+        _t2_canvas = tk.Canvas(tab2, bg=COLOR_CARD, highlightthickness=0)
+        _t2_bar = ttk.Scrollbar(tab2, orient="vertical", command=_t2_canvas.yview)
+        _t2_canvas.configure(yscrollcommand=_t2_bar.set)
+        _t2_bar.pack(side="right", fill="y")
+        _t2_canvas.pack(side="left", fill="both", expand=True)
+        _tab2_inner = tk.Frame(_t2_canvas, bg=COLOR_CARD, padx=18, pady=12)
+        _t2_win = _t2_canvas.create_window((0, 0), window=_tab2_inner, anchor="nw")
+        def _on_t2_cfg(e): _t2_canvas.configure(scrollregion=_t2_canvas.bbox("all"))
+        def _on_t2_cv(e):  _t2_canvas.itemconfig(_t2_win, width=e.width)
+        def _on_t2_mw(e):  _t2_canvas.yview_scroll(int(-1*(e.delta/120)), "units")
+        _tab2_inner.bind("<Configure>", _on_t2_cfg)
+        _t2_canvas.bind("<Configure>", _on_t2_cv)
+        _t2_canvas.bind("<Enter>", lambda e: _t2_canvas.bind_all("<MouseWheel>", _on_t2_mw))
+        _t2_canvas.bind("<Leave>", lambda e: _t2_canvas.unbind_all("<MouseWheel>"))
+
+        section_title(_tab2_inner, T("cdlg_sec_birth"), icon="🎂")
 
         # خيار: مولود بالخارج
-        ab_box = tk.Frame(tab2, bg=COLOR_PRIMARY_LIGHT, padx=12, pady=8)
+        ab_box = tk.Frame(_tab2_inner, bg=COLOR_PRIMARY_LIGHT, padx=12, pady=8)
         ab_box.pack(fill="x", pady=(0, 8))
         tk.Checkbutton(ab_box,
                        text=T("cdlg_born_abroad"),
@@ -3256,7 +3271,7 @@ class CandidateDialog(tk.Toplevel):
                        fg=COLOR_PRIMARY_DARK, activebackground=COLOR_PRIMARY_LIGHT,
                        selectcolor=COLOR_WHITE, anchor=A()).pack(anchor=A())
 
-        g2 = tk.Frame(tab2, bg=COLOR_CARD)
+        g2 = tk.Frame(_tab2_inner, bg=COLOR_CARD)
         g2.pack(fill="x")
         g2.columnconfigure(0, weight=1); g2.columnconfigure(1, weight=1)
 
@@ -3282,8 +3297,8 @@ class CandidateDialog(tk.Toplevel):
         self._abroad_widgets = [c_emb, c_con]
 
         # -- العنوان الحالي --
-        section_title(tab2, T("cdlg_sec_addr"), icon="🏠")
-        g_addr = tk.Frame(tab2, bg=COLOR_CARD)
+        section_title(_tab2_inner, T("cdlg_sec_addr"), icon="🏠")
+        g_addr = tk.Frame(_tab2_inner, bg=COLOR_CARD)
         g_addr.pack(fill="x")
         g_addr.columnconfigure(0, weight=1); g_addr.columnconfigure(1, weight=1)
         _, self._addr_commune_w, _ = self._make_field(
@@ -3296,7 +3311,7 @@ class CandidateDialog(tk.Toplevel):
                                                        "address_commune",
                                                        self._addr_commune_w))
 
-        addr_cell = tk.Frame(tab2, bg=COLOR_CARD)
+        addr_cell = tk.Frame(_tab2_inner, bg=COLOR_CARD)
         addr_cell.pack(fill="x", padx=10, pady=4)
         make_label(addr_cell, T("cdlg_f_addr"), font=FONT_BOLD).pack(anchor=A())
         v_addr = tk.StringVar(); self.vars["current_address"] = v_addr
