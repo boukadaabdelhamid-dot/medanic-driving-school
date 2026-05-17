@@ -144,14 +144,20 @@ def _load_trial() -> dict | None:
 def trial_remaining_seconds() -> float | None:
     """
     يُعيد الثواني المتبقية من فترة التجربة:
-      None  → لم تبدأ التجربة بعد (أول تشغيل)
+      None  → ترخيص دائم صالح، أو لم تبدأ التجربة بعد (أول تشغيل)
       > 0   → التجربة نشطة
       0.0   → التجربة انتهت
     """
+    # ترخيص دائم صالح → لا عداد
+    hwid = _get_hwid()
+    lic = _load_license()
+    if lic and lic.get("hwid") == hwid and _verify(hwid, lic.get("key", "")):
+        return None
+
     data = _load_trial()
     if data is None:
         return None
-    if data.get("hwid") != _get_hwid():
+    if data.get("hwid") != hwid:
         return 0.0   # ملف نُقل من جهاز آخر
     elapsed = time.time() - data.get("start", 0)
     return max(0.0, TRIAL_HOURS * 3600 - elapsed)
