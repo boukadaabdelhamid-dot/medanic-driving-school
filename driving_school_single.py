@@ -9077,13 +9077,16 @@ class LoginWindow:
 
         # ── عداد فترة التجربة في عنوان النافذة ───────────────────────────
         try:
+            import math as _math
             from license_guard import trial_remaining_seconds as _trial_rem
 
             def _update_trial_title():
                 rem = _trial_rem()
                 if rem is not None and rem > 0:
-                    h = int(rem // 3600)
-                    m = int((rem % 3600) // 60)
+                    # ceil حتى يُعرض 48:00 عند أول تشغيل بدلاً من 47:59
+                    total_mins = _math.ceil(rem / 60)
+                    h = total_mins // 60
+                    m = total_mins % 60
                     self.root.title(
                         f"برنامج ميدانيك  |  ⏳ التجربة: {h:02d}س {m:02d}د متبقية"
                     )
