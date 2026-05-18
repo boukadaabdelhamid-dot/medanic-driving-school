@@ -67,6 +67,7 @@ STRINGS: dict = {
     "nav_expenses":    {"ar": "المصاريف",           "fr": "Dépenses"},
     "nav_reports":     {"ar": "التقارير",           "fr": "Rapports"},
     "nav_documents":   {"ar": "طباعة الوثائق",     "fr": "Imprimer Docs"},
+    "nav_graduates":   {"ar": "المتخرجون",          "fr": "Diplômés"},
     # ── أزرار شائعة ─────────────────────────────────────────────────────────
     "btn_save":          {"ar": "حفظ",             "fr": "Enregistrer"},
     "btn_save_info":     {"ar": "حفظ المعلومات",   "fr": "Enregistrer"},
@@ -1079,6 +1080,7 @@ NAV_PERMISSIONS = {
     7: "view_expenses",        # المصاريف
     8: "view_reports",         # التقارير
     9: "print_docs",           # طباعة الوثائق
+    10: "view_graduates",      # المتخرجون
 }
 
 
@@ -1693,16 +1695,52 @@ class InstructorDB:
 class CandidateDB:
     @staticmethod
     def get_all(search=""):
+        _NOT_GRAD = """NOT (
+            (c.license_type='A1' AND
+             (SELECT COUNT(*) FROM training_stages ts
+              WHERE ts.candidate_id=c.id AND ts.stage_type='code' AND ts.status='ناجح')>=1)
+            OR
+            (c.license_type!='A1' AND
+             (SELECT COUNT(DISTINCT ts.stage_type) FROM training_stages ts
+              WHERE ts.candidate_id=c.id AND ts.status='ناجح'
+              AND ts.stage_type IN ('code','creneau','circuit'))>=3)
+        )"""
         conn = get_connection()
+        base = (f"SELECT c.*, i.first_name||' '||i.last_name as instructor_name "
+                f"FROM candidates c LEFT JOIN instructors i ON c.instructor_id=i.id "
+                f"WHERE {_NOT_GRAD}")
         if search:
-            rows = conn.execute("""SELECT c.*, i.first_name||' '||i.last_name as instructor_name
-                FROM candidates c LEFT JOIN instructors i ON c.instructor_id=i.id
-                WHERE c.first_name LIKE ? OR c.last_name LIKE ? OR c.phone LIKE ?""",
+            rows = conn.execute(
+                base + " AND (c.first_name LIKE ? OR c.last_name LIKE ? OR c.phone LIKE ?)",
                 (f"%{search}%",) * 3).fetchall()
         else:
-            rows = conn.execute("""SELECT c.*, i.first_name||' '||i.last_name as instructor_name
-                FROM candidates c LEFT JOIN instructors i ON c.instructor_id=i.id
-                ORDER BY c.last_name""").fetchall()
+            rows = conn.execute(base + " ORDER BY c.last_name").fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_graduates(search=""):
+        """المترشحون المتخرجون: A1 بعد الكود، وباقي الأصناف بعد الثلاث مراحل."""
+        _GRAD = """(
+            (c.license_type='A1' AND
+             (SELECT COUNT(*) FROM training_stages ts
+              WHERE ts.candidate_id=c.id AND ts.stage_type='code' AND ts.status='ناجح')>=1)
+            OR
+            (c.license_type!='A1' AND
+             (SELECT COUNT(DISTINCT ts.stage_type) FROM training_stages ts
+              WHERE ts.candidate_id=c.id AND ts.status='ناجح'
+              AND ts.stage_type IN ('code','creneau','circuit'))>=3)
+        )"""
+        conn = get_connection()
+        base = (f"SELECT c.*, i.first_name||' '||i.last_name as instructor_name "
+                f"FROM candidates c LEFT JOIN instructors i ON c.instructor_id=i.id "
+                f"WHERE {_GRAD}")
+        if search:
+            rows = conn.execute(
+                base + " AND (c.first_name LIKE ? OR c.last_name LIKE ? OR c.phone LIKE ?)",
+                (f"%{search}%",) * 3).fetchall()
+        else:
+            rows = conn.execute(base + " ORDER BY c.last_name").fetchall()
         conn.close()
         return [dict(r) for r in rows]
 
@@ -3074,10 +3112,10 @@ class SchoolInfoFrame(tk.Frame):
         make_entry(f_daira, v_daira, width=32).pack(fill="x", ipady=4, pady=(2, 0))
 
         other_fields = [
-            ("اسم مسيّر المدرسة" if LANG == "ar" else "Nom du responsable", "manager_name"),
-            (T("school_cr"), "commercial_register"),
             (T("school_accred"), "accreditation_number"),
             ("تاريخ صدور الاعتماد" if LANG == "ar" else "Date d'agrément", "accreditation_date"),
+            ("اسم مسيّر المدرسة" if LANG == "ar" else "Nom du responsable", "manager_name"),
+            (T("school_cr"), "commercial_register"),
             ("NIF", "nif"), ("NIS", "nis"),
             ("N° Article", "article_number"),
         ]
@@ -9208,6 +9246,92 @@ class DocumentsFrame(tk.Frame):
 
 
 # ============================================================================
+#  نافذة المتخرجون
+# ============================================================================
+
+class GraduatesFrame(tk.Frame):
+    """يعرض المترشحين الذين أكملوا مراحل التكوين بنجاح."""
+
+    def __init__(self, parent):
+        super().__init__(parent, bg=COLOR_BG)
+        self.selected_id = None
+        self._build()
+        self._load_list()
+
+    def _build(self):
+        wrap = tk.Frame(self, bg=COLOR_BG, padx=20, pady=15)
+        wrap.pack(fill="both", expand=True)
+
+        # ── رأس الصفحة ──────────────────────────────────────────────────────
+        head = tk.Frame(wrap, bg=COLOR_BG)
+        head.pack(fill="x", pady=(0, 15))
+
+        right_head = tk.Frame(head, bg=COLOR_BG)
+        right_head.pack(side="right")
+        tk.Label(right_head, text=T("nav_graduates"),
+                 font=(FONT_FAMILY, 20, "bold"),
+                 bg=COLOR_BG, fg=COLOR_HEADER, anchor=A()).pack(anchor=A())
+        sub = ("المترشحون الذين أكملوا جميع مراحل التكوين بنجاح"
+               if LANG == "ar" else
+               "Candidats ayant réussi toutes les étapes de formation")
+        tk.Label(right_head, text=sub,
+                 font=FONT_MAIN, bg=COLOR_BG, fg=COLOR_TEXT_LIGHT,
+                 anchor=A()).pack(anchor=A())
+
+        left_head = tk.Frame(head, bg=COLOR_BG)
+        left_head.pack(side="left")
+        self.count_var = tk.StringVar(value="")
+        tk.Label(left_head, textvariable=self.count_var,
+                 font=(FONT_FAMILY, 14, "bold"),
+                 bg=COLOR_BG, fg=COLOR_SUCCESS).pack(side="left", padx=8)
+
+        # ── شريط البحث ──────────────────────────────────────────────────────
+        sc_outer, sc = make_card(wrap, padding=15)
+        sc_outer.pack(fill="x", pady=(0, 10))
+        tk.Label(sc, text="🔍", font=(FONT_FAMILY, 14),
+                 bg=COLOR_CARD, fg=COLOR_PRIMARY).pack(side="right", padx=(0, 8))
+        self.search_var = tk.StringVar()
+        self.search_var.trace("w", lambda *a: self._load_list())
+        make_entry(sc, self.search_var, width=40).pack(
+            side="right", fill="x", expand=True, ipady=6)
+        lbl_s = ("بحث بالاسم أو الهاتف" if LANG == "ar"
+                 else "Rechercher par nom ou téléphone")
+        tk.Label(sc, text=lbl_s, font=FONT_BOLD,
+                 bg=COLOR_CARD, fg=COLOR_TEXT, anchor=A()).pack(side="right", padx=10)
+
+        # ── جدول المتخرجين ──────────────────────────────────────────────────
+        tbl_outer, tbl_card = make_card(wrap, padding=10)
+        tbl_outer.pack(fill="both", expand=True)
+        cols   = ("id", "last_name", "first_name", "national_id",
+                  "gender", "phone", "license_type",
+                  "instructor_name", "registration_date")
+        heads  = (T("cand_col_num"), T("cand_col_lname"), T("cand_col_fname"),
+                  T("cand_col_nid"), T("cand_col_gender"), T("cand_col_phone"),
+                  T("cand_col_license"), T("cand_col_inst"), T("cand_col_date"))
+        widths = (50, 130, 130, 150, 70, 115, 80, 155, 125)
+        self.tree = create_treeview(tbl_card, cols, heads, widths, height=20)
+        self.tree.bind("<<TreeviewSelect>>", self._on_select)
+
+    def _load_list(self):
+        rows   = CandidateDB.get_graduates(self.search_var.get())
+        values = [(r['id'], r['last_name'], r['first_name'],
+                   r.get('national_id', '') or '—', r['gender'], r['phone'],
+                   r['license_type'], r.get('instructor_name', '') or '—',
+                   r['registration_date'])
+                  for r in rows]
+        insert_zebra(self.tree, values)
+        n     = len(values)
+        label = (f"إجمالي المتخرجين: {n}" if LANG == "ar"
+                 else f"Total diplômés : {n}")
+        self.count_var.set(label)
+
+    def _on_select(self, event):
+        sel = self.tree.selection()
+        if sel:
+            self.selected_id = self.tree.item(sel[0])['values'][0]
+
+
+# ============================================================================
 #  نافذة تسجيل الدخول
 # ============================================================================
 
@@ -9966,6 +10090,7 @@ class DrivingSchoolApp:
             ("💸", T("nav_expenses")),
             ("📊", T("nav_reports")),
             ("🖨️", T("nav_documents")),
+            ("🎓", T("nav_graduates")),
         ]
         self._nav_refs = []
         for i, (icon, label) in enumerate(nav_defs):
@@ -10131,6 +10256,7 @@ class DrivingSchoolApp:
             (T("nav_expenses"),    ExpensesFrame),
             (T("nav_reports"),     ReportsFrame),
             (T("nav_documents"),   DocumentsFrame),
+            (T("nav_graduates"),   GraduatesFrame),
         ]
         # يحتاج DashboardFrame وReportsFrame لـ callback للتنقل
         navigate_aware = (DashboardFrame, ReportsFrame)
