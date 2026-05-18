@@ -1253,6 +1253,13 @@ def upgrade_db():
             ("address_wilaya",     "TEXT DEFAULT ''"),
             ("last_name_fr",       "TEXT DEFAULT ''"),
             ("first_name_fr",      "TEXT DEFAULT ''"),
+            ("insurance_number",   "TEXT DEFAULT ''"),
+            ("email",              "TEXT DEFAULT ''"),
+            ("guardian_first_name","TEXT DEFAULT ''"),
+            ("guardian_last_name", "TEXT DEFAULT ''"),
+            ("guardian_birth_date","TEXT DEFAULT ''"),
+            ("guardian_address",   "TEXT DEFAULT ''"),
+            ("guardian_phone",     "TEXT DEFAULT ''"),
         ]
         for col, dtype in cand_cols:
             if col not in cand_existing:
@@ -1280,6 +1287,21 @@ def upgrade_db():
             conn.execute("ALTER TABLE school_info ADD COLUMN wilaya TEXT DEFAULT ''")
         if "manager_name" not in school_existing:
             conn.execute("ALTER TABLE school_info ADD COLUMN manager_name TEXT DEFAULT ''")
+        _school_new = [
+            ("accreditation_date",       "TEXT DEFAULT ''"),
+            ("address_commune",          "TEXT DEFAULT ''"),
+            ("address_daira",            "TEXT DEFAULT ''"),
+            ("owner_name",               "TEXT DEFAULT ''"),
+            ("owner_birth_date",         "TEXT DEFAULT ''"),
+            ("owner_birth_place",        "TEXT DEFAULT ''"),
+            ("owner_email",              "TEXT DEFAULT ''"),
+            ("representative_name",      "TEXT DEFAULT ''"),
+            ("representative_birth_date","TEXT DEFAULT ''"),
+            ("representative_birth_place","TEXT DEFAULT ''"),
+        ]
+        for _col, _dtype in _school_new:
+            if _col not in school_existing:
+                conn.execute(f"ALTER TABLE school_info ADD COLUMN {_col} {_dtype}")
 
         # عمود نوع المركبة في جدول vehicles
         cur4 = conn.execute("PRAGMA table_info(vehicles)")
@@ -1596,10 +1618,19 @@ class SchoolInfoDB:
         conn = get_connection()
         conn.execute("""UPDATE school_info SET name=?,commercial_register=?,
             accreditation_number=?,nif=?,nis=?,article_number=?,address=?,phone=?,wilaya=?,
-            manager_name=? WHERE id=1""",
+            manager_name=?,accreditation_date=?,address_commune=?,address_daira=?,
+            owner_name=?,owner_birth_date=?,owner_birth_place=?,owner_email=?,
+            representative_name=?,representative_birth_date=?,representative_birth_place=?
+            WHERE id=1""",
             (d['name'], d['commercial_register'], d['accreditation_number'],
              d['nif'], d['nis'], d['article_number'], d['address'], d['phone'],
-             d.get('wilaya', ''), d.get('manager_name', '')))
+             d.get('wilaya', ''), d.get('manager_name', ''),
+             d.get('accreditation_date', ''), d.get('address_commune', ''),
+             d.get('address_daira', ''), d.get('owner_name', ''),
+             d.get('owner_birth_date', ''), d.get('owner_birth_place', ''),
+             d.get('owner_email', ''), d.get('representative_name', ''),
+             d.get('representative_birth_date', ''),
+             d.get('representative_birth_place', '')))
         conn.commit()
         conn.close()
 
@@ -1717,8 +1748,10 @@ class CandidateDB:
             nationality,disability,blood_type,license_type,previous_licenses,instructor_id,
             total_amount,national_id,second_nationality,current_address,is_born_abroad,
             birth_country,embassy,consulate,file_number,file_date,address_commune,address_wilaya,
-            last_name_fr,first_name_fr)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            last_name_fr,first_name_fr,insurance_number,email,
+            guardian_first_name,guardian_last_name,guardian_birth_date,
+            guardian_address,guardian_phone)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (d['first_name'], d['last_name'], d['gender'], d['birth_date'],
              d['birth_place_commune'], d['birth_place_wilaya'], d['marital_status'],
              d['father_name'], d['mother_name'], d['phone'], d['nationality'],
@@ -1729,7 +1762,11 @@ class CandidateDB:
              d.get('birth_country',''), d.get('embassy',''), d.get('consulate',''),
              d.get('file_number',''), d.get('file_date',''),
              d.get('address_commune',''), d.get('address_wilaya',''),
-             d.get('last_name_fr',''), d.get('first_name_fr','')))
+             d.get('last_name_fr',''), d.get('first_name_fr',''),
+             d.get('insurance_number',''), d.get('email',''),
+             d.get('guardian_first_name',''), d.get('guardian_last_name',''),
+             d.get('guardian_birth_date',''), d.get('guardian_address',''),
+             d.get('guardian_phone','')))
         lid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         conn.execute("INSERT INTO training_stages (candidate_id,stage_type) VALUES (?,?)",
                      (lid, 'code'))
@@ -1746,7 +1783,9 @@ class CandidateDB:
             previous_licenses=?,instructor_id=?,total_amount=?,national_id=?,
             second_nationality=?,current_address=?,is_born_abroad=?,birth_country=?,
             embassy=?,consulate=?,file_number=?,file_date=?,address_commune=?,address_wilaya=?,
-            last_name_fr=?,first_name_fr=?
+            last_name_fr=?,first_name_fr=?,insurance_number=?,email=?,
+            guardian_first_name=?,guardian_last_name=?,guardian_birth_date=?,
+            guardian_address=?,guardian_phone=?
             WHERE id=?""",
             (d['first_name'], d['last_name'], d['gender'], d['birth_date'],
              d['birth_place_commune'], d['birth_place_wilaya'], d['marital_status'],
@@ -1758,7 +1797,11 @@ class CandidateDB:
              d.get('birth_country',''), d.get('embassy',''),
              d.get('consulate',''), d.get('file_number',''), d.get('file_date',''),
              d.get('address_commune',''), d.get('address_wilaya',''),
-             d.get('last_name_fr',''), d.get('first_name_fr',''), i))
+             d.get('last_name_fr',''), d.get('first_name_fr',''),
+             d.get('insurance_number',''), d.get('email',''),
+             d.get('guardian_first_name',''), d.get('guardian_last_name',''),
+             d.get('guardian_birth_date',''), d.get('guardian_address',''),
+             d.get('guardian_phone',''), i))
         conn.commit()
         conn.close()
 
@@ -2958,6 +3001,14 @@ class SchoolInfoFrame(tk.Frame):
         nb.add(tab1, text="  📋  بيانات المدرسة  ")
         self._build_info_tab(tab1)
 
+        tab_owner = tk.Frame(nb, bg=COLOR_BG)
+        nb.add(tab_owner, text="  👤  صاحب المدرسة  ")
+        self._build_owner_tab(tab_owner)
+
+        tab_rep = tk.Frame(nb, bg=COLOR_BG)
+        nb.add(tab_rep, text="  🤝  الممثل  ")
+        self._build_rep_tab(tab_rep)
+
         tab2 = tk.Frame(nb, bg=COLOR_BG)
         nb.add(tab2, text="  🚗  المركبات  ")
         self._build_vehicles_tab(tab2)
@@ -3010,21 +3061,73 @@ class SchoolInfoFrame(tk.Frame):
                      values=ALGERIA_WILAYAS, width=30,
                      state="readonly").pack(fill="x", ipady=4, pady=(2, 0))
 
+        f_commune = tk.Frame(grid, bg=COLOR_CARD)
+        f_commune.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
+        make_label(f_commune, "البلدية" if LANG == "ar" else "Commune", font=FONT_BOLD).pack(anchor=A())
+        v_commune = tk.StringVar(); self.vars["address_commune"] = v_commune
+        make_entry(f_commune, v_commune, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+
+        f_daira = tk.Frame(grid, bg=COLOR_CARD)
+        f_daira.grid(row=2, column=1, sticky="ew", padx=10, pady=5)
+        make_label(f_daira, "الدائرة" if LANG == "ar" else "Daïra", font=FONT_BOLD).pack(anchor=A())
+        v_daira = tk.StringVar(); self.vars["address_daira"] = v_daira
+        make_entry(f_daira, v_daira, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+
         other_fields = [
             ("اسم مسيّر المدرسة" if LANG == "ar" else "Nom du responsable", "manager_name"),
             (T("school_cr"), "commercial_register"),
             (T("school_accred"), "accreditation_number"),
+            ("تاريخ صدور الاعتماد" if LANG == "ar" else "Date d'agrément", "accreditation_date"),
             ("NIF", "nif"), ("NIS", "nis"),
             ("N° Article", "article_number"),
         ]
         for i, (label, key) in enumerate(other_fields):
-            row = (i // 2) + 2
+            row = (i // 2) + 3
             col = i % 2
             cell = tk.Frame(grid, bg=COLOR_CARD)
             cell.grid(row=row, column=col, sticky="ew", padx=10, pady=5)
             make_label(cell, label, font=FONT_BOLD).pack(anchor=A())
             v = tk.StringVar()
             self.vars[key] = v
+            make_entry(cell, v, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+
+    def _build_owner_tab(self, parent):
+        outer, card = make_card(parent, padding=28)
+        outer.pack(fill="both", expand=True, padx=60, pady=20)
+        section_title(card, "معلومات صاحب المدرسة" if LANG == "ar" else "Informations du propriétaire", icon="👤")
+        grid = tk.Frame(card, bg=COLOR_CARD)
+        grid.pack(fill="x", expand=True)
+        grid.columnconfigure(0, weight=1); grid.columnconfigure(1, weight=1)
+        owner_fields = [
+            ("الاسم واللقب" if LANG == "ar" else "Nom complet",          "owner_name",        0, 0),
+            ("تاريخ الميلاد (YYYY-MM-DD)" if LANG == "ar" else "Date de naissance", "owner_birth_date",  0, 1),
+            ("مكان الميلاد" if LANG == "ar" else "Lieu de naissance",    "owner_birth_place", 1, 0),
+            ("البريد الإلكتروني" if LANG == "ar" else "E-mail",          "owner_email",       1, 1),
+        ]
+        for lbl, key, r, c in owner_fields:
+            cell = tk.Frame(grid, bg=COLOR_CARD)
+            cell.grid(row=r, column=c, sticky="ew", padx=10, pady=5)
+            make_label(cell, lbl, font=FONT_BOLD).pack(anchor=A())
+            v = tk.StringVar(); self.vars[key] = v
+            make_entry(cell, v, width=32).pack(fill="x", ipady=4, pady=(2, 0))
+
+    def _build_rep_tab(self, parent):
+        outer, card = make_card(parent, padding=28)
+        outer.pack(fill="both", expand=True, padx=60, pady=20)
+        section_title(card, "معلومات ممثل المدرسة" if LANG == "ar" else "Informations du représentant", icon="🤝")
+        grid = tk.Frame(card, bg=COLOR_CARD)
+        grid.pack(fill="x", expand=True)
+        grid.columnconfigure(0, weight=1); grid.columnconfigure(1, weight=1)
+        rep_fields = [
+            ("الاسم واللقب" if LANG == "ar" else "Nom complet",          "representative_name",        0, 0),
+            ("تاريخ الميلاد (YYYY-MM-DD)" if LANG == "ar" else "Date de naissance", "representative_birth_date",  0, 1),
+            ("مكان الميلاد" if LANG == "ar" else "Lieu de naissance",    "representative_birth_place", 1, 0),
+        ]
+        for lbl, key, r, c in rep_fields:
+            cell = tk.Frame(grid, bg=COLOR_CARD)
+            cell.grid(row=r, column=c, sticky="ew", padx=10, pady=5)
+            make_label(cell, lbl, font=FONT_BOLD).pack(anchor=A())
+            v = tk.StringVar(); self.vars[key] = v
             make_entry(cell, v, width=32).pack(fill="x", ipady=4, pady=(2, 0))
 
     def _build_vehicles_tab(self, parent):
@@ -3230,6 +3333,8 @@ class CandidateDialog(tk.Toplevel):
             (T("cdlg_f_father"),    "father_name",        "entry", None),
             (T("cdlg_f_mother"),    "mother_name",        "entry", None),
             (T("cdlg_f_phone"),     "phone",              "entry", None),
+            ("البريد الإلكتروني" if LANG == "ar" else "E-mail", "email", "entry", None),
+            ("رقم التأمين" if LANG == "ar" else "N° Assurance", "insurance_number", "entry", None),
             (T("cdlg_f_nat"),       "nationality",        "entry", None),
             (T("cdlg_f_nat2"),      "second_nationality", "entry", None),
             (T("cdlg_f_disab"),     "disability",         "entry", None),
@@ -3371,7 +3476,41 @@ class CandidateDialog(tk.Toplevel):
                      icon="📋", color=COLOR_PRIMARY).pack(anchor=A())
 
         # ══════════════════════════════════════════════
-        # التبويب 4: نتائج الامتحانات (تعديل فقط)
+        # التبويب 4: الممثل الشرعي (للقاصرين)
+        # ══════════════════════════════════════════════
+        tab_guard = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
+        nb.add(tab_guard, text="  👨‍👦  الممثل الشرعي  ")
+
+        section_title(tab_guard, "معلومات الممثل الشرعي (للمترشح القاصر)" if LANG == "ar"
+                      else "Représentant légal (mineur)", icon="👨‍👦")
+
+        info_lbl = tk.Label(tab_guard,
+            text="يُملأ هذا القسم فقط إذا كان المترشح قاصراً (أقل من 18 سنة)" if LANG == "ar"
+                 else "À remplir uniquement si le candidat est mineur",
+            font=FONT_MAIN, bg=COLOR_CARD, fg=COLOR_TEXT_LIGHT, anchor=A())
+        info_lbl.pack(fill="x", padx=10, pady=(0, 8))
+
+        g_guard = tk.Frame(tab_guard, bg=COLOR_CARD)
+        g_guard.pack(fill="x")
+        g_guard.columnconfigure(0, weight=1); g_guard.columnconfigure(1, weight=1)
+
+        guard_fields = [
+            ("اللقب" if LANG == "ar" else "Nom",                           "guardian_last_name",  0, 0),
+            ("الاسم" if LANG == "ar" else "Prénom",                        "guardian_first_name", 0, 1),
+            ("تاريخ الميلاد (YYYY-MM-DD)" if LANG == "ar" else "Date naissance", "guardian_birth_date", 1, 0),
+            ("رقم الهاتف" if LANG == "ar" else "Téléphone",               "guardian_phone",      1, 1),
+        ]
+        for lbl, key, r, c in guard_fields:
+            self._make_field(g_guard, lbl, key, row=r, col=c)
+
+        addr_guard = tk.Frame(tab_guard, bg=COLOR_CARD)
+        addr_guard.pack(fill="x", padx=10, pady=4)
+        make_label(addr_guard, "العنوان" if LANG == "ar" else "Adresse", font=FONT_BOLD).pack(anchor=A())
+        v_gaddr = tk.StringVar(); self.vars["guardian_address"] = v_gaddr
+        make_entry(addr_guard, v_gaddr, width=80).pack(fill="x", ipady=5, pady=(2, 0))
+
+        # ══════════════════════════════════════════════
+        # التبويب 5: نتائج الامتحانات (تعديل فقط)
         # ══════════════════════════════════════════════
         tab4 = tk.Frame(nb, bg=COLOR_CARD, padx=18, pady=12)
         nb.add(tab4, text=T("cdlg_tab_exams"))
@@ -3691,7 +3830,10 @@ class CandidateDialog(tk.Toplevel):
                      "birth_place_wilaya", "father_name", "mother_name", "phone",
                      "disability", "national_id",
                      "second_nationality", "current_address", "embassy", "consulate",
-                     "file_number", "file_date", "address_commune", "address_wilaya"]
+                     "file_number", "file_date", "address_commune", "address_wilaya",
+                     "insurance_number", "email",
+                     "guardian_first_name", "guardian_last_name", "guardian_birth_date",
+                     "guardian_address", "guardian_phone"]
         try:
             d = {k: self.vars[k].get().strip() for k in text_keys}
         except KeyError as _ke:
@@ -7400,29 +7542,38 @@ class DocumentsFrame(tk.Frame):
         # — المدرسة —
         _t("مالك مدرسة تعليم سياقة السيارات  :", bold=True); _nl(0.8)
 
-        acr = school.get('accreditation_number','')
-        _t(f"الاعتماد رقم  {_dots(acr,30)}                الصادر في  {'.'*30}"); _nl()
+        acr      = school.get('accreditation_number','')
+        acr_date = school.get('accreditation_date','')
+        _t(f"الاعتماد رقم  {_dots(acr,25)}    الصادر في  {_dots(acr_date,20)}"); _nl()
 
-        owner = school.get('name','')
-        _t(f"السيد )ة(  {_dots(owner,30)}  :  المولود )ة( في  {'.'*20}  بـ  {'.'*15}"); _nl()
+        owner_n  = school.get('owner_name','') or school.get('name','')
+        owner_bd = school.get('owner_birth_date','')
+        owner_bp = school.get('owner_birth_place','')
+        _t(f"السيد )ة(  {_dots(owner_n,28)}  :  المولود )ة( في  {_dots(owner_bd,16)}  بـ  {_dots(owner_bp,14)}"); _nl()
 
         _field("العنوان  :", school.get('address',''), 60)
 
-        _t(f"الممثل من طرف السيد )ة(  {'.'*28}  :  المولود )ة( في  {'.'*18}  بـ  {'.'*12}"); _nl()
+        rep_n  = school.get('representative_name','')
+        rep_bd = school.get('representative_birth_date','')
+        rep_bp = school.get('representative_birth_place','')
+        _t(f"الممثل من طرف السيد )ة(  {_dots(rep_n,22)}  :  المولود )ة( في  {_dots(rep_bd,14)}  بـ  {_dots(rep_bp,12)}"); _nl()
 
         _field("اسم الشركة  :", school.get('name',''), 50)
         _field("العنوان المهني  :", school.get('address',''), 50)
 
         commune  = school.get('address_commune','') or ""
+        daira    = school.get('address_daira','') or ""
         wilaya_s = _no_wnum(school.get('wilaya','')) or ""
-        _t(f"ولاية  {_dots(wilaya_s,18)}  :  دائرة  {'.'*20}  :  بلدية  {_dots(commune,20)}"); _nl()
+        _t(f"ولاية  {_dots(wilaya_s,16)}  :  دائرة  {_dots(daira,16)}  :  بلدية  {_dots(commune,16)}"); _nl()
 
-        phone_s = school.get('phone','')
-        _t(f"البريد الإلكتروني  {'.'*30}            الهاتف  {_dots(phone_s,20)}"); _nl()
+        phone_s   = school.get('phone','')
+        owner_em  = school.get('owner_email','')
+        _t(f"البريد الإلكتروني  {_dots(owner_em,28)}            الهاتف  {_dots(phone_s,20)}"); _nl()
 
         lic_type = cand.get('license_type','ب') or 'ب'
         _field("صنف )أصناف( رخصة السياقة محل التعليم", lic_type, 30)
-        _t(f"رقم التأمين على الحوادث لفائدة المترشح )ة(  {'.'*42}  :"); _nl(0.9)
+        ins_num = cand.get('insurance_number','')
+        _t(f"رقم التأمين على الحوادث لفائدة المترشح )ة(  {_dots(ins_num,35)}  :"); _nl(0.9)
 
         # — المترشح —
         _t("والمترشح )ة(  :", bold=True); _nl(0.8)
@@ -7435,12 +7586,18 @@ class DocumentsFrame(tk.Frame):
         addr = cand.get('current_address','') or cand.get('address_commune','') or ""
         _field("القاطن )ة(  :", addr, 60)
 
-        cph = cand.get('phone','')
-        _t(f"البريد الإلكتروني  {'.'*35}              الهاتف  {_dots(cph,20)}"); _nl(0.9)
+        cph   = cand.get('phone','')
+        cemail = cand.get('email','')
+        _t(f"البريد الإلكتروني  {_dots(cemail,30)}              الهاتف  {_dots(cph,20)}"); _nl(0.9)
 
         _t("عند الاقتضاء، يمثله )ها( الممثل الشرعي  :", bold=False); _nl()
-        _t(f"المولود )ة( في  {'.'*20}          الاسم  {'.'*20}          اللقب  {'.'*20}"); _nl()
-        _t(f"الهاتف  {'.'*22}              العنوان  {'.'*40}"); _nl(1.0)
+        g_last  = cand.get('guardian_last_name','')
+        g_first = cand.get('guardian_first_name','')
+        g_bdate = cand.get('guardian_birth_date','')
+        g_phone = cand.get('guardian_phone','')
+        g_addr  = cand.get('guardian_address','')
+        _t(f"المولود )ة( في  {_dots(g_bdate,16)}          الاسم  {_dots(g_first,16)}          اللقب  {_dots(g_last,16)}"); _nl()
+        _t(f"الهاتف  {_dots(g_phone,18)}              العنوان  {_dots(g_addr,36)}"); _nl(1.0)
 
         _t("تم الاتفاق على ما يأتي  :", bold=True, size=12); _nl(0.4)
 
