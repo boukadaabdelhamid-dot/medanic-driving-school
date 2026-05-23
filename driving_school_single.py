@@ -3064,8 +3064,18 @@ class SchoolInfoFrame(tk.Frame):
         ModernButton(bf, T("btn_reload"), self._load,
                      icon="🔄", color=COLOR_TEXT_LIGHT).pack(side="right", padx=5)
 
-        grid = tk.Frame(card, bg=COLOR_CARD)
-        grid.pack(fill="x", expand=True)
+        _sf = tk.Frame(card, bg=COLOR_CARD)
+        _sf.pack(fill="both", expand=True)
+        _cv = tk.Canvas(_sf, bg=COLOR_CARD, highlightthickness=0)
+        _vsb = ttk.Scrollbar(_sf, orient="vertical", command=_cv.yview)
+        _cv.configure(yscrollcommand=_vsb.set)
+        _vsb.pack(side="right", fill="y")
+        _cv.pack(side="left", fill="both", expand=True)
+        grid = tk.Frame(_cv, bg=COLOR_CARD)
+        _cw = _cv.create_window((0, 0), window=grid, anchor="nw")
+        grid.bind("<Configure>", lambda e: _cv.configure(scrollregion=_cv.bbox("all")))
+        _cv.bind("<Configure>", lambda e: _cv.itemconfig(_cw, width=e.width))
+        _cv.bind("<MouseWheel>", lambda e: _cv.yview_scroll(int(-1*(e.delta/120)), "units"))
         grid.columnconfigure(0, weight=1)
         grid.columnconfigure(1, weight=1)
 
