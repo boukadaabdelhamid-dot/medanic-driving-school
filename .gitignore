@@ -47,3 +47,45 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Build output
+build/
+*.spec
+
+# License / trial files
+trial.dat
+license.dat
+
+# Sensitive tools
+keygen_tool.py
+
+# Packages
+*.zip
+
+# Logs
+*.log
+
+# Attached assets (chat images)
+attached_assets/
+
+# Extra zip/package files
+backup_scripts.zip
+build_exe_kit.zip
+fix_dll_kit.zip
+license_protection.zip
+medanic_full_package.zip
+medanic_protected.zip
+medanic_simple.zip
+driving_school_modified.zip
+patch_db_fix.zip
