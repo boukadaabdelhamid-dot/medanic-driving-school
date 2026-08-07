@@ -16,6 +16,7 @@ import sys
 import sqlite3
 import hashlib
 import json
+import shutil
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import date, datetime, timedelta
@@ -859,7 +860,71 @@ if getattr(sys, 'frozen', False):
     _BASE_DIR = os.path.dirname(sys.executable)
 else:
     _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(_BASE_DIR, "driving_school.db")
+
+
+def _get_data_dir() -> str:
+    """Return a writable, stable directory for user data and the SQLite DB."""
+    if sys.platform == "win32":
+        data_root = (
+            os.environ.get("LOCALAPPDATA")
+            or os.environ.get("APPDATA")
+            or os.path.expanduser("~")
+        )
+    else:
+        data_root = os.environ.get(
+            "XDG_DATA_HOME",
+            os.path.join(os.path.expanduser("~"), ".local", "share"),
+        )
+
+    data_dir = os.path.join(data_root, "Medanic")
+    os.makedirs(data_dir, exist_ok=True)
+    return data_dir
+
+
+def _prepare_database_path() -> str:
+    """
+    Keep the database outside the executable directory.
+
+    Existing installations are migrated by copying the database (and any
+    SQLite WAL/SHM sidecar files) to the new location. The original file is
+    deliberately kept as a backup and is never deleted.
+    """
+    data_dir = _get_data_dir()
+    database_name = "driving_school.db"
+    new_path = os.path.join(data_dir, database_name)
+    legacy_path = os.path.join(_BASE_DIR, database_name)
+
+    if os.path.exists(new_path) or not os.path.exists(legacy_path):
+        return new_path
+
+    temp_path = f"{new_path}.migrating"
+    try:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        shutil.copy2(legacy_path, temp_path)
+        os.replace(temp_path, new_path)
+
+        # Preserve pending SQLite transactions if the old installation used
+        # WAL mode and was closed before this first launch.
+        for suffix in ("-wal", "-shm"):
+            old_sidecar = f"{legacy_path}{suffix}"
+            new_sidecar = f"{new_path}{suffix}"
+            if os.path.exists(old_sidecar) and not os.path.exists(new_sidecar):
+                shutil.copy2(old_sidecar, new_sidecar)
+    except OSError:
+        # If migration is blocked by a filesystem permission issue, keep the
+        # application usable with the legacy location instead of losing data.
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+        return legacy_path
+
+    return new_path
+
+
+DB_PATH = _prepare_database_path()
 
 # ----- الخطوط -----
 FONT_FAMILY = "Tahoma"
@@ -9374,12 +9439,13 @@ class LoginWindow:
             def _update_trial_title():
                 rem = _trial_rem()
                 if rem is not None and rem > 0:
-                    # ceil حتى يُعرض 48:00 عند أول تشغيل بدلاً من 47:59
+                    # ceil حتى يُعرض 30 يوماً عند أول تشغيل بدلاً من 29 يوماً
                     total_mins = _math.ceil(rem / 60)
-                    h = total_mins // 60
+                    days = total_mins // (24 * 60)
+                    h = (total_mins % (24 * 60)) // 60
                     m = total_mins % 60
                     self.root.title(
-                        f"برنامج ميدانيك  |  ⏳ التجربة: {h:02d}س {m:02d}د متبقية"
+                        f"برنامج ميدانيك  |  ⏳ التجربة: {days}ي {h:02d}س {m:02d}د متبقية"
                     )
                     self.root.after(60_000, _update_trial_title)
                 # rem is None (مرخّص دائم) أو rem == 0 → لا يُعدَّل العنوان
@@ -10356,8 +10422,11 @@ if __name__ == "__main__":
         _lic_root.destroy()
         if not _lic_ok:
             raise SystemExit("البرنامج غير مفعّل.")
-    except ImportError:
-        pass   # ملف license_guard.py غير موجود → يعمل بدون حماية
+    except ImportError as exc:
+        # لا تسمح بتشغيل نسخة العميل بدون نظام الترخيص.
+        raise SystemExit(
+            "تعذر تحميل نظام الترخيص. أعد بناء البرنامج مع license_guard.py."
+        ) from exc
     # ──────────────────────────────────────────────────────────────────
 
     LoginWindow()

@@ -9,8 +9,8 @@ echo      Medanic - Patch Database Save Fix
 echo      اصلاح مشكلة عدم حفظ البيانات
 echo  ====================================================
 echo.
-echo  This script fixes the source code, then you rebuild
-echo  سيقوم باصلاح الكود ثم تعيد البناء
+echo  The source now stores the database in AppData\Local\Medanic
+echo  الكود الآن يحفظ قاعدة البيانات في AppData\Local\Medanic
 echo.
 pause
 
@@ -29,21 +29,15 @@ copy /Y "driving_school_single.py" "driving_school_single.py.backup" >nul
 echo       OK: driving_school_single.py.backup
 
 REM ── تطبيق الإصلاح عبر PowerShell ─────────────────────
-echo  [2/3] Applying database path fix...
+echo  [2/3] Checking database path fix...
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$file = 'driving_school_single.py';" ^
-    "$content = Get-Content $file -Raw -Encoding UTF8;" ^
-    "$old = 'DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), \"driving_school.db\")';" ^
-    "$new = \"if getattr(sys, 'frozen', False):`n    _BASE_DIR = os.path.dirname(sys.executable)`nelse:`n    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))`nDB_PATH = os.path.join(_BASE_DIR, 'driving_school.db')\";" ^
-    "if ($content -match [regex]::Escape($old)) {" ^
-    "    $content = $content.Replace($old, $new);" ^
-    "    [System.IO.File]::WriteAllText((Resolve-Path $file), $content, [System.Text.UTF8Encoding]::new($false));" ^
-    "    Write-Host '      OK: Fix applied successfully';" ^
-    "} elseif ($content -match 'frozen.*sys.executable') {" ^
-    "    Write-Host '      OK: Fix already applied (no changes needed)';" ^
+    "$content = Get-Content 'driving_school_single.py' -Raw -Encoding UTF8;" ^
+    "if ($content -match 'def _prepare_database_path') {" ^
+    "    Write-Host '      OK: AppData database path is already enabled';" ^
     "} else {" ^
-    "    Write-Host '      WARNING: Could not find exact line - manual fix needed';" ^
+    "    Write-Host '      ERROR: This source is older than the supported version';" ^
+    "    Write-Host '      Download the latest source before rebuilding';" ^
     "    exit 1;" ^
     "}"
 

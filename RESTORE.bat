@@ -12,8 +12,14 @@ echo.
 
 set "APP_DIR=%~dp0"
 set "APP_DIR=%APP_DIR:~0,-1%"
-set "DB_FILE=%APP_DIR%\driving_school.db"
-set "BACKUP_DIR=%APP_DIR%\Backups"
+set "DATA_ROOT=%LOCALAPPDATA%"
+if not defined DATA_ROOT set "DATA_ROOT=%APPDATA%"
+if not defined DATA_ROOT set "DATA_ROOT=%USERPROFILE%"
+set "DATA_DIR=%DATA_ROOT%\Medanic"
+set "DB_FILE=%DATA_DIR%\driving_school.db"
+set "BACKUP_DIR=%DATA_DIR%\Backups"
+
+if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 
 if not exist "%BACKUP_DIR%" (
     color 0C
