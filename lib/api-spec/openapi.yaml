@@ -1,22 +1,22 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Bilingual Medanic driving-school ERP API
 servers:
   - url: /api
-    description: Base API path
 tags:
-  - name: health
-    description: Health operations
+  - name: auth
+  - name: school
+  - name: records
+  - name: reports
+  - name: documents
+  - name: erp
 paths:
   /healthz:
     get:
       operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      description: Returns server health status
+      tags: [auth]
       responses:
         "200":
           description: Healthy
@@ -24,13 +24,586 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/setup-required:
+    get:
+      operationId: getSetupStatus
+      tags: [auth]
+      responses:
+        "200":
+          description: Whether a first administrator can be configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupStatus"
+  /auth/setup:
+    post:
+      operationId: setupInitialAdmin
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitialAdminInput"
+      responses:
+        "201":
+          description: Initial administrator created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCredentials"
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      responses:
+        "200":
+          description: Current authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      responses:
+        "204":
+          description: Session ended
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [reports]
+      parameters:
+        - $ref: "#/components/parameters/Language"
+      responses:
+        "200":
+          description: Current school activity summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /school:
+    get:
+      operationId: getSchool
+      tags: [school]
+      responses:
+        "200":
+          description: Driving school's registered profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolInfo"
+    patch:
+      operationId: updateSchool
+      tags: [school]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SchoolInfoUpdate"
+      responses:
+        "200":
+          description: Updated school profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolInfo"
+  /resources/{resource}:
+    get:
+      operationId: listResourceRecords
+      tags: [records]
+      parameters:
+        - $ref: "#/components/parameters/Resource"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/CandidateId"
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - $ref: "#/components/parameters/Period"
+        - $ref: "#/components/parameters/Language"
+      responses:
+        "200":
+          description: List of records and the fields needed to edit them
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourcePage"
+    post:
+      operationId: createResourceRecord
+      tags: [records]
+      parameters:
+        - $ref: "#/components/parameters/Resource"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceInput"
+      responses:
+        "201":
+          description: Created record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /resources/{resource}/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Resource"
+      - $ref: "#/components/parameters/RecordId"
+    get:
+      operationId: getResourceRecord
+      tags: [records]
+      responses:
+        "200":
+          description: Resource record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRecord"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateResourceRecord
+      tags: [records]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceInput"
+      responses:
+        "200":
+          description: Updated resource record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRecord"
+    delete:
+      operationId: deleteResourceRecord
+      tags: [records]
+      responses:
+        "204":
+          description: Deleted record
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /reports/{report}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      parameters:
+        - $ref: "#/components/parameters/Report"
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - $ref: "#/components/parameters/Language"
+      responses:
+        "200":
+          description: Filtered report rows and totals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportData"
+  /documents/catalog:
+    get:
+      operationId: getDocumentCatalog
+      tags: [documents]
+      parameters:
+        - $ref: "#/components/parameters/Language"
+      responses:
+        "200":
+          description: Administrative PDFs available in the desktop app
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentType"
+  /documents/generate:
+    post:
+      operationId: generateDocument
+      tags: [documents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentRequest"
+      responses:
+        "200":
+          description: Generated official PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /erp/journal/{id}/reverse:
+    post:
+      operationId: reverseJournalEntry
+      tags: [erp]
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "201":
+          description: Reversal posted; original entry is preserved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRecord"
+  /erp/payroll/{id}/pay:
+    post:
+      operationId: payPayrollItem
+      tags: [erp]
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: Payroll marked paid and journal entry posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRecord"
+        "409":
+          $ref: "#/components/responses/Conflict"
 components:
+  parameters:
+    Language:
+      name: language
+      in: query
+      schema:
+        type: string
+        enum: [ar, fr]
+    Resource:
+      name: resource
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/ResourceName"
+    RecordId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    Search:
+      name: search
+      in: query
+      schema:
+        type: string
+    CandidateId:
+      name: candidateId
+      in: query
+      schema:
+        type: integer
+    FromDate:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date
+    ToDate:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date
+    Period:
+      name: period
+      in: query
+      schema:
+        type: string
+        pattern: "^\\d{4}-\\d{2}$"
+    Report:
+      name: report
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [payments, expenses, candidates, instructors, exams, payroll, journal]
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    NotFound:
+      description: Record not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Conflict:
+      description: Action conflicts with existing records
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
-
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    ResourceName:
+      type: string
+      enum:
+        - candidates
+        - instructors
+        - trainingStages
+        - vehicles
+        - sessions
+        - payments
+        - expenses
+        - examResults
+        - examAttempts
+        - graduates
+        - users
+        - accounts
+        - journalEntries
+        - employees
+        - payroll
+    ResourceInput:
+      type: object
+      additionalProperties: true
+    ResourceRecord:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+      additionalProperties: true
+    ResourcePage:
+      type: object
+      required: [items, fields, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceRecord"
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldDefinition"
+        total:
+          type: integer
+    FieldDefinition:
+      type: object
+      required: [name, label, type, required]
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [text, number, date, select, boolean, textarea, password]
+        required:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: string
+        readOnly:
+          type: boolean
+        hidden:
+          type: boolean
+    AuthCredentials:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+    InitialAdminInput:
+      type: object
+      required: [setupKey, username, fullName, password]
+      properties:
+        setupKey:
+          type: string
+        username:
+          type: string
+          minLength: 3
+        fullName:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 12
+    SetupStatus:
+      type: object
+      required: [required]
+      properties:
+        required:
+          type: boolean
+    AuthUser:
+      type: object
+      required: [id, username, fullName, role, permissions]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [admin, trainer]
+        permissions:
+          type: object
+          additionalProperties:
+            type: boolean
+    SchoolInfo:
+      type: object
+      properties:
+        name: { type: string }
+        commercialRegister: { type: string }
+        accreditationNumber: { type: string }
+        nif: { type: string }
+        nis: { type: string }
+        articleNumber: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        wilaya: { type: string }
+        managerName: { type: string }
+        accreditationDate: { type: string }
+        addressCommune: { type: string }
+        addressDaira: { type: string }
+        ownerName: { type: string }
+        ownerBirthDate: { type: string }
+        ownerBirthPlace: { type: string }
+        ownerEmail: { type: string }
+        representativeName: { type: string }
+        representativeBirthDate: { type: string }
+        representativeBirthPlace: { type: string }
+    SchoolInfoUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        commercialRegister: { type: string }
+        accreditationNumber: { type: string }
+        nif: { type: string }
+        nis: { type: string }
+        articleNumber: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        wilaya: { type: string }
+        managerName: { type: string }
+        accreditationDate: { type: string }
+        addressCommune: { type: string }
+        addressDaira: { type: string }
+        ownerName: { type: string }
+        ownerBirthDate: { type: string }
+        ownerBirthPlace: { type: string }
+        ownerEmail: { type: string }
+        representativeName: { type: string }
+        representativeBirthDate: { type: string }
+        representativeBirthPlace: { type: string }
+    DashboardSummary:
+      type: object
+      required: [candidateCount, instructorCount, todaySessions, paidThisMonth, expensesThisMonth, recentActivity]
+      properties:
+        candidateCount: { type: integer }
+        instructorCount: { type: integer }
+        todaySessions: { type: integer }
+        paidThisMonth: { type: number }
+        expensesThisMonth: { type: number }
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceRecord"
+    ReportData:
+      type: object
+      required: [items, totals]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceRecord"
+        totals:
+          type: object
+          additionalProperties:
+            type: number
+    DocumentType:
+      type: object
+      required: [id, label, scope]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        scope:
+          type: string
+          enum: [candidate, group]
+        description:
+          type: string
+    DocumentRequest:
+      type: object
+      required: [type, language]
+      properties:
+        type:
+          type: string
+        language:
+          type: string
+          enum: [ar, fr]
+        candidateId:
+          type: integer
+        candidateIds:
+          type: array
+          items:
+            type: integer
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        options:
+          type: object
+          additionalProperties: true

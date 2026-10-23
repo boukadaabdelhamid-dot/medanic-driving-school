@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Medanic ERP"
+description = "A bilingual Arabic/French driving-school ERP for managing candidate records, instructors, training, schedules, payments, expenses, reports, payroll, and the school's existing administrative PDFs."
+version = "1.0.0"
+id = "artifacts/medanic-erp"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19943
+
+[services.development]
+run = "pnpm --filter @workspace/medanic-erp run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/medanic-erp", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/medanic-erp/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19943"
+BASE_PATH = "/"

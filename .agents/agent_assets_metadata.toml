@@ -6,81 +6,95 @@ id = "8DLZwCdAahOx2x-YSQ6D0"
 uri = "file://driving_school_modified.zip"
 type = "unspecified"
 title = "ميدانيك — نسخة مُصلحة (فحص شامل)"
+logical_id = "5ee8d584-e389-4cea-a392-be00a70d0f96"
 
 [[outputs]]
 id = "61lnDREa7x15j1Y-Skctq"
 uri = "file://license_protection.zip"
 type = "unspecified"
 title = "نظام الحماية — license_guard.py + keygen_tool.py"
+logical_id = "d2e7cf18-5eb1-4bf9-906d-0e7f1e39ab1a"
 
 [[outputs]]
 id = "A56KnB1qxHZydaV8R1yrf"
 uri = "file://medanic_protected.zip"
 type = "unspecified"
 title = "ميدانيك — النسخة المحمية الكاملة"
+logical_id = "b7a5383c-99ca-4341-b1d9-cfe82a3c0343"
 
 [[outputs]]
 id = "XhObtBj1tgG1xca4bUrFD"
 uri = "file://medanic_full_package.zip"
 type = "unspecified"
 title = "ميدانيك — الحزمة الكاملة (أيقونة + EXE + اختصار سطح المكتب)"
+logical_id = "e945000a-900a-40a1-8de0-fff646def8a6"
 
 [[outputs]]
 id = "7OVGychaUbVyxjMlSltFS"
 uri = "file://medanic_simple.zip"
 type = "unspecified"
 title = "ميدانيك — نسخة التشخيص"
+logical_id = "ce1b7087-8ca2-454c-9960-ccda796c1356"
 
 [[outputs]]
 id = "AbQL8-MdKk3YSV6MizoZg"
 uri = "file://backup_scripts.zip"
 type = "unspecified"
 title = "سكربتات النسخ الاحتياطي"
+logical_id = "91a5ed84-2036-48f1-904c-6281f7b8fee6"
 
 [[outputs]]
 id = "lkHANNUrs5zO7hrh8JR9C"
 uri = "file://Medanic_Transfer_Guide.pdf"
 type = "pdf"
 title = "دليل العميل (4 صفحات - يشمل حل مشكلة DLL)"
+logical_id = "478f6d95-f998-4223-976e-c709dcbf9035"
 
 [[outputs]]
 id = "0LtDQ40gWnFRvuXmPNlox"
 uri = "file://build_exe_kit.zip"
 type = "unspecified"
 title = "حزمة بناء EXE للتوزيع التجاري"
+logical_id = "a12d7c9b-2eff-43fa-bc4d-94531d03a99a"
 
 [[outputs]]
 id = "nlbFmETKc51SM_F7jBfDc"
 uri = "file://Medanic_Seller_Guide.pdf"
 type = "pdf"
 title = "دليل البائع - Tel/WhatsApp"
+logical_id = "19cdbf1f-0e09-42e2-9a90-8c7eb931fc84"
 
 [[outputs]]
 id = "Lou5dzcGzR5X_OQop5-VR"
 uri = "file://fix_dll_kit.zip"
 type = "unspecified"
 title = "حزمة حل مشكلة DLL (FIX_WIN7.bat + دليل العميل)"
+logical_id = "4819507e-04a3-4d10-b858-8d03ce1d74d0"
 
 [[outputs]]
 id = "3p6lLupKHjnOKGETTBwKk"
 uri = "file://patch_db_fix.zip"
 type = "unspecified"
 title = "إصلاح حفظ البيانات - PATCH_DB_FIX"
+logical_id = "4cec2d58-f06f-419f-8968-5768ec1d8e83"
 
 [[outputs]]
 id = "X6Jr9uKQMlsZUNBHVzBvP"
 uri = "file://Medanic_Update.zip"
 type = "unspecified"
 title = "Medanic_Update.zip — تحديث #98"
+logical_id = "65314382-0ef0-4a22-a9b5-49d8b0e327e6"
 
 [[outputs]]
 id = "3CbPOwI1ecxYJ7AE1njDq"
 uri = "file://Medanic_Dev_Guide.pdf"
 type = "pdf"
 title = "دليل المطوّر — برنامج ميدانيك"
+logical_id = "d060e852-f3db-4d3c-b072-d3b3d50e82ce"
 
 [[outputs]]
 id = "zduBiYn4akST6CokMv7Jy"
 uri = "file://Medanic_Client_Guide.pdf"
 type = "pdf"
 title = "دليل الزبون — برنامج ميدانيك"
+logical_id = "a7698172-6c51-42bb-9668-8632270b19ee"
