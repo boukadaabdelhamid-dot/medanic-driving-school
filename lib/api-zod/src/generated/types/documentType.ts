@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DocumentTypeScope } from './documentTypeScope';
+import type { FieldDefinition } from './fieldDefinition';
 
 export interface DocumentType {
   id: string;
   label: string;
   scope: DocumentTypeScope;
   description?: string;
+  fields?: FieldDefinition[];
 }

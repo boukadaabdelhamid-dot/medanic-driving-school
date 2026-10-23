@@ -20,4 +20,5 @@ failed to import `_tkinter` even after the matching system dependency was instal
 
 **How to apply:** Check the compiled extension's importability, not just whether
 `find_spec("tkinter")` succeeds. Expose the matching Nix site-packages path through
-the desktop launcher rather than modifying the product's source or bypassing Tk.
+any launcher or headless wrapper that imports the desktop module; do not modify the
+product's source or bypass Tk.

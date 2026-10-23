@@ -17,4 +17,5 @@ export const FieldDefinitionType = {
   boolean: 'boolean',
   textarea: 'textarea',
   password: 'password',
+  permissions: 'permissions',
 } as const;

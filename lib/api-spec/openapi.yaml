@@ -439,17 +439,27 @@ components:
           type: string
         type:
           type: string
-          enum: [text, number, date, select, boolean, textarea, password]
+          enum: [text, number, date, select, boolean, textarea, password, permissions]
         required:
           type: boolean
         options:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/FieldOption"
+        multiple:
+          type: boolean
         readOnly:
           type: boolean
         hidden:
           type: boolean
+    FieldOption:
+      type: object
+      required: [value, label]
+      properties:
+        value:
+          type: string
+        label:
+          type: string
     AuthCredentials:
       type: object
       required: [username, password]
@@ -583,6 +593,10 @@ components:
           enum: [candidate, group]
         description:
           type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldDefinition"
     DocumentRequest:
       type: object
       required: [type, language]

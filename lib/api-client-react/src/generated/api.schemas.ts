@@ -52,14 +52,21 @@ export const FieldDefinitionType = {
   boolean: 'boolean',
   textarea: 'textarea',
   password: 'password',
+  permissions: 'permissions',
 } as const;
+
+export interface FieldOption {
+  value: string;
+  label: string;
+}
 
 export interface FieldDefinition {
   name: string;
   label: string;
   type: FieldDefinitionType;
   required: boolean;
-  options?: string[];
+  options?: FieldOption[];
+  multiple?: boolean;
   readOnly?: boolean;
   hidden?: boolean;
 }
@@ -184,6 +191,7 @@ export interface DocumentType {
   label: string;
   scope: DocumentTypeScope;
   description?: string;
+  fields?: FieldDefinition[];
 }
 
 export type DocumentRequestLanguage = typeof DocumentRequestLanguage[keyof typeof DocumentRequestLanguage];

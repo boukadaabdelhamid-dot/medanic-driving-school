@@ -181,9 +181,13 @@ export const ListResourceRecordsResponse = zod.object({
   "fields": zod.array(zod.object({
   "name": zod.string(),
   "label": zod.string(),
-  "type": zod.enum(['text', 'number', 'date', 'select', 'boolean', 'textarea', 'password']),
+  "type": zod.enum(['text', 'number', 'date', 'select', 'boolean', 'textarea', 'password', 'permissions']),
   "required": zod.boolean(),
-  "options": zod.array(zod.string()).optional(),
+  "options": zod.array(zod.object({
+  "value": zod.string(),
+  "label": zod.string()
+})).optional(),
+  "multiple": zod.boolean().optional(),
   "readOnly": zod.boolean().optional(),
   "hidden": zod.boolean().optional()
 })),
@@ -267,7 +271,20 @@ export const GetDocumentCatalogResponseItem = zod.object({
   "id": zod.string(),
   "label": zod.string(),
   "scope": zod.enum(['candidate', 'group']),
-  "description": zod.string().optional()
+  "description": zod.string().optional(),
+  "fields": zod.array(zod.object({
+  "name": zod.string(),
+  "label": zod.string(),
+  "type": zod.enum(['text', 'number', 'date', 'select', 'boolean', 'textarea', 'password', 'permissions']),
+  "required": zod.boolean(),
+  "options": zod.array(zod.object({
+  "value": zod.string(),
+  "label": zod.string()
+})).optional(),
+  "multiple": zod.boolean().optional(),
+  "readOnly": zod.boolean().optional(),
+  "hidden": zod.boolean().optional()
+})).optional()
 })
 export const GetDocumentCatalogResponse = zod.array(GetDocumentCatalogResponseItem)
 

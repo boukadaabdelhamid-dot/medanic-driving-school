@@ -6,13 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { FieldDefinitionType } from './fieldDefinitionType';
+import type { FieldOption } from './fieldOption';
 
 export interface FieldDefinition {
   name: string;
   label: string;
   type: FieldDefinitionType;
   required: boolean;
-  options?: string[];
+  options?: FieldOption[];
+  multiple?: boolean;
   readOnly?: boolean;
   hidden?: boolean;
 }

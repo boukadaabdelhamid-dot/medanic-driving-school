@@ -22,6 +22,7 @@ export * from './documentType';
 export * from './documentTypeScope';
 export * from './fieldDefinition';
 export * from './fieldDefinitionType';
+export * from './fieldOption';
 export * from './fromDateParameter';
 export * from './getDashboardParams';
 export * from './getDocumentCatalogParams';
