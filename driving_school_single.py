@@ -68,6 +68,7 @@ STRINGS: dict = {
     "nav_reports":     {"ar": "التقارير",           "fr": "Rapports"},
     "nav_documents":   {"ar": "طباعة الوثائق",     "fr": "Imprimer Docs"},
     "nav_graduates":   {"ar": "المتخرجون",          "fr": "Diplômés"},
+    "nav_erp":         {"ar": "الموارد والمالية",    "fr": "Finance & RH"},
     # ── أزرار شائعة ─────────────────────────────────────────────────────────
     "btn_save":          {"ar": "حفظ",             "fr": "Enregistrer"},
     "btn_save_info":     {"ar": "حفظ المعلومات",   "fr": "Enregistrer"},
@@ -10101,13 +10102,16 @@ class DrivingSchoolApp:
             ("📊", T("nav_reports")),
             ("🖨️", T("nav_documents")),
             ("🎓", T("nav_graduates")),
+            ("🏢", T("nav_erp")),
         ]
         self._nav_refs = []
         for i, (icon, label) in enumerate(nav_defs):
             self._make_nav_item(nav_container, icon, label, i)
             perm_key = NAV_PERMISSIONS.get(i)
             visible  = True
-            if perm_key is None:
+            if i >= 11 and not is_admin:
+                visible = False
+            elif perm_key is None:
                 if i == 3 and not is_admin:
                     visible = False
             else:
@@ -10175,6 +10179,11 @@ class DrivingSchoolApp:
         is_admin = (self._current_user.get("role") == "admin")
         perm_key = NAV_PERMISSIONS.get(index)
         if index == 3 and not is_admin:
+            return
+        if index >= 11 and not is_admin:
+            messagebox.showwarning(T("msg_perm_title"),
+                                   T("msg_perm_denied"),
+                                   parent=self.root)
             return
         if perm_key and not is_admin:
             if not self._current_user.get("permissions", {}).get(perm_key, False):
@@ -10268,6 +10277,11 @@ class DrivingSchoolApp:
             (T("nav_documents"),   DocumentsFrame),
             (T("nav_graduates"),   GraduatesFrame),
         ]
+        # Separate ERP screen; legacy pages and administrative documents remain unchanged.
+        from erp_suite import ERPSuiteFrame
+        nav_defs.append((T("nav_erp"), lambda parent: ERPSuiteFrame(
+            parent, DB_PATH, lambda: LANG
+        )))
         # يحتاج DashboardFrame وReportsFrame لـ callback للتنقل
         navigate_aware = (DashboardFrame, ReportsFrame)
         self._page_frames = []
