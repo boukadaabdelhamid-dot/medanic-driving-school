@@ -50,6 +50,7 @@ Thumbs.db
 
 # Python
 __pycache__/
+.pythonlibs/
 *.pyc
 *.pyo
 *.pyd

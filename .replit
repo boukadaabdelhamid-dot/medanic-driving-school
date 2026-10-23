@@ -11,6 +11,26 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Medanic Desktop"
+
+[[workflows.workflow]]
+name = "Medanic Desktop"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "vnc"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python scripts/run_medanic.py"
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
@@ -38,3 +58,4 @@ externalPort = 3001
 
 [nix]
 channel = "stable-25_05"
+packages = ["freetype", "glibcLocales", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "zlib", "python312Packages.tkinter", "dejavu_fonts"]

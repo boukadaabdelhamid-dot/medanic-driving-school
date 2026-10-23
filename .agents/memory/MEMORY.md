@@ -1,0 +1,1 @@
+- [Desktop setup constraints](desktop-setup.md) — preserve the imported desktop app; Nix Tk needs an explicit Python search path.
