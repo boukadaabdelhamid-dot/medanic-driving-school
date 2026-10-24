@@ -1,3 +1,44 @@
 export * from "./generated/api";
-// Orval duplicates these parameter types between generated/api and types.
-// The response validators used by the API server are exported above.
+// Keep the operation schemas from generated/api for the two query parameter
+// names that Orval also emits as types. Re-export the remaining component types.
+export type {
+  AccountUpdateInput,
+  ApiError,
+  AuthCredentials,
+  AuthUser,
+  AuthUserPermissions,
+  AuthUserRole,
+  BadRequestResponse,
+  CandidateIdParameter,
+  ConflictResponse,
+  DashboardSummary,
+  DocumentRequest,
+  DocumentRequestLanguage,
+  DocumentRequestOptions,
+  DocumentType,
+  DocumentTypeScope,
+  FieldDefinition,
+  FieldDefinitionType,
+  FieldOption,
+  FromDateParameter,
+  GetDashboardParams,
+  GetDocumentCatalogParams,
+  HealthStatus,
+  InitialAdminInput,
+  LanguageParameter,
+  NotFoundResponse,
+  PeriodParameter,
+  ReportData,
+  ReportDataTotals,
+  ResourceInput,
+  ResourceName,
+  ResourcePage,
+  ResourceRecord,
+  SchoolInfo,
+  SchoolInfoUpdate,
+  SearchParameter,
+  SetupStatus,
+  ToDateParameter,
+  UnauthorizedResponse,
+} from "./generated/types";
+export * from './generated/types';

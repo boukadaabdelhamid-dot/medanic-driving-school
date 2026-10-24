@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountUpdateInput';
 export * from './apiError';
 export * from './authCredentials';
 export * from './authUser';

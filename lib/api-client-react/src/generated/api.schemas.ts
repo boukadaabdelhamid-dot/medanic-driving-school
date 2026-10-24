@@ -46,6 +46,7 @@ export type FieldDefinitionType = typeof FieldDefinitionType[keyof typeof FieldD
 
 export const FieldDefinitionType = {
   text: 'text',
+  email: 'email',
   number: 'number',
   date: 'date',
   select: 'select',
@@ -78,20 +79,24 @@ export interface ResourcePage {
 }
 
 export interface AuthCredentials {
-  /** @minLength 1 */
-  username: string;
+  email: string;
   /** @minLength 1 */
   password: string;
 }
 
 export interface InitialAdminInput {
-  setupKey: string;
-  /** @minLength 3 */
-  username: string;
   /** @minLength 1 */
   fullName: string;
   /** @minLength 12 */
   password: string;
+}
+
+export interface AccountUpdateInput {
+  /** @minLength 1 */
+  currentPassword: string;
+  email?: string;
+  /** @minLength 12 */
+  newPassword?: string;
 }
 
 export interface SetupStatus {
@@ -110,7 +115,7 @@ export type AuthUserPermissions = {[key: string]: boolean};
 
 export interface AuthUser {
   id: number;
-  username: string;
+  email: string;
   fullName: string;
   role: AuthUserRole;
   permissions: AuthUserPermissions;

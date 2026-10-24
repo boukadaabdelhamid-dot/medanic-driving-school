@@ -11,6 +11,7 @@ export type FieldDefinitionType = typeof FieldDefinitionType[keyof typeof FieldD
 
 export const FieldDefinitionType = {
   text: 'text',
+  email: 'email',
   number: 'number',
   date: 'date',
   select: 'select',

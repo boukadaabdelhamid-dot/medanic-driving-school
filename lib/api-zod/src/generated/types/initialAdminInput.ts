@@ -7,9 +7,6 @@
  */
 
 export interface InitialAdminInput {
-  setupKey: string;
-  /** @minLength 3 */
-  username: string;
   /** @minLength 1 */
   fullName: string;
   /** @minLength 12 */

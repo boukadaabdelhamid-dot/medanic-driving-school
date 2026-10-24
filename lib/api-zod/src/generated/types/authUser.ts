@@ -10,7 +10,7 @@ import type { AuthUserRole } from './authUserRole';
 
 export interface AuthUser {
   id: number;
-  username: string;
+  email: string;
   fullName: string;
   role: AuthUserRole;
   permissions: AuthUserPermissions;

@@ -18,23 +18,19 @@ export const GetSetupStatusResponse = zod.object({
 })
 
 
-export const setupInitialAdminBodyUsernameMin = 3;
-
 
 export const setupInitialAdminBodyPasswordMin = 12;
 
 
 
 export const SetupInitialAdminBody = zod.object({
-  "setupKey": zod.string(),
-  "username": zod.string().min(setupInitialAdminBodyUsernameMin),
   "fullName": zod.string().min(1),
   "password": zod.string().min(setupInitialAdminBodyPasswordMin)
 })
 
 export const SetupInitialAdminResponse = zod.object({
   "id": zod.int(),
-  "username": zod.string(),
+  "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
   "permissions": zod.record(zod.string(), zod.boolean())
@@ -44,15 +40,14 @@ export const SetupInitialAdminResponse = zod.object({
 
 
 
-
 export const LoginBody = zod.object({
-  "username": zod.string().min(1),
+  "email": zod.email(),
   "password": zod.string().min(1)
 })
 
 export const LoginResponse = zod.object({
   "id": zod.int(),
-  "username": zod.string(),
+  "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
   "permissions": zod.record(zod.string(), zod.boolean())
@@ -61,7 +56,27 @@ export const LoginResponse = zod.object({
 
 export const GetCurrentUserResponse = zod.object({
   "id": zod.int(),
-  "username": zod.string(),
+  "email": zod.email(),
+  "fullName": zod.string(),
+  "role": zod.enum(['admin', 'trainer']),
+  "permissions": zod.record(zod.string(), zod.boolean())
+})
+
+
+
+export const updateAccountBodyNewPasswordMin = 12;
+
+
+
+export const UpdateAccountBody = zod.object({
+  "currentPassword": zod.string().min(1),
+  "email": zod.email().optional(),
+  "newPassword": zod.string().min(updateAccountBodyNewPasswordMin).optional()
+})
+
+export const UpdateAccountResponse = zod.object({
+  "id": zod.int(),
+  "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
   "permissions": zod.record(zod.string(), zod.boolean())
@@ -181,7 +196,7 @@ export const ListResourceRecordsResponse = zod.object({
   "fields": zod.array(zod.object({
   "name": zod.string(),
   "label": zod.string(),
-  "type": zod.enum(['text', 'number', 'date', 'select', 'boolean', 'textarea', 'password', 'permissions']),
+  "type": zod.enum(['text', 'email', 'number', 'date', 'select', 'boolean', 'textarea', 'password', 'permissions']),
   "required": zod.boolean(),
   "options": zod.array(zod.object({
   "value": zod.string(),
@@ -275,7 +290,7 @@ export const GetDocumentCatalogResponseItem = zod.object({
   "fields": zod.array(zod.object({
   "name": zod.string(),
   "label": zod.string(),
-  "type": zod.enum(['text', 'number', 'date', 'select', 'boolean', 'textarea', 'password', 'permissions']),
+  "type": zod.enum(['text', 'email', 'number', 'date', 'select', 'boolean', 'textarea', 'password', 'permissions']),
   "required": zod.boolean(),
   "options": zod.array(zod.object({
   "value": zod.string(),
