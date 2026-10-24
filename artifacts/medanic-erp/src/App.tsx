@@ -349,6 +349,11 @@ function formFieldDefault(field: FieldDefinition, current: unknown) {
     }
     return [];
   }
+  if (field.name === 'registrationDate' && !current) {
+    const today = new Date();
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    return today.toISOString().slice(0, 10);
+  }
   return current ?? (field.type === 'boolean' ? false : field.multiple ? [] : '');
 }
 

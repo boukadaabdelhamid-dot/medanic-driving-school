@@ -1,1 +1,2 @@
 - [Desktop setup constraints](desktop-setup.md) — preserve the imported desktop app; Nix Tk needs an explicit Python search path.
+- [Public GitHub releases](public-repo-publishing.md) — keep public releases to source and Railway config; exclude PDFs, uploaded attachments, and internal Replit notes.
