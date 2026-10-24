@@ -1,6 +1,4 @@
 export * from "./generated/api";
-// Keep the operation schemas from generated/api for the two query parameter
-// names that Orval also emits as types. Re-export the remaining component types.
 export type {
   AccountUpdateInput,
   ApiError,
@@ -41,4 +39,3 @@ export type {
   ToDateParameter,
   UnauthorizedResponse,
 } from "./generated/types";
-export * from './generated/types';

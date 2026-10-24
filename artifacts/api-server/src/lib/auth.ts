@@ -8,7 +8,7 @@ const PASSWORD_SCRYPT_BYTES = 64;
 
 export type PublicUser = {
   id: number;
-  username: string;
+  email: string;
   fullName: string;
   role: "admin" | "trainer";
   permissions: Record<string, boolean>;
@@ -123,7 +123,7 @@ async function getUserFromRequestCookie(cookie?: string): Promise<PublicUser | n
       : {};
   return {
     id: Number(row.id),
-    username: String(row.username),
+    email: String(row.username),
     fullName: String(row.full_name ?? ""),
     role: row.role === "admin" ? "admin" : "trainer",
     permissions,
@@ -168,20 +168,6 @@ export function requirePermission(permission: string): RequestHandler {
   };
 }
 
-export function compareSetupKey(provided: string, expected: string) {
-  return safeEqual(provided, expected);
-}
-
-export function canUseSetupKey() {
-  const key = process.env.ADMIN_SETUP_KEY;
-  return typeof key === "string" && key.length >= 24;
-}
-
-export function validateSetupKey(provided: string) {
-  const key = process.env.ADMIN_SETUP_KEY;
-  return Boolean(key && key.length >= 24 && compareSetupKey(provided, key));
-}
-
 export async function userCount() {
   const result = await pool.query<{ count: string }>(
     "SELECT COUNT(*)::text AS count FROM users",
@@ -198,7 +184,7 @@ export function publicUser(row: {
 }): PublicUser {
   return {
     id: Number(row.id),
-    username: row.username,
+    email: row.username,
     fullName: row.full_name ?? "",
     role: row.role === "admin" ? "admin" : "trainer",
     permissions: row.permissions ?? {},

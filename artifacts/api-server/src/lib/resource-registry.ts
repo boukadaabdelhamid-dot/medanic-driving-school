@@ -19,6 +19,7 @@ export const RESOURCE_NAMES = [
 export type ResourceName = (typeof RESOURCE_NAMES)[number];
 export type FieldType =
   | "text"
+  | "email"
   | "number"
   | "date"
   | "select"
@@ -305,7 +306,7 @@ export const resourceDefinitions: Record<ResourceName, ResourceDefinition> = {
     table: "users",
     permission: "manage_users",
     fields: [
-      field("username", "اسم المستخدم", "Nom d'utilisateur", "text", true),
+      field("username", "البريد الإلكتروني", "Adresse e-mail", "email", true),
       field("password", "كلمة المرور", "Mot de passe", "password", false),
       field("fullName", "الاسم الكامل", "Nom complet"),
       field("role", "الدور", "Rôle", "select", true, ["admin", "trainer"]),

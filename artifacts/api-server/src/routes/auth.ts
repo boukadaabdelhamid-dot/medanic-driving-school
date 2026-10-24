@@ -5,21 +5,22 @@ import {
   LoginResponse,
   SetupInitialAdminBody,
   SetupInitialAdminResponse,
+  UpdateAccountBody,
+  UpdateAccountResponse,
 } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import {
-  canUseSetupKey,
   clearSessionCookie,
   hashPassword,
   publicUser,
   setSessionCookie,
   userCount,
-  validateSetupKey,
   verifyPassword,
   type PublicUser,
 } from "../lib/auth";
 
 const router: IRouter = Router();
+const INITIAL_ADMIN_EMAIL = "admin@midanic.com";
 const loginWindows = new Map<string, { count: number; resetAt: number }>();
 const LOGIN_LIMIT = 8;
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
@@ -38,7 +39,7 @@ function rejectLoginBurst(key: string) {
 function publicUserResponse(user: PublicUser) {
   return {
     id: user.id,
-    username: user.username,
+    email: user.email,
     fullName: user.fullName,
     role: user.role,
     permissions: user.permissions,
@@ -60,17 +61,6 @@ router.post("/auth/setup", async (req, res) => {
     res.status(400).json({ error: "Review the setup form and try again." });
     return;
   }
-  if (!canUseSetupKey()) {
-    res.status(503).json({
-      error: "ADMIN_SETUP_KEY is not configured. Configure it before first setup.",
-    });
-    return;
-  }
-  if (!validateSetupKey(parsed.data.setupKey)) {
-    res.status(403).json({ error: "The setup key is invalid." });
-    return;
-  }
-
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -88,7 +78,7 @@ router.post("/auth/setup", async (req, res) => {
        VALUES ($1, $2, 'admin', $3, '{}'::jsonb)
        RETURNING id, username, full_name, role, permissions`,
       [
-        parsed.data.username.trim(),
+        INITIAL_ADMIN_EMAIL,
         hashPassword(parsed.data.password),
         parsed.data.fullName.trim(),
       ],
@@ -100,7 +90,7 @@ router.post("/auth/setup", async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     if ((error as { code?: string }).code === "23505") {
-      res.status(409).json({ error: "That username is already in use." });
+      res.status(409).json({ error: "That email address is already in use." });
       return;
     }
     req.log.error({ err: error }, "Initial administrator setup failed");
@@ -118,18 +108,18 @@ router.post("/auth/login", async (req, res) => {
   }
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Enter a username and password." });
+    res.status(400).json({ error: "Enter an email address and password." });
     return;
   }
   try {
     const result = await pool.query(
       `SELECT id, username, password_hash, full_name, role, permissions
-         FROM users WHERE username = $1`,
-      [parsed.data.username.trim()],
+         FROM users WHERE lower(username) = $1`,
+      [parsed.data.email.trim().toLowerCase()],
     );
     const row = result.rows[0];
     if (!row) {
-      res.status(401).json({ error: "Username or password is incorrect." });
+      res.status(401).json({ error: "Email or password is incorrect." });
       return;
     }
     const verification = verifyPassword(
@@ -137,7 +127,7 @@ router.post("/auth/login", async (req, res) => {
       String(row.password_hash),
     );
     if (!verification.valid) {
-      res.status(401).json({ error: "Username or password is incorrect." });
+      res.status(401).json({ error: "Email or password is incorrect." });
       return;
     }
     if (verification.needsUpgrade) {
@@ -158,6 +148,70 @@ router.post("/auth/login", async (req, res) => {
     }
     req.log.error({ err: error }, "Sign-in failed");
     res.status(503).json({ error: "Sign-in is temporarily unavailable." });
+  }
+});
+
+router.patch("/auth/account", async (req, res): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: "Authentication required." });
+    return;
+  }
+
+  const parsed = UpdateAccountBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Review the account update fields." });
+    return;
+  }
+
+  const email = parsed.data.email?.trim().toLowerCase();
+  if (!email && !parsed.data.newPassword) {
+    res.status(400).json({ error: "Provide a new email or password." });
+    return;
+  }
+
+  try {
+    const found = await pool.query(
+      `SELECT id, username, password_hash
+         FROM users WHERE id = $1`,
+      [req.user.id],
+    );
+    const row = found.rows[0];
+    if (!row) {
+      res.status(401).json({ error: "Authentication required." });
+      return;
+    }
+
+    const verification = verifyPassword(
+      parsed.data.currentPassword,
+      String(row.password_hash),
+    );
+    if (!verification.valid) {
+      res.status(400).json({ error: "The current password is incorrect." });
+      return;
+    }
+
+    const nextEmail = email ?? String(row.username);
+    const nextPasswordHash = parsed.data.newPassword
+      ? hashPassword(parsed.data.newPassword)
+      : verification.needsUpgrade
+        ? hashPassword(parsed.data.currentPassword)
+        : String(row.password_hash);
+    const updated = await pool.query(
+      `UPDATE users
+          SET username = $1, password_hash = $2
+        WHERE id = $3
+        RETURNING id, username, full_name, role, permissions`,
+      [nextEmail, nextPasswordHash, req.user.id],
+    );
+    const user = publicUser(updated.rows[0]);
+    res.json(UpdateAccountResponse.parse(publicUserResponse(user)));
+  } catch (error) {
+    if ((error as { code?: string }).code === "23505") {
+      res.status(409).json({ error: "That email address is already in use." });
+      return;
+    }
+    req.log.error({ err: error }, "Account update failed");
+    res.status(503).json({ error: "The account could not be updated right now." });
   }
 });
 

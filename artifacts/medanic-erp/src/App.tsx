@@ -20,6 +20,7 @@ import {
   getUpdateResourceRecordMutationOptions, getDeleteResourceRecordMutationOptions,
   getUpdateSchoolMutationOptions, getGenerateDocumentMutationOptions,
   getReverseJournalEntryMutationOptions, getPayPayrollItemMutationOptions,
+  getUpdateAccountMutationOptions,
   getLoginMutationOptions, getSetupInitialAdminMutationOptions, getLogoutMutationOptions,
   getGetCurrentUserQueryKey, getGetSetupStatusQueryKey,
   useGetCurrentUser, useGetSetupStatus, useHealthCheck,
@@ -48,6 +49,7 @@ const routeInfo: Record<string, { ar: string; fr: string; icon: LucideIcon; reso
   '/graduates': { ar: 'الناجحون', fr: 'Diplômés', icon: BadgeCheck, resource: 'graduates' },
   '/accounting': { ar: 'المحاسبة والمالية', fr: 'Comptabilité et finances', icon: CircleDollarSign },
   '/hr': { ar: 'الموارد البشرية والأجور', fr: 'Ressources humaines et paie', icon: BriefcaseBusiness },
+  '/profile': { ar: 'حسابي', fr: 'Mon compte', icon: UserRound },
   '/team': { ar: 'حسابات المستخدمين', fr: 'Comptes utilisateurs', icon: ShieldCheck, resource: 'users' },
 };
 const resourceTitles: Record<string, { ar: string; fr: string; subtitleAr: string; subtitleFr: string }> = {
@@ -69,6 +71,7 @@ const groups = [
   { title: { ar: 'التسيير', fr: 'Pilotage' }, paths: ['/', '/school'] },
   { title: { ar: 'النشاط التعليمي', fr: 'Activité pédagogique' }, paths: ['/candidates', '/instructors', '/training', '/schedule', '/graduates'] },
   { title: { ar: 'الإدارة والمالية', fr: 'Administration et finances' }, paths: ['/payments', '/expenses', '/accounting', '/hr', '/reports', '/documents'] },
+  { title: { ar: 'حسابي', fr: 'Mon compte' }, paths: ['/profile'] },
   { title: { ar: 'إدارة النظام', fr: 'Administration système' }, paths: ['/team'] },
 ];
 
@@ -133,6 +136,7 @@ function RoutedPages() {
     <Route path="/graduates" component={GraduatesPage} />
     <Route path="/accounting" component={AccountingPage} />
     <Route path="/hr" component={HrPage} />
+    <Route path="/profile" component={ProfilePage} />
     <Route path="/team" component={TeamPage} />
     <Route component={NotFound} />
   </Switch>;
@@ -328,7 +332,7 @@ function FieldControl({ field, form, lang }: { field: FieldDefinition; form: Ret
   const value = form.register(field.name, { required: field.required ? (lang === 'ar' ? 'هذا الحقل مطلوب' : 'Ce champ est requis') : false });
   const error = form.formState.errors[field.name];
   const label = field.label || field.name;
-  const type = field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : field.type === 'password' ? 'password' : 'text';
+  const type = field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : field.type === 'password' ? 'password' : field.type === 'email' ? 'email' : 'text';
   if (field.type === 'permissions') {
     const selected = (form.watch(field.name) as string[] | undefined) || [];
     return <fieldset className="sm:col-span-2 rounded-lg border border-[#ded8cc] p-3" data-testid={`field-${field.name}`}><legend className="px-1 text-xs font-medium text-[#455565]">{label}</legend><div className="grid gap-2 sm:grid-cols-2">{(field.options || []).map(option => <label key={option.value} className="flex items-center gap-2 rounded-md bg-[#f8f5ee] px-3 py-2 text-[11px] text-[#536170]"><input type="checkbox" checked={selected.includes(option.value)} onChange={event => { const next = event.target.checked ? [...selected, option.value] : selected.filter(item => item !== option.value); form.setValue(field.name, next, { shouldDirty: true, shouldValidate: true }); }} className="h-4 w-4 accent-[#203a52]" /><span>{option.label}</span></label>)}</div>{error && <span className="mt-1 block text-[10px] text-[#a83d37]">{String(error.message || '')}</span>}</fieldset>;
@@ -502,17 +506,17 @@ function HrPage() {
 
 function LoginPage() {
   const { lang } = useLang(); const [, setLocation] = useLocation(); const client = useQueryClient();
-  const form = useForm<{ username: string; password: string }>({ resolver: zodResolver(z.object({ username: z.string().min(1), password: z.string().min(1) })), defaultValues: { username: '', password: '' } });
+  const form = useForm<{ email: string; password: string }>({ resolver: zodResolver(z.object({ email: z.string().email(), password: z.string().min(1) })), defaultValues: { email: 'admin@midanic.com', password: '' } });
   const mutation = useMutation(getLoginMutationOptions());
   const submit = form.handleSubmit(data => mutation.mutate({ data }, { onSuccess: () => { client.invalidateQueries({ queryKey: getGetDashboardQueryKey() }); setLocation('/'); } }));
   return <AuthFrame><div className="mb-7 text-center"><img src={logo} className="mx-auto mb-4 h-[82px] w-[82px] rounded-full border border-[#e6e0d5] bg-[#f8f6ef] object-cover" alt="شعار ميدانيك" /><p className="text-[10px] font-semibold tracking-[.15em] text-[#a5793d]">MEDANIC ERP</p><h1 className="mt-2 text-[24px] font-bold text-[#1e344a]">{lang === 'ar' ? 'تسجيل الدخول' : 'Connexion'}</h1><p className="mt-2 text-xs text-[#818680]">{lang === 'ar' ? 'فضاء تسيير مدرسة تعليم السياقة' : 'Espace de gestion de l’auto-école'}</p></div>
-    <Form {...form}><form onSubmit={submit} className="space-y-4"><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'اسم المستخدم' : 'Nom d’utilisateur'}<input {...form.register('username')} autoComplete="username" className="field-control mt-1.5" data-testid="input-login-username" /></label><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور' : 'Mot de passe'}<input {...form.register('password')} type="password" autoComplete="current-password" className="field-control mt-1.5" data-testid="input-login-password" /></label>{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'بيانات الدخول غير صحيحة أو تعذر الاتصال.' : 'Identifiants incorrects ou connexion impossible.'}</p>}<Button type="submit" disabled={mutation.isPending} testId="button-login" >{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'الدخول إلى النظام' : 'Se connecter'}<ArrowLeft size={14} /></Button></form></Form>
-    <div className="mt-5 flex justify-between border-t border-[#eee8dd] pt-4 text-xs"><Link href="/setup" className="text-[#7f633e] hover:underline">{lang === 'ar' ? 'إعداد أول مدير' : 'Configurer le premier administrateur'}</Link><button onClick={() => form.reset()} className="text-[#777e80] hover:text-[#243b50]" data-testid="button-clear-login">{lang === 'ar' ? 'مسح الحقول' : 'Effacer'}</button></div>
+    <Form {...form}><form onSubmit={submit} className="space-y-4"><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input {...form.register('email')} type="email" autoComplete="email" className="field-control mt-1.5" data-testid="input-login-email" /></label><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور' : 'Mot de passe'}<input {...form.register('password')} type="password" autoComplete="current-password" className="field-control mt-1.5" data-testid="input-login-password" /></label>{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو تعذر الاتصال.' : 'Adresse e-mail ou mot de passe incorrect, ou connexion impossible.'}</p>}<Button type="submit" disabled={mutation.isPending} testId="button-login" >{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'الدخول إلى النظام' : 'Se connecter'}<ArrowLeft size={14} /></Button></form></Form>
+    <div className="mt-5 flex justify-between border-t border-[#eee8dd] pt-4 text-xs"><Link href="/setup" className="text-[#7f633e] hover:underline">{lang === 'ar' ? 'إنشاء المدير الأول' : 'Créer le premier administrateur'}</Link><button onClick={() => form.reset()} className="text-[#777e80] hover:text-[#243b50]" data-testid="button-clear-login">{lang === 'ar' ? 'مسح الحقول' : 'Effacer'}</button></div>
   </AuthFrame>;
 }
 function SetupPage() {
   const { lang } = useLang(); const [, setLocation] = useLocation(); const client = useQueryClient(); const setup = useGetSetupStatus();
-  const form = useForm<{ setupKey: string; username: string; fullName: string; password: string }>({ resolver: zodResolver(z.object({ setupKey: z.string().min(1), username: z.string().min(3), fullName: z.string().min(1), password: z.string().min(12) })), defaultValues: { setupKey: '', username: '', fullName: '', password: '' } });
+  const form = useForm<{ fullName: string; password: string }>({ resolver: zodResolver(z.object({ fullName: z.string().min(1), password: z.string().min(12) })), defaultValues: { fullName: '', password: '' } });
   const mutation = useMutation(getSetupInitialAdminMutationOptions());
   useEffect(() => {
     if (!mutation.isSuccess) return;
@@ -520,14 +524,74 @@ function SetupPage() {
     client.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
   }, [mutation.isSuccess, client]);
   const submit = form.handleSubmit(data => mutation.mutate({ data }, { onSuccess: () => { client.invalidateQueries(); setLocation('/'); } }));
-  const inputs: { name: 'setupKey' | 'username' | 'fullName' | 'password'; ar: string; fr: string; type?: string }[] = [
-    { name: 'setupKey', ar: 'مفتاح الإعداد', fr: 'Clé de configuration', type: 'password' }, { name: 'fullName', ar: 'الاسم الكامل', fr: 'Nom complet' }, { name: 'username', ar: 'اسم المستخدم', fr: 'Nom d’utilisateur' }, { name: 'password', ar: 'كلمة المرور (12 حرفاً على الأقل)', fr: 'Mot de passe (12 caractères minimum)', type: 'password' },
+  const inputs: { name: 'fullName' | 'password'; ar: string; fr: string; type?: string }[] = [
+    { name: 'fullName', ar: 'الاسم الكامل', fr: 'Nom complet' }, { name: 'password', ar: 'كلمة المرور (12 حرفاً على الأقل)', fr: 'Mot de passe (12 caractères minimum)', type: 'password' },
   ];
-  return <AuthFrame><div className="mb-6 text-center"><img src={logo} className="mx-auto mb-4 h-[72px] w-[72px] rounded-full border border-[#e6e0d5] object-cover" alt="شعار ميدانيك" /><h1 className="text-[22px] font-bold text-[#1e344a]">{lang === 'ar' ? 'إعداد الحساب الأول' : 'Configuration initiale'}</h1><p className="mt-2 text-xs text-[#818680]">{lang === 'ar' ? 'إنشاء حساب مدير النظام وفق مفتاح الإعداد.' : 'Créer le compte administrateur avec la clé de configuration.'}</p></div>
+  return <AuthFrame><div className="mb-6 text-center"><img src={logo} className="mx-auto mb-4 h-[72px] w-[72px] rounded-full border border-[#e6e0d5] object-cover" alt="شعار ميدانيك" /><h1 className="text-[22px] font-bold text-[#1e344a]">{lang === 'ar' ? 'إعداد الحساب الأول' : 'Configuration initiale'}</h1><p className="mt-2 text-xs text-[#818680]">{lang === 'ar' ? 'أنشئ حساب المدير الأول. اختر كلمة مرور قوية واحتفظ بها.' : 'Créez le premier compte administrateur et choisissez un mot de passe robuste.'}</p></div>
     {setup.data?.required === false ? <div className="rounded-lg bg-[#f5f0e5] p-4 text-center text-xs text-[#6e716d]">{lang === 'ar' ? 'تم إعداد النظام مسبقاً. سجّل الدخول بحسابك.' : 'Le système est déjà configuré. Connectez-vous avec votre compte.'}<Link href="/login" className="mt-3 block font-semibold text-[#7f633e] hover:underline">{lang === 'ar' ? 'الانتقال إلى تسجيل الدخول' : 'Aller à la connexion'}</Link></div> : setup.isError ? <div className="mb-4 rounded-lg bg-[#f8e8e5] p-3 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر التحقق من حالة الإعداد.' : 'Impossible de vérifier l’état de configuration.'}</div> : null}
-    {setup.data?.required !== false && <Form {...form}><form onSubmit={submit} className="space-y-3">{inputs.map(item => <label key={item.name} className="block text-xs font-medium text-[#455565]">{item[lang]}<input {...form.register(item.name)} type={item.type || 'text'} className="field-control mt-1.5" data-testid={`input-setup-${item.name}`} /></label>)}{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر إنشاء الحساب. تحقق من مفتاح الإعداد والبيانات.' : 'Création impossible. Vérifiez la clé et les informations.'}</p>}<Button type="submit" disabled={mutation.isPending || setup.isLoading} testId="button-setup-admin">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'إنشاء حساب المدير' : 'Créer le compte administrateur'}</Button></form></Form>}
+    {setup.data?.required !== false && <Form {...form}><form onSubmit={submit} className="space-y-3"><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input value="admin@midanic.com" readOnly className="field-control mt-1.5 bg-[#f5f2eb] text-[#68747b]" data-testid="input-setup-email" /></label>{inputs.map(item => <label key={item.name} className="block text-xs font-medium text-[#455565]">{item[lang]}<input {...form.register(item.name)} type={item.type || 'text'} autoComplete={item.name === 'password' ? 'new-password' : 'name'} className="field-control mt-1.5" data-testid={`input-setup-${item.name}`} /></label>)}{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر إنشاء الحساب. تحقق من البيانات وحاول مجدداً.' : 'Création impossible. Vérifiez les informations et réessayez.'}</p>}<Button type="submit" disabled={mutation.isPending || setup.isLoading} testId="button-setup-admin">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'إنشاء حساب المدير' : 'Créer le compte administrateur'}</Button></form></Form>}
     <Link href="/login" className="mt-5 block text-center text-xs text-[#7f633e] hover:underline">{lang === 'ar' ? 'العودة إلى تسجيل الدخول' : 'Retour à la connexion'}</Link>
   </AuthFrame>;
+}
+function ProfilePage() {
+  const { lang } = useLang();
+  const client = useQueryClient();
+  const currentUser = useGetCurrentUser({ query: { retry: false } });
+  const mutation = useMutation(getUpdateAccountMutationOptions());
+  const [saved, setSaved] = useState(false);
+  const form = useForm<{ email: string; currentPassword: string; newPassword: string; confirmPassword: string }>({
+    resolver: zodResolver(z.object({
+      email: z.string().email(),
+      currentPassword: z.string().min(1),
+      newPassword: z.string(),
+      confirmPassword: z.string(),
+    }).superRefine((values, context) => {
+      if (values.newPassword && values.newPassword.length < 12) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['newPassword'], message: 'Password must be at least 12 characters.' });
+      }
+      if (values.newPassword !== values.confirmPassword) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match.' });
+      }
+    })),
+    defaultValues: { email: '', currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  useEffect(() => {
+    if (currentUser.data) {
+      form.reset({ email: currentUser.data.email, currentPassword: '', newPassword: '', confirmPassword: '' });
+    }
+  }, [currentUser.data?.email, form]);
+
+  const submit = form.handleSubmit(({ email, currentPassword, newPassword }) => {
+    setSaved(false);
+    mutation.mutate({
+      data: { email, currentPassword, ...(newPassword ? { newPassword } : {}) },
+    }, {
+      onSuccess: user => {
+        client.setQueryData(getGetCurrentUserQueryKey(), user);
+        form.reset({ email: user.email, currentPassword: '', newPassword: '', confirmPassword: '' });
+        setSaved(true);
+      },
+    });
+  });
+
+  return <div><PageIntro title={lang === 'ar' ? 'الحساب والأمان' : 'Compte et sécurité'} subtitle={lang === 'ar' ? 'تغيير البريد الإلكتروني أو كلمة المرور بعد التحقق من كلمة المرور الحالية.' : 'Modifiez votre adresse e-mail ou votre mot de passe après vérification du mot de passe actuel.'} />
+    {currentUser.isLoading ? <StateMessage loading /> : <section className="surface max-w-2xl p-5 md:p-7">
+      <Form {...form}><form onSubmit={submit} className="space-y-4">
+        <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input {...form.register('email')} type="email" autoComplete="email" className="field-control mt-1.5" data-testid="input-profile-email" /></label>
+        <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور الحالية للتأكيد' : 'Mot de passe actuel pour confirmer'}<input {...form.register('currentPassword')} type="password" autoComplete="current-password" className="field-control mt-1.5" data-testid="input-profile-current-password" /></label>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور الجديدة (اختياري، 12 حرفاً على الأقل)' : 'Nouveau mot de passe (facultatif, 12 caractères minimum)'}<input {...form.register('newPassword')} type="password" autoComplete="new-password" className="field-control mt-1.5" data-testid="input-profile-new-password" /></label>
+          <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirmer le nouveau mot de passe'}<input {...form.register('confirmPassword')} type="password" autoComplete="new-password" className="field-control mt-1.5" data-testid="input-profile-confirm-password" /></label>
+        </div>
+        {form.formState.errors.newPassword && <p role="alert" className="text-xs text-[#a83d37]">{lang === 'ar' ? 'كلمة المرور الجديدة يجب أن تتكون من 12 حرفاً على الأقل.' : 'Le nouveau mot de passe doit contenir au moins 12 caractères.'}</p>}
+        {form.formState.errors.confirmPassword && <p role="alert" className="text-xs text-[#a83d37]">{lang === 'ar' ? 'تأكيد كلمة المرور غير مطابق.' : 'La confirmation du mot de passe ne correspond pas.'}</p>}
+        {mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر تحديث الحساب. تحقق من كلمة المرور الحالية والبريد الإلكتروني.' : 'Impossible de mettre à jour le compte. Vérifiez le mot de passe actuel et l’adresse e-mail.'}</p>}
+        {saved && <p role="status" className="rounded-lg bg-[#e8f2e8] px-3 py-2 text-xs text-[#386344]">{lang === 'ar' ? 'تم تحديث بيانات الحساب.' : 'Les informations du compte ont été mises à jour.'}</p>}
+        <Button type="submit" disabled={mutation.isPending} testId="button-profile-save">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'حفظ التغييرات' : 'Enregistrer les modifications'}</Button>
+      </form></Form>
+    </section>}
+  </div>;
 }
 function AuthFrame({ children }: { children: ReactNode }) {
   const { lang, setLang } = useLang();

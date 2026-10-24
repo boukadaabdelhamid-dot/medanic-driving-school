@@ -176,6 +176,15 @@ export function validateResourceInput(
       output[item.name] = date;
       continue;
     }
+    if (item.type === "email") {
+      if (typeof value !== "string") throw new Error(`${item.name} must be an email.`);
+      const email = value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error(`${item.name} must be a valid email address.`);
+      }
+      output[item.name] = email;
+      continue;
+    }
     if (item.type === "select") {
       const optionValues = (item.options ?? []).map((option) => option);
       if (optionValues.length && !optionValues.includes(String(value))) {
