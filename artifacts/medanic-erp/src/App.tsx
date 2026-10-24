@@ -159,7 +159,7 @@ function AppShell({ children }: { children: ReactNode }) {
   const health = useHealthCheck({ query: { refetchInterval: 60000 } });
   return <div className="flex min-h-[100dvh]">
     {mobileOpen && <button aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Fermer le menu'} onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-[#12263a]/45 md:hidden" data-testid="button-close-menu" />}
-    <aside className={`sidebar fixed inset-y-0 z-40 flex w-[266px] flex-col transition-transform duration-200 md:sticky md:top-0 md:h-[100dvh] md:translate-x-0 ${mobileOpen ? 'translate-x-0 start-0' : 'rtl:translate-x-full ltr:-translate-x-full md:translate-x-0'}`}>
+    <aside className={`sidebar fixed inset-y-0 z-40 flex w-[266px] flex-col transition-transform duration-200 md:sticky md:top-0 md:h-[100dvh] ${mobileOpen ? 'translate-x-0 start-0' : 'max-md:rtl:translate-x-full max-md:ltr:-translate-x-full'} md:translate-x-0`}>
       <div className="flex h-[82px] shrink-0 items-center gap-3 border-b border-white/10 px-5">
         <img src={logo} alt="شعار مدرسة ميدانيك" className="h-[48px] w-[48px] rounded-full bg-[#f7f4ec] object-cover" data-testid="img-medanic-logo" />
         <div className="leading-tight"><div className="text-[15px] font-bold tracking-wide">MEDANIC</div><div className="mt-1 text-[11px] text-[#bac5cf]">إدارة مدرسة السياقة</div></div>
