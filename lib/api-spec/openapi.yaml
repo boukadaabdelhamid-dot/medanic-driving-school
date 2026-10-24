@@ -54,6 +54,12 @@ paths:
                 $ref: "#/components/schemas/AuthUser"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "503":
+          description: Initial password or session secret is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /auth/login:
     post:
       operationId: login
@@ -499,14 +505,11 @@ components:
           minLength: 1
     InitialAdminInput:
       type: object
-      required: [fullName, password]
+      required: [fullName]
       properties:
         fullName:
           type: string
           minLength: 1
-        password:
-          type: string
-          minLength: 12
     AccountUpdateInput:
       type: object
       required: [currentPassword]
@@ -528,7 +531,7 @@ components:
           type: boolean
     AuthUser:
       type: object
-      required: [id, email, fullName, role, permissions]
+      required: [id, email, fullName, role, mustChangePassword, permissions]
       properties:
         id:
           type: integer
@@ -540,6 +543,8 @@ components:
         role:
           type: string
           enum: [admin, trainer]
+        mustChangePassword:
+          type: boolean
         permissions:
           type: object
           additionalProperties:

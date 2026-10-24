@@ -10,8 +10,11 @@ import {
 } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import {
+  assertSessionSecretConfigured,
   clearSessionCookie,
+  getInitialAdminPassword,
   hashPassword,
+  INITIAL_ADMIN_EMAIL,
   publicUser,
   setSessionCookie,
   userCount,
@@ -20,7 +23,6 @@ import {
 } from "../lib/auth";
 
 const router: IRouter = Router();
-const INITIAL_ADMIN_EMAIL = "admin@midanic.com";
 const loginWindows = new Map<string, { count: number; resetAt: number }>();
 const LOGIN_LIMIT = 8;
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
@@ -42,6 +44,7 @@ function publicUserResponse(user: PublicUser) {
     email: user.email,
     fullName: user.fullName,
     role: user.role,
+    mustChangePassword: user.mustChangePassword,
     permissions: user.permissions,
   };
 }
@@ -61,6 +64,35 @@ router.post("/auth/setup", async (req, res) => {
     res.status(400).json({ error: "Review the setup form and try again." });
     return;
   }
+  let initialPassword: string | null;
+  try {
+    initialPassword = getInitialAdminPassword();
+  } catch (error) {
+    req.log.error(
+      { err: error },
+      "Invalid initial administrator password configuration",
+    );
+    res.status(503).json({
+      error: "INITIAL_ADMIN_PASSWORD must contain at least 12 characters.",
+    });
+    return;
+  }
+  if (!initialPassword) {
+    res.status(503).json({
+      error:
+        "Set INITIAL_ADMIN_PASSWORD in Railway Variables before creating the administrator.",
+    });
+    return;
+  }
+  try {
+    assertSessionSecretConfigured();
+  } catch {
+    res.status(503).json({
+      error:
+        "Set SESSION_SECRET to a value of at least 32 characters in Railway Variables.",
+    });
+    return;
+  }
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -74,12 +106,14 @@ router.post("/auth/setup", async (req, res) => {
       return;
     }
     const inserted = await client.query(
-      `INSERT INTO users (username, password_hash, role, full_name, permissions)
-       VALUES ($1, $2, 'admin', $3, '{}'::jsonb)
-       RETURNING id, username, full_name, role, permissions`,
+      `INSERT INTO users
+         (username, password_hash, role, full_name, permissions,
+          must_change_password, initial_password_configured)
+       VALUES ($1, $2, 'admin', $3, '{}'::jsonb, TRUE, TRUE)
+       RETURNING id, username, full_name, role, permissions, must_change_password`,
       [
         INITIAL_ADMIN_EMAIL,
-        hashPassword(parsed.data.password),
+        hashPassword(initialPassword),
         parsed.data.fullName.trim(),
       ],
     );
@@ -113,7 +147,8 @@ router.post("/auth/login", async (req, res) => {
   }
   try {
     const result = await pool.query(
-      `SELECT id, username, password_hash, full_name, role, permissions
+      `SELECT id, username, password_hash, full_name, role, permissions,
+              must_change_password
          FROM users WHERE lower(username) = $1`,
       [parsed.data.email.trim().toLowerCase()],
     );
@@ -171,7 +206,7 @@ router.patch("/auth/account", async (req, res): Promise<void> => {
 
   try {
     const found = await pool.query(
-      `SELECT id, username, password_hash
+      `SELECT id, username, password_hash, must_change_password
          FROM users WHERE id = $1`,
       [req.user.id],
     );
@@ -189,6 +224,12 @@ router.patch("/auth/account", async (req, res): Promise<void> => {
       res.status(400).json({ error: "The current password is incorrect." });
       return;
     }
+    if (row.must_change_password && !parsed.data.newPassword) {
+      res.status(400).json({
+        error: "Change the temporary password to continue.",
+      });
+      return;
+    }
 
     const nextEmail = email ?? String(row.username);
     const nextPasswordHash = parsed.data.newPassword
@@ -198,10 +239,17 @@ router.patch("/auth/account", async (req, res): Promise<void> => {
         : String(row.password_hash);
     const updated = await pool.query(
       `UPDATE users
-          SET username = $1, password_hash = $2
-        WHERE id = $3
-        RETURNING id, username, full_name, role, permissions`,
-      [nextEmail, nextPasswordHash, req.user.id],
+          SET username = $1,
+              password_hash = $2,
+              must_change_password = CASE WHEN $3 THEN FALSE ELSE must_change_password END
+        WHERE id = $4
+        RETURNING id, username, full_name, role, permissions, must_change_password`,
+      [
+        nextEmail,
+        nextPasswordHash,
+        Boolean(parsed.data.newPassword),
+        req.user.id,
+      ],
     );
     const user = publicUser(updated.rows[0]);
     res.json(UpdateAccountResponse.parse(publicUserResponse(user)));

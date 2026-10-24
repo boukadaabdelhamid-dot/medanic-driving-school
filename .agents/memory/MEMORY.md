@@ -1,2 +1,4 @@
 - [Desktop setup constraints](desktop-setup.md) — preserve the imported desktop app; Nix Tk needs an explicit Python search path.
 - [Public GitHub releases](public-repo-publishing.md) — keep public releases to source and Railway config; exclude PDFs, uploaded attachments, and internal Replit notes.
+- [Drizzle Kit migration paths](drizzle-kit-paths.md) — keep schema and output paths relative to the database package when generating migrations.
+- [Temporary PostgreSQL tests](temporary-postgres-tests.md) — point local PostgreSQL's socket directory at the test temp folder in this runtime.

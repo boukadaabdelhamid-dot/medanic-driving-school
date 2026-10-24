@@ -13,5 +13,6 @@ export interface AuthUser {
   email: string;
   fullName: string;
   role: AuthUserRole;
+  mustChangePassword: boolean;
   permissions: AuthUserPermissions;
 }

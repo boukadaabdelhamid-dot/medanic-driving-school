@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { logger } from "./lib/logger";
 import { ensureDefaultAccounts } from "./lib/ledger";
+import { initializeConfiguredAdminPassword } from "./lib/auth";
 
 const rawPort = process.env["PORT"];
 
@@ -33,6 +34,12 @@ async function start() {
       migrationsFolder: path.join(workspaceRoot(), "lib/db/drizzle"),
     });
     await ensureDefaultAccounts(pool);
+    const initializedAdminPassword = await initializeConfiguredAdminPassword();
+    if (initializedAdminPassword) {
+      logger.info(
+        "Configured the initial administrator password; a password change is required after sign-in",
+      );
+    }
     app.listen(port, () => {
       logger.info({ port }, "Server listening");
     });

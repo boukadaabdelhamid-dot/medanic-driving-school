@@ -95,6 +95,7 @@ function Router() {
   useEffect(() => {
     if (!setup.data) return;
     if (setup.data.required && path !== '/setup') setLocation('/setup');
+    else if (!setup.data.required && currentUser.data?.mustChangePassword && path !== '/profile') setLocation('/profile');
     else if (!setup.data.required && path === '/setup') setLocation(currentUser.data ? '/' : '/login');
     else if (!setup.data.required && path === '/login' && currentUser.data) setLocation('/');
     else if (!setup.data.required && privatePath && currentUser.isError) setLocation('/login');
@@ -112,6 +113,9 @@ function Router() {
     return <div className="app-shell grid min-h-[100dvh] place-items-center"><StateMessage loading /></div>;
   }
   if (privatePath && !currentUser.data) {
+    return <div className="app-shell grid min-h-[100dvh] place-items-center"><StateMessage loading /></div>;
+  }
+  if (currentUser.data?.mustChangePassword && path !== '/profile') {
     return <div className="app-shell grid min-h-[100dvh] place-items-center"><StateMessage loading /></div>;
   }
   if (path === '/login' && currentUser.data) {
@@ -508,7 +512,7 @@ function LoginPage() {
   const { lang } = useLang(); const [, setLocation] = useLocation(); const client = useQueryClient();
   const form = useForm<{ email: string; password: string }>({ resolver: zodResolver(z.object({ email: z.string().email(), password: z.string().min(1) })), defaultValues: { email: 'admin@midanic.com', password: '' } });
   const mutation = useMutation(getLoginMutationOptions());
-  const submit = form.handleSubmit(data => mutation.mutate({ data }, { onSuccess: () => { client.invalidateQueries({ queryKey: getGetDashboardQueryKey() }); setLocation('/'); } }));
+  const submit = form.handleSubmit(data => mutation.mutate({ data }, { onSuccess: user => { client.setQueryData(getGetCurrentUserQueryKey(), user); client.invalidateQueries({ queryKey: getGetDashboardQueryKey() }); setLocation('/'); } }));
   return <AuthFrame><div className="mb-7 text-center"><img src={logo} className="mx-auto mb-4 h-[82px] w-[82px] rounded-full border border-[#e6e0d5] bg-[#f8f6ef] object-cover" alt="شعار ميدانيك" /><p className="text-[10px] font-semibold tracking-[.15em] text-[#a5793d]">MEDANIC ERP</p><h1 className="mt-2 text-[24px] font-bold text-[#1e344a]">{lang === 'ar' ? 'تسجيل الدخول' : 'Connexion'}</h1><p className="mt-2 text-xs text-[#818680]">{lang === 'ar' ? 'فضاء تسيير مدرسة تعليم السياقة' : 'Espace de gestion de l’auto-école'}</p></div>
     <Form {...form}><form onSubmit={submit} className="space-y-4"><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input {...form.register('email')} type="email" autoComplete="email" className="field-control mt-1.5" data-testid="input-login-email" /></label><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور' : 'Mot de passe'}<input {...form.register('password')} type="password" autoComplete="current-password" className="field-control mt-1.5" data-testid="input-login-password" /></label>{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو تعذر الاتصال.' : 'Adresse e-mail ou mot de passe incorrect, ou connexion impossible.'}</p>}<Button type="submit" disabled={mutation.isPending} testId="button-login" >{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'الدخول إلى النظام' : 'Se connecter'}<ArrowLeft size={14} /></Button></form></Form>
     <div className="mt-5 flex justify-between border-t border-[#eee8dd] pt-4 text-xs"><Link href="/setup" className="text-[#7f633e] hover:underline">{lang === 'ar' ? 'إنشاء المدير الأول' : 'Créer le premier administrateur'}</Link><button onClick={() => form.reset()} className="text-[#777e80] hover:text-[#243b50]" data-testid="button-clear-login">{lang === 'ar' ? 'مسح الحقول' : 'Effacer'}</button></div>
@@ -516,20 +520,26 @@ function LoginPage() {
 }
 function SetupPage() {
   const { lang } = useLang(); const [, setLocation] = useLocation(); const client = useQueryClient(); const setup = useGetSetupStatus();
-  const form = useForm<{ fullName: string; password: string }>({ resolver: zodResolver(z.object({ fullName: z.string().min(1), password: z.string().min(12) })), defaultValues: { fullName: '', password: '' } });
+  const form = useForm<{ fullName: string }>({ resolver: zodResolver(z.object({ fullName: z.string().min(1) })), defaultValues: { fullName: '' } });
   const mutation = useMutation(getSetupInitialAdminMutationOptions());
   useEffect(() => {
     if (!mutation.isSuccess) return;
     client.setQueryData(getGetSetupStatusQueryKey(), { required: false });
     client.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
   }, [mutation.isSuccess, client]);
-  const submit = form.handleSubmit(data => mutation.mutate({ data }, { onSuccess: () => { client.invalidateQueries(); setLocation('/'); } }));
-  const inputs: { name: 'fullName' | 'password'; ar: string; fr: string; type?: string }[] = [
-    { name: 'fullName', ar: 'الاسم الكامل', fr: 'Nom complet' }, { name: 'password', ar: 'كلمة المرور (12 حرفاً على الأقل)', fr: 'Mot de passe (12 caractères minimum)', type: 'password' },
+  const submit = form.handleSubmit(data => mutation.mutate({ data }, { onSuccess: user => { client.setQueryData(getGetCurrentUserQueryKey(), user); client.invalidateQueries(); setLocation('/'); } }));
+  const setupError = mutation.error instanceof Error ? mutation.error.message : '';
+  const setupErrorText = setupError.includes('INITIAL_ADMIN_PASSWORD')
+    ? (lang === 'ar' ? 'أضف INITIAL_ADMIN_PASSWORD في متغيرات Railway (12 حرفاً على الأقل) ثم أعد النشر.' : 'Ajoutez INITIAL_ADMIN_PASSWORD dans les variables Railway (12 caractères minimum), puis redéployez.')
+    : setupError.includes('SESSION_SECRET')
+      ? (lang === 'ar' ? 'أضف SESSION_SECRET في متغيرات Railway (32 حرفاً على الأقل) ثم أعد النشر.' : 'Ajoutez SESSION_SECRET dans les variables Railway (32 caractères minimum), puis redéployez.')
+      : (lang === 'ar' ? 'تعذر إنشاء الحساب. تحقق من الإعدادات وحاول مجدداً.' : 'Création impossible. Vérifiez la configuration et réessayez.');
+  const inputs: { name: 'fullName'; ar: string; fr: string }[] = [
+    { name: 'fullName', ar: 'الاسم الكامل', fr: 'Nom complet' },
   ];
   return <AuthFrame><div className="mb-6 text-center"><img src={logo} className="mx-auto mb-4 h-[72px] w-[72px] rounded-full border border-[#e6e0d5] object-cover" alt="شعار ميدانيك" /><h1 className="text-[22px] font-bold text-[#1e344a]">{lang === 'ar' ? 'إعداد الحساب الأول' : 'Configuration initiale'}</h1><p className="mt-2 text-xs text-[#818680]">{lang === 'ar' ? 'أنشئ حساب المدير الأول. اختر كلمة مرور قوية واحتفظ بها.' : 'Créez le premier compte administrateur et choisissez un mot de passe robuste.'}</p></div>
     {setup.data?.required === false ? <div className="rounded-lg bg-[#f5f0e5] p-4 text-center text-xs text-[#6e716d]">{lang === 'ar' ? 'تم إعداد النظام مسبقاً. سجّل الدخول بحسابك.' : 'Le système est déjà configuré. Connectez-vous avec votre compte.'}<Link href="/login" className="mt-3 block font-semibold text-[#7f633e] hover:underline">{lang === 'ar' ? 'الانتقال إلى تسجيل الدخول' : 'Aller à la connexion'}</Link></div> : setup.isError ? <div className="mb-4 rounded-lg bg-[#f8e8e5] p-3 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر التحقق من حالة الإعداد.' : 'Impossible de vérifier l’état de configuration.'}</div> : null}
-    {setup.data?.required !== false && <Form {...form}><form onSubmit={submit} className="space-y-3"><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input value="admin@midanic.com" readOnly className="field-control mt-1.5 bg-[#f5f2eb] text-[#68747b]" data-testid="input-setup-email" /></label>{inputs.map(item => <label key={item.name} className="block text-xs font-medium text-[#455565]">{item[lang]}<input {...form.register(item.name)} type={item.type || 'text'} autoComplete={item.name === 'password' ? 'new-password' : 'name'} className="field-control mt-1.5" data-testid={`input-setup-${item.name}`} /></label>)}{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر إنشاء الحساب. تحقق من البيانات وحاول مجدداً.' : 'Création impossible. Vérifiez les informations et réessayez.'}</p>}<Button type="submit" disabled={mutation.isPending || setup.isLoading} testId="button-setup-admin">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'إنشاء حساب المدير' : 'Créer le compte administrateur'}</Button></form></Form>}
+     {setup.data?.required !== false && <Form {...form}><form onSubmit={submit} className="space-y-3"><label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input value="admin@midanic.com" readOnly className="field-control mt-1.5 bg-[#f5f2eb] text-[#68747b]" data-testid="input-setup-email" /></label>{inputs.map(item => <label key={item.name} className="block text-xs font-medium text-[#455565]">{item[lang]}<input {...form.register(item.name)} autoComplete="name" className="field-control mt-1.5" data-testid={`input-setup-${item.name}`} /></label>)}<p className="rounded-lg bg-[#f5f0e5] px-3 py-2 text-xs text-[#6e716d]">{lang === 'ar' ? 'كلمة المرور المؤقتة محفوظة في متغير Railway السري INITIAL_ADMIN_PASSWORD، وسيُطلب تغييرها بعد أول دخول.' : 'Le mot de passe temporaire est conservé dans la variable secrète Railway INITIAL_ADMIN_PASSWORD et devra être changé après la première connexion.'}</p>{mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{setupErrorText}</p>}<Button type="submit" disabled={mutation.isPending || setup.isLoading} testId="button-setup-admin">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'إنشاء حساب المدير' : 'Créer le compte administrateur'}</Button></form></Form>}
     <Link href="/login" className="mt-5 block text-center text-xs text-[#7f633e] hover:underline">{lang === 'ar' ? 'العودة إلى تسجيل الدخول' : 'Retour à la connexion'}</Link>
   </AuthFrame>;
 }
@@ -548,6 +558,9 @@ function ProfilePage() {
     }).superRefine((values, context) => {
       if (values.newPassword && values.newPassword.length < 12) {
         context.addIssue({ code: z.ZodIssueCode.custom, path: ['newPassword'], message: 'Password must be at least 12 characters.' });
+      }
+      if (currentUser.data?.mustChangePassword && !values.newPassword) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['newPassword'], message: 'A new password is required.' });
       }
       if (values.newPassword !== values.confirmPassword) {
         context.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match.' });
@@ -576,19 +589,20 @@ function ProfilePage() {
   });
 
   return <div><PageIntro title={lang === 'ar' ? 'الحساب والأمان' : 'Compte et sécurité'} subtitle={lang === 'ar' ? 'تغيير البريد الإلكتروني أو كلمة المرور بعد التحقق من كلمة المرور الحالية.' : 'Modifiez votre adresse e-mail ou votre mot de passe après vérification du mot de passe actuel.'} />
+    {currentUser.data?.mustChangePassword && <div role="status" className="mb-4 rounded-lg border border-[#e7d2a9] bg-[#f8f0df] p-4 text-sm text-[#6e5732]">{lang === 'ar' ? 'هذه كلمة مرور مؤقتة. غيّرها الآن للمتابعة إلى بقية النظام.' : 'Ce mot de passe est temporaire. Changez-le maintenant pour accéder au reste du système.'}</div>}
     {currentUser.isLoading ? <StateMessage loading /> : <section className="surface max-w-2xl p-5 md:p-7">
       <Form {...form}><form onSubmit={submit} className="space-y-4">
         <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'البريد الإلكتروني' : 'Adresse e-mail'}<input {...form.register('email')} type="email" autoComplete="email" className="field-control mt-1.5" data-testid="input-profile-email" /></label>
         <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور الحالية للتأكيد' : 'Mot de passe actuel pour confirmer'}<input {...form.register('currentPassword')} type="password" autoComplete="current-password" className="field-control mt-1.5" data-testid="input-profile-current-password" /></label>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'كلمة المرور الجديدة (اختياري، 12 حرفاً على الأقل)' : 'Nouveau mot de passe (facultatif, 12 caractères minimum)'}<input {...form.register('newPassword')} type="password" autoComplete="new-password" className="field-control mt-1.5" data-testid="input-profile-new-password" /></label>
+          <label className="block text-xs font-medium text-[#455565]">{currentUser.data?.mustChangePassword ? (lang === 'ar' ? 'كلمة المرور الجديدة (مطلوبة، 12 حرفاً على الأقل)' : 'Nouveau mot de passe (obligatoire, 12 caractères minimum)') : (lang === 'ar' ? 'كلمة المرور الجديدة (اختياري، 12 حرفاً على الأقل)' : 'Nouveau mot de passe (facultatif, 12 caractères minimum)')}<input {...form.register('newPassword')} type="password" autoComplete="new-password" className="field-control mt-1.5" data-testid="input-profile-new-password" /></label>
           <label className="block text-xs font-medium text-[#455565]">{lang === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirmer le nouveau mot de passe'}<input {...form.register('confirmPassword')} type="password" autoComplete="new-password" className="field-control mt-1.5" data-testid="input-profile-confirm-password" /></label>
         </div>
         {form.formState.errors.newPassword && <p role="alert" className="text-xs text-[#a83d37]">{lang === 'ar' ? 'كلمة المرور الجديدة يجب أن تتكون من 12 حرفاً على الأقل.' : 'Le nouveau mot de passe doit contenir au moins 12 caractères.'}</p>}
         {form.formState.errors.confirmPassword && <p role="alert" className="text-xs text-[#a83d37]">{lang === 'ar' ? 'تأكيد كلمة المرور غير مطابق.' : 'La confirmation du mot de passe ne correspond pas.'}</p>}
         {mutation.isError && <p role="alert" className="rounded-lg bg-[#f8e8e5] px-3 py-2 text-xs text-[#a83d37]">{lang === 'ar' ? 'تعذر تحديث الحساب. تحقق من كلمة المرور الحالية والبريد الإلكتروني.' : 'Impossible de mettre à jour le compte. Vérifiez le mot de passe actuel et l’adresse e-mail.'}</p>}
         {saved && <p role="status" className="rounded-lg bg-[#e8f2e8] px-3 py-2 text-xs text-[#386344]">{lang === 'ar' ? 'تم تحديث بيانات الحساب.' : 'Les informations du compte ont été mises à jour.'}</p>}
-        <Button type="submit" disabled={mutation.isPending} testId="button-profile-save">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{lang === 'ar' ? 'حفظ التغييرات' : 'Enregistrer les modifications'}</Button>
+        <Button type="submit" disabled={mutation.isPending} testId="button-profile-save">{mutation.isPending && <LoaderCircle size={14} className="animate-spin" />}{currentUser.data?.mustChangePassword ? (lang === 'ar' ? 'تغيير كلمة المرور والمتابعة' : 'Changer le mot de passe et continuer') : (lang === 'ar' ? 'حفظ التغييرات' : 'Enregistrer les modifications')}</Button>
       </form></Form>
     </section>}
   </div>;

@@ -19,13 +19,10 @@ export const GetSetupStatusResponse = zod.object({
 
 
 
-export const setupInitialAdminBodyPasswordMin = 12;
-
 
 
 export const SetupInitialAdminBody = zod.object({
-  "fullName": zod.string().min(1),
-  "password": zod.string().min(setupInitialAdminBodyPasswordMin)
+  "fullName": zod.string().min(1)
 })
 
 export const SetupInitialAdminResponse = zod.object({
@@ -33,6 +30,7 @@ export const SetupInitialAdminResponse = zod.object({
   "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
+  "mustChangePassword": zod.boolean(),
   "permissions": zod.record(zod.string(), zod.boolean())
 })
 
@@ -50,6 +48,7 @@ export const LoginResponse = zod.object({
   "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
+  "mustChangePassword": zod.boolean(),
   "permissions": zod.record(zod.string(), zod.boolean())
 })
 
@@ -59,6 +58,7 @@ export const GetCurrentUserResponse = zod.object({
   "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
+  "mustChangePassword": zod.boolean(),
   "permissions": zod.record(zod.string(), zod.boolean())
 })
 
@@ -79,6 +79,7 @@ export const UpdateAccountResponse = zod.object({
   "email": zod.email(),
   "fullName": zod.string(),
   "role": zod.enum(['admin', 'trainer']),
+  "mustChangePassword": zod.boolean(),
   "permissions": zod.record(zod.string(), zod.boolean())
 })
 

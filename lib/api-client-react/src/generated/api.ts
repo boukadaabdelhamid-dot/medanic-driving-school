@@ -307,7 +307,7 @@ return customFetch<AuthUser>(getSetupInitialAdminUrl(),
 
 export const getSetupInitialAdminMutationKey = () => ['setupInitialAdmin'] as const;
 
-export const getSetupInitialAdminMutationOptions = <TError = ErrorType<BadRequestResponse>,
+export const getSetupInitialAdminMutationOptions = <TError = ErrorType<BadRequestResponse | ApiError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupInitialAdmin>>, TError,SetupInitialAdminMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setupInitialAdmin>>, TError,SetupInitialAdminMutationVariables, TContext> => {
 
@@ -336,10 +336,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetupInitialAdminMutationResult = NonNullable<Awaited<ReturnType<typeof setupInitialAdmin>>>
     export type SetupInitialAdminMutationBody = BodyType<InitialAdminInput>
-    export type SetupInitialAdminMutationError = ErrorType<BadRequestResponse>
+    export type SetupInitialAdminMutationError = ErrorType<BadRequestResponse | ApiError>
     export type SetupInitialAdminMutationVariables = {data: BodyType<InitialAdminInput>}
 
-    export const useSetupInitialAdmin = <TError = ErrorType<BadRequestResponse>,
+    export const useSetupInitialAdmin = <TError = ErrorType<BadRequestResponse | ApiError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupInitialAdmin>>, TError,SetupInitialAdminMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setupInitialAdmin>>,

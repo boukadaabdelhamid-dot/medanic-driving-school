@@ -9,6 +9,4 @@
 export interface InitialAdminInput {
   /** @minLength 1 */
   fullName: string;
-  /** @minLength 12 */
-  password: string;
 }

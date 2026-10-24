@@ -87,8 +87,6 @@ export interface AuthCredentials {
 export interface InitialAdminInput {
   /** @minLength 1 */
   fullName: string;
-  /** @minLength 12 */
-  password: string;
 }
 
 export interface AccountUpdateInput {
@@ -118,6 +116,7 @@ export interface AuthUser {
   email: string;
   fullName: string;
   role: AuthUserRole;
+  mustChangePassword: boolean;
   permissions: AuthUserPermissions;
 }
 

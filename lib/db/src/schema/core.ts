@@ -17,6 +17,10 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("trainer"),
   fullName: text("full_name").notNull().default(""),
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
+  initialPasswordConfigured: boolean("initial_password_configured")
+    .notNull()
+    .default(false),
   permissions: jsonb("permissions")
     .$type<Record<string, boolean>>()
     .notNull()

@@ -11,8 +11,12 @@ export type PublicUser = {
   email: string;
   fullName: string;
   role: "admin" | "trainer";
+  mustChangePassword: boolean;
   permissions: Record<string, boolean>;
 };
+
+export const INITIAL_ADMIN_EMAIL = "admin@midanic.com";
+const INITIAL_ADMIN_PASSWORD_MIN_LENGTH = 12;
 
 declare global {
   namespace Express {
@@ -30,6 +34,20 @@ function sessionSecret() {
   return secret;
 }
 
+export function assertSessionSecretConfigured() {
+  sessionSecret();
+}
+
+export function getInitialAdminPassword() {
+  const password = process.env.INITIAL_ADMIN_PASSWORD;
+  if (password && password.length < INITIAL_ADMIN_PASSWORD_MIN_LENGTH) {
+    throw new Error(
+      `INITIAL_ADMIN_PASSWORD must contain at least ${INITIAL_ADMIN_PASSWORD_MIN_LENGTH} characters.`,
+    );
+  }
+  return password || null;
+}
+
 function safeEqual(left: string, right: string) {
   const a = Buffer.from(left);
   const b = Buffer.from(right);
@@ -42,6 +60,50 @@ export function hashPassword(password: string) {
     "base64url",
   );
   return `scrypt$${salt}$${derived}`;
+}
+
+export async function initializeConfiguredAdminPassword() {
+  const password = getInitialAdminPassword();
+  if (!password) return false;
+
+  sessionSecret();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(948271604)");
+    const existing = await client.query<{
+      id: number;
+      initial_password_configured: boolean;
+    }>(
+      `SELECT id, initial_password_configured
+         FROM users
+        WHERE lower(username) = $1
+        LIMIT 1
+        FOR UPDATE`,
+      [INITIAL_ADMIN_EMAIL],
+    );
+    const admin = existing.rows[0];
+    if (!admin || admin.initial_password_configured) {
+      await client.query("COMMIT");
+      return false;
+    }
+
+    await client.query(
+      `UPDATE users
+          SET password_hash = $1,
+              must_change_password = TRUE,
+              initial_password_configured = TRUE
+        WHERE id = $2`,
+      [hashPassword(password), admin.id],
+    );
+    await client.query("COMMIT");
+    return true;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export function verifyPassword(password: string, encoded: string) {
@@ -111,7 +173,7 @@ async function getUserFromRequestCookie(cookie?: string): Promise<PublicUser | n
   if (!safeEqual(signature, expected)) return null;
 
   const result = await pool.query(
-    `SELECT id, username, full_name, role, permissions
+    `SELECT id, username, full_name, role, permissions, must_change_password
        FROM users WHERE id = $1`,
     [id],
   );
@@ -126,6 +188,7 @@ async function getUserFromRequestCookie(cookie?: string): Promise<PublicUser | n
     email: String(row.username),
     fullName: String(row.full_name ?? ""),
     role: row.role === "admin" ? "admin" : "trainer",
+    mustChangePassword: Boolean(row.must_change_password),
     permissions,
   };
 }
@@ -145,6 +208,10 @@ export const loadOptionalUser: RequestHandler = async (req, _res, next) => {
 export const requireAuth: RequestHandler = (req, res, next) => {
   if (!req.user) {
     res.status(401).json({ error: "Authentication required." });
+    return;
+  }
+  if (req.user.mustChangePassword) {
+    res.status(403).json({ error: "Change the temporary password to continue." });
     return;
   }
   next();
@@ -180,6 +247,7 @@ export function publicUser(row: {
   username: string;
   full_name: string;
   role: string;
+  must_change_password: boolean;
   permissions: Record<string, boolean> | null;
 }): PublicUser {
   return {
@@ -187,6 +255,7 @@ export function publicUser(row: {
     email: row.username,
     fullName: row.full_name ?? "",
     role: row.role === "admin" ? "admin" : "trainer",
+    mustChangePassword: Boolean(row.must_change_password),
     permissions: row.permissions ?? {},
   };
 }

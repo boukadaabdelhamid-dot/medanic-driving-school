@@ -8,6 +8,13 @@
       "when": 1792775665049,
       "tag": "0000_tiny_owl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792837006584,
+      "tag": "0001_admin_password_bootstrap",
+      "breakpoints": true
     }
   ]
 }
