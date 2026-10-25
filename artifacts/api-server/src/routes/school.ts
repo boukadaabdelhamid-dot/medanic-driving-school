@@ -13,10 +13,43 @@ const schoolDateFields = [
   "representativeBirthDate",
 ];
 
+const schoolStringFields = [
+  "name",
+  "commercialRegister",
+  "accreditationNumber",
+  "nif",
+  "nis",
+  "articleNumber",
+  "address",
+  "phone",
+  "wilaya",
+  "managerName",
+  "accreditationDate",
+  "addressCommune",
+  "addressDaira",
+  "ownerName",
+  "ownerBirthDate",
+  "ownerBirthPlace",
+  "ownerEmail",
+  "representativeName",
+  "representativeBirthDate",
+  "representativeBirthPlace",
+];
+
 function schoolResponse(row: Record<string, unknown>) {
   const data = normalizeRow(row);
-  for (const key of schoolDateFields) {
-    if (data[key] === null) data[key] = "";
+  for (const key of schoolStringFields) {
+    const value = data[key];
+    if (value === null || value === undefined) {
+      data[key] = "";
+    } else if (schoolDateFields.includes(key) && value instanceof Date) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, "0");
+      const day = String(value.getDate()).padStart(2, "0");
+      data[key] = `${year}-${month}-${day}`;
+    } else if (typeof value !== "string") {
+      data[key] = String(value);
+    }
   }
   return data;
 }
