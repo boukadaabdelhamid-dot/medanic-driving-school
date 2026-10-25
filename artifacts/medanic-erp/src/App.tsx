@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, CircleHelp, Clock3, FileText, Gauge,
   GraduationCap, Languages, LayoutDashboard, LogOut, Menu, Plus, Search,
   ShieldCheck, UserRound, Users, Wallet, X, Pencil, Trash2, Download, RotateCcw,
-  Building2, CircleDollarSign, ClipboardList, LoaderCircle, AlertCircle, type LucideIcon,
+  Building2, Car, CircleDollarSign, ClipboardList, LoaderCircle, AlertCircle, type LucideIcon,
 } from 'lucide-react';
 import {
   useGetDashboard, getGetDashboardQueryKey, useGetSchool, getGetSchoolQueryKey,
@@ -40,6 +40,7 @@ const routeInfo: Record<string, { ar: string; fr: string; icon: LucideIcon; reso
   '/school': { ar: 'ملف المدرسة', fr: 'Fiche de l’école', icon: Building2 },
   '/candidates': { ar: 'المترشحون', fr: 'Candidats', icon: Users, resource: 'candidates' },
   '/instructors': { ar: 'المدربون', fr: 'Moniteurs', icon: UserRound, resource: 'instructors' },
+  '/vehicles': { ar: 'المركبات', fr: 'Véhicules', icon: Car, resource: 'vehicles' },
   '/training': { ar: 'التكوين', fr: 'Formation', icon: GraduationCap, resource: 'trainingStages' },
   '/schedule': { ar: 'الجدول والحصص', fr: 'Planning et séances', icon: CalendarDays, resource: 'sessions' },
   '/payments': { ar: 'المدفوعات', fr: 'Paiements', icon: Banknote, resource: 'payments' },
@@ -55,6 +56,7 @@ const routeInfo: Record<string, { ar: string; fr: string; icon: LucideIcon; reso
 const resourceTitles: Record<string, { ar: string; fr: string; subtitleAr: string; subtitleFr: string }> = {
   candidates: { ar: 'ملفات المترشحين', fr: 'Dossiers des candidats', subtitleAr: 'إدارة التسجيلات والملفات الإدارية للمترشحين', subtitleFr: 'Suivi des inscriptions et dossiers administratifs' },
   instructors: { ar: 'طاقم التدريب', fr: 'Équipe pédagogique', subtitleAr: 'بيانات المدربين وعقودهم المهنية', subtitleFr: 'Informations et contrats des moniteurs' },
+  vehicles: { ar: 'أسطول المركبات', fr: 'Parc de véhicules', subtitleAr: 'إدارة مركبات المدرسة وبيانات التأمين والفحص التقني', subtitleFr: 'Gestion des véhicules, assurances et contrôles techniques' },
   trainingStages: { ar: 'مراحل التكوين', fr: 'Étapes de formation', subtitleAr: 'متابعة تقدم المترشحين في مراحل التكوين', subtitleFr: 'Suivi de progression des candidats' },
   sessions: { ar: 'الحصص والجدول', fr: 'Séances et planning', subtitleAr: 'تنظيم حصص التدريب والمواعيد', subtitleFr: 'Organisation des séances et rendez-vous' },
   payments: { ar: 'تحصيل المدفوعات', fr: 'Encaissements', subtitleAr: 'متابعة دفعات المترشحين', subtitleFr: 'Suivi des versements des candidats' },
@@ -69,7 +71,7 @@ const resourceTitles: Record<string, { ar: string; fr: string; subtitleAr: strin
 
 const groups = [
   { title: { ar: 'التسيير', fr: 'Pilotage' }, paths: ['/', '/school'] },
-  { title: { ar: 'النشاط التعليمي', fr: 'Activité pédagogique' }, paths: ['/candidates', '/instructors', '/training', '/schedule', '/graduates'] },
+  { title: { ar: 'النشاط التعليمي', fr: 'Activité pédagogique' }, paths: ['/candidates', '/instructors', '/vehicles', '/training', '/schedule', '/graduates'] },
   { title: { ar: 'الإدارة والمالية', fr: 'Administration et finances' }, paths: ['/payments', '/expenses', '/accounting', '/hr', '/reports', '/documents'] },
   { title: { ar: 'حسابي', fr: 'Mon compte' }, paths: ['/profile'] },
   { title: { ar: 'إدارة النظام', fr: 'Administration système' }, paths: ['/team'] },
@@ -131,6 +133,7 @@ function RoutedPages() {
     <Route path="/candidates/:id" component={CandidateDetailPage} />
     <Route path="/candidates" component={CandidatesPage} />
     <Route path="/instructors" component={InstructorsPage} />
+    <Route path="/vehicles" component={VehiclesPage} />
     <Route path="/training" component={TrainingPage} />
     <Route path="/schedule" component={SchedulePage} />
     <Route path="/payments" component={PaymentsPage} />
@@ -397,6 +400,7 @@ function CandidateDetailPage() {
 
 function CandidatesPage() { return <ResourcePage resource="candidates" />; }
 function InstructorsPage() { return <ResourcePage resource="instructors" />; }
+function VehiclesPage() { return <ResourcePage resource="vehicles" />; }
 function TrainingPage() { return <ResourcePage resource="trainingStages" />; }
 function SchedulePage() { return <ResourcePage resource="sessions" />; }
 function PaymentsPage() { return <ResourcePage resource="payments" />; }
