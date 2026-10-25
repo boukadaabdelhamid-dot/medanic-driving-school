@@ -187,7 +187,11 @@ export function validateResourceInput(
     }
     if (item.type === "select") {
       const optionValues = (item.options ?? []).map((option) => option);
-      if (optionValues.length && !optionValues.includes(String(value))) {
+      if (
+        optionValues.length &&
+        value !== "" &&
+        !optionValues.includes(String(value))
+      ) {
         throw new Error(`${item.name} has an unsupported value.`);
       }
     }
